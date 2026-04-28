@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pf-gold: #c8a443;
+  --color-pf-dark: #1a1209;
+  --color-pf-parchment: #f5edd6;
+  --color-pf-brown: #6b4226;
+  --color-pf-red: #8b1a1a;
+  --color-pf-panel: #2a1f0e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #1a1209;
+  color: #f5edd6;
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.pf-panel {
+  background: linear-gradient(135deg, #2a1f0e 0%, #1e1508 100%);
+  border: 1px solid #6b4226;
+  border-radius: 0.5rem;
+}
+
+.pf-header {
+  background: linear-gradient(90deg, #6b4226 0%, #8b5e3c 50%, #6b4226 100%);
+}
+
+.pf-input {
+  background-color: #2a1f0e;
+  border: 1px solid #6b4226;
+  color: #f5edd6;
+  border-radius: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.pf-input:focus {
+  outline: none;
+  border-color: #c8a443;
+  box-shadow: 0 0 0 2px rgba(200, 164, 67, 0.25);
+}
+
+.pf-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.375rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.pf-btn-gold {
+  background: linear-gradient(135deg, #c8a443, #a07830);
+  color: #1a1209;
+  border-color: #c8a443;
+}
+
+.pf-btn-gold:hover {
+  background: linear-gradient(135deg, #e0b84d, #c8a443);
+}
+
+.pf-btn-outline {
+  background: transparent;
+  color: #c8a443;
+  border-color: #c8a443;
+}
+
+.pf-btn-outline:hover {
+  background: rgba(200, 164, 67, 0.1);
+}
+
+.pf-btn-red {
+  background: linear-gradient(135deg, #8b1a1a, #6b1010);
+  color: #f5edd6;
+  border-color: #8b1a1a;
+}
+
+.pf-btn-red:hover {
+  background: linear-gradient(135deg, #a02020, #8b1a1a);
+}
+
+.pf-btn-ghost {
+  background: transparent;
+  color: #9ca3af;
+  border-color: #4b3620;
+}
+
+.pf-btn-ghost:hover {
+  background: rgba(75, 54, 32, 0.3);
+  color: #f5edd6;
+}
+
+.tab-active {
+  background: linear-gradient(135deg, #6b4226, #4b2e10);
+  color: #c8a443;
+  border-bottom-color: #c8a443 !important;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1209;
+}
+::-webkit-scrollbar-thumb {
+  background: #6b4226;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5e3c;
+}
+
+.stat-box {
+  background: #2a1f0e;
+  border: 1px solid #6b4226;
+  border-radius: 0.375rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.modifier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: #1a1209;
+  border: 2px solid #6b4226;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
