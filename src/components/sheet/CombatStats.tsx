@@ -1,14 +1,19 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Character } from '../../types';
 import {
   effectiveAbilityScores, totalBAB, totalSave,
   abilityMod, modStr, maxHP,
 } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
+import type { RollRequest } from './DiceRoller';
 
-interface Props { char: Character }
+interface Props {
+  char: Character;
+  onQuickRoll?: (req: RollRequest) => void;
+}
 
-export function CombatStats({ char }: Props) {
+export function CombatStats({ char, onQuickRoll }: Props) {
   const { takeDamage, heal, setTempHp, fullRest } = useCharacterStore();
   const scores = effectiveAbilityScores(char);
   const bab = totalBAB(char.classes);
@@ -76,23 +81,25 @@ export function CombatStats({ char }: Props) {
         ))}
       </div>
 
-      {/* BAB + saves */}
+      {/* BAB + Init */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="stat-box py-3">
-          <div className="text-xs uppercase tracking-wider mb-1" style={{ color: '#8b5e3c' }}>BAB</div>
-          <div className="text-2xl font-bold" style={{ color: '#c8a443' }}>{modStr(bab)}</div>
-          {bab >= 6 && (
+        <RollableStat
+          label="BAB"
+          value={modStr(bab)}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab }) : undefined}
+          extra={bab >= 6 ? (
             <div className="text-xs" style={{ color: '#9ca3af' }}>
               {modStr(bab)}/{modStr(bab - 5)}
               {bab >= 11 ? `/${modStr(bab - 10)}` : ''}
               {bab >= 16 ? `/${modStr(bab - 15)}` : ''}
             </div>
-          )}
-        </div>
-        <div className="stat-box py-3">
-          <div className="text-xs uppercase tracking-wider mb-1" style={{ color: '#8b5e3c' }}>Iniziativa</div>
-          <div className="text-2xl font-bold" style={{ color: '#c8a443' }}>{modStr(init)}</div>
-        </div>
+          ) : undefined}
+        />
+        <RollableStat
+          label="Iniziativa"
+          value={modStr(init)}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'Iniziativa', numDice: 1, dieType: 20, modifier: init }) : undefined}
+        />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -101,27 +108,57 @@ export function CombatStats({ char }: Props) {
           { label: 'Riflessi', value: ref,  detail: `base + DES ${modStr(abilityMod(scores.dex))}` },
           { label: 'Volontà', value: will, detail: `base + SAG ${modStr(abilityMod(scores.wis))}` },
         ].map(({ label, value, detail }) => (
-          <div key={label} className="stat-box py-3">
-            <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>{label}</div>
-            <div className="text-2xl font-bold" style={{ color: value >= 0 ? '#4ade80' : '#ef4444' }}>
-              {modStr(value)}
-            </div>
-            <div className="text-xs" style={{ color: '#6b6b5b' }}>{detail}</div>
-          </div>
+          <RollableStat
+            key={label}
+            label={label}
+            value={modStr(value)}
+            detail={detail}
+            valueColor={value >= 0 ? '#4ade80' : '#ef4444'}
+            onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: value }) : undefined}
+          />
         ))}
       </div>
 
       {/* CMB / CMD */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="stat-box py-3">
-          <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>CMB</div>
-          <div className="text-2xl font-bold" style={{ color: '#f5edd6' }}>{modStr(cmb)}</div>
-        </div>
+        <RollableStat
+          label="CMB"
+          value={modStr(cmb)}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: cmb }) : undefined}
+        />
         <div className="stat-box py-3">
           <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>CMD</div>
           <div className="text-2xl font-bold" style={{ color: '#f5edd6' }}>{cmd}</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function RollableStat({
+  label, value, detail, valueColor, onRoll, extra,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  valueColor?: string;
+  onRoll?: () => void;
+  extra?: ReactNode;
+}) {
+  return (
+    <div
+      className="stat-box py-3 transition-colors"
+      style={{ cursor: onRoll ? 'pointer' : 'default' }}
+      onClick={onRoll}
+      title={onRoll ? `Tira 1d20 ${value} (${label})` : undefined}
+    >
+      <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>{label}</div>
+      <div className="text-2xl font-bold" style={{ color: valueColor ?? '#c8a443' }}>{value}</div>
+      {detail && <div className="text-xs" style={{ color: '#6b6b5b' }}>{detail}</div>}
+      {extra}
+      {onRoll && (
+        <div className="text-xs mt-0.5 opacity-50" style={{ color: '#c8a443' }}>🎲</div>
+      )}
     </div>
   );
 }

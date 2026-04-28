@@ -1,6 +1,6 @@
 import type { Character, AbilityKey } from '../../types';
 import { effectiveAbilityScores, abilityMod, modStr } from '../../utils/calculations';
-import { StatBox } from '../ui/StatBox';
+import type { RollRequest } from './DiceRoller';
 
 const ABILITY_LABELS: Record<AbilityKey, string> = {
   str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR',
@@ -11,9 +11,12 @@ const ABILITY_FULL: Record<AbilityKey, string> = {
   int: 'Intelligenza', wis: 'Saggezza', cha: 'Carisma',
 };
 
-interface Props { char: Character }
+interface Props {
+  char: Character;
+  onQuickRoll?: (req: RollRequest) => void;
+}
 
-export function AbilityPanel({ char }: Props) {
+export function AbilityPanel({ char, onQuickRoll }: Props) {
   const scores = effectiveAbilityScores(char);
   const abilities: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -36,16 +39,19 @@ export function AbilityPanel({ char }: Props) {
                 {ABILITY_LABELS[key]}
               </div>
               <div className="text-3xl font-bold mb-1" style={{ color: '#f5edd6' }}>{score}</div>
-              <div
-                className="text-sm font-bold py-0.5 px-2 rounded-full inline-block mb-1"
+              <button
+                className="text-sm font-bold py-0.5 px-2 rounded-full inline-block mb-1 transition-opacity"
                 style={{
                   background: mod >= 0 ? 'rgba(200,164,67,0.15)' : 'rgba(239,68,68,0.15)',
                   color: mod >= 0 ? '#c8a443' : '#ef4444',
                   border: `1px solid ${mod >= 0 ? '#6b4226' : '#8b1a1a'}`,
+                  cursor: onQuickRoll ? 'pointer' : 'default',
                 }}
+                title={onQuickRoll ? `Tira 1d20${modStr(mod)}` : undefined}
+                onClick={() => onQuickRoll?.({ label: ABILITY_LABELS[key], numDice: 1, dieType: 20, modifier: mod })}
               >
                 {modStr(mod)}
-              </div>
+              </button>
               <div className="text-xs" style={{ color: '#6b6b5b' }}>
                 {base}{racial !== 0 ? ` ${racial >= 0 ? '+' : ''}${racial}R` : ''}
                 {increases !== 0 ? ` +${increases}↑` : ''}

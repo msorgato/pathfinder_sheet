@@ -10,6 +10,8 @@ import { SkillsPanel } from '../components/sheet/SkillsPanel';
 import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
+import { DiceRoller } from '../components/sheet/DiceRoller';
+import type { RollRequest } from '../components/sheet/DiceRoller';
 
 type Tab = 'overview' | 'skills' | 'spells' | 'features' | 'notes';
 
@@ -26,6 +28,13 @@ export function CharacterSheet() {
   const [tab, setTab] = useState<Tab>('overview');
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
+  const [diceOpen, setDiceOpen] = useState(false);
+  const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
+
+  const handleQuickRoll = (req: RollRequest) => {
+    setDiceOpen(true);
+    setPendingRoll(req);
+  };
 
   const char = characters.find(c => c.id === id);
   if (!char) {
@@ -179,11 +188,11 @@ export function CharacterSheet() {
       <div className="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full">
         {tab === 'overview' && (
           <div className="space-y-4">
-            <AbilityPanel char={char} />
-            <CombatStats char={char} />
+            <AbilityPanel char={char} onQuickRoll={handleQuickRoll} />
+            <CombatStats char={char} onQuickRoll={handleQuickRoll} />
           </div>
         )}
-        {tab === 'skills' && <SkillsPanel char={char} />}
+        {tab === 'skills' && <SkillsPanel char={char} onQuickRoll={handleQuickRoll} />}
         {tab === 'spells' && <SpellsPanel char={char} />}
         {tab === 'features' && <FeaturesPanel char={char} />}
         {tab === 'notes' && (
@@ -247,6 +256,27 @@ export function CharacterSheet() {
       {showLevelUp && (
         <LevelUpWizard char={char} onClose={() => setShowLevelUp(false)} />
       )}
+
+      {/* Floating dice button */}
+      <button
+        onClick={() => setDiceOpen(o => !o)}
+        className="fixed bottom-4 right-4 z-30 w-12 h-12 rounded-full text-xl font-bold shadow-lg transition-transform active:scale-90"
+        style={{
+          background: diceOpen ? '#c8a443' : '#2a1f0e',
+          color: diceOpen ? '#1a1209' : '#c8a443',
+          border: '2px solid #c8a443',
+        }}
+        title="Lancia i dadi"
+      >
+        🎲
+      </button>
+
+      <DiceRoller
+        open={diceOpen}
+        onClose={() => setDiceOpen(false)}
+        pendingRoll={pendingRoll}
+        onPendingHandled={() => setPendingRoll(undefined)}
+      />
     </div>
   );
 }

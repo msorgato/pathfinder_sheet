@@ -4,14 +4,18 @@ import { getClass } from '../../data/classes';
 import type { Character, AbilityKey } from '../../types';
 import { effectiveAbilityScores, abilityMod, skillTotal } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
+import type { RollRequest } from './DiceRoller';
 
 const AB_LABELS: Record<AbilityKey, string> = {
   str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR',
 };
 
-interface Props { char: Character }
+interface Props {
+  char: Character;
+  onQuickRoll?: (req: RollRequest) => void;
+}
 
-export function SkillsPanel({ char }: Props) {
+export function SkillsPanel({ char, onQuickRoll }: Props) {
   const { setSkillRanks, setSkillMisc } = useCharacterStore();
   const [search, setSearch] = useState('');
   const [onlyTrained, setOnlyTrained] = useState(false);
@@ -75,7 +79,7 @@ export function SkillsPanel({ char }: Props) {
           <span className="text-center">Car</span>
           <span className="text-center">Grad</span>
           <span className="text-center">Misc</span>
-          <span className="text-center">Tot</span>
+          <span className="text-center" title={onQuickRoll ? 'Clicca per tirare' : undefined}>Tot</span>
         </div>
 
         {filtered.map(skill => {
@@ -126,11 +130,19 @@ export function SkillsPanel({ char }: Props) {
                   onChange={e => setSkillMisc(char.id, skill.id, Number(e.target.value))}
                 />
               </div>
-              <div
-                className="text-center text-sm font-bold"
-                style={{ color: total >= 10 ? '#c8a443' : total >= 5 ? '#d1c5a8' : '#9ca3af' }}
-              >
-                {total >= 0 ? '+' : ''}{total}
+              <div className="text-center">
+                <button
+                  className="text-sm font-bold px-1 rounded transition-colors"
+                  style={{
+                    color: total >= 10 ? '#c8a443' : total >= 5 ? '#d1c5a8' : '#9ca3af',
+                    cursor: onQuickRoll ? 'pointer' : 'default',
+                    background: 'transparent',
+                  }}
+                  title={onQuickRoll ? `Tira 1d20${total >= 0 ? '+' : ''}${total} (${skill.name})` : undefined}
+                  onClick={() => onQuickRoll?.({ label: skill.name, numDice: 1, dieType: 20, modifier: total })}
+                >
+                  {total >= 0 ? '+' : ''}{total}
+                </button>
               </div>
             </div>
           );
