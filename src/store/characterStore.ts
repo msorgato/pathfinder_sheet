@@ -89,6 +89,9 @@ interface CharacterState {
   removeEquipment: (id: string, itemId: string) => void;
   updateEquipment: (id: string, itemId: string, patch: Partial<EquipmentItem>) => void;
 
+  // Import / export
+  importCharacters: (incoming: Character[]) => void;
+
   // Wizard flow state
   wizardDraft: Partial<Character> | null;
   setWizardDraft: (draft: Partial<Character> | null) => void;
@@ -411,6 +414,18 @@ export const useCharacterStore = create<CharacterState>()(
               : c,
           ),
         }));
+      },
+
+      importCharacters: (incoming) => {
+        set(s => {
+          const existingIds = new Set(s.characters.map(c => c.id));
+          const toAdd = incoming.filter(c => !existingIds.has(c.id));
+          const updated = s.characters.map(c => {
+            const match = incoming.find(i => i.id === c.id);
+            return match ? { ...emptyCharacter(c.id), ...match } : c;
+          });
+          return { characters: [...updated, ...toAdd] };
+        });
       },
 
       setWizardDraft: (draft) => set({ wizardDraft: draft }),

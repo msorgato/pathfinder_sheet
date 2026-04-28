@@ -1,12 +1,67 @@
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, maxHP } from '../utils/calculations';
+import type { Character } from '../types';
+
+function triggerJsonDownload(data: object, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { characters, deleteCharacter, setActive } = useCharacterStore();
+  const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const exportAll = () => {
+    if (characters.length === 0) return;
+    triggerJsonDownload(
+      { version: 1, exportedAt: new Date().toISOString(), characters },
+      `pathfinder-backup-${new Date().toISOString().slice(0, 10)}.json`,
+    );
+  };
+
+  const exportChar = (char: Character, e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerJsonDownload(
+      { version: 1, exportedAt: new Date().toISOString(), characters: [char] },
+      `${(char.name || 'personaggio').replace(/\s+/g, '-').toLowerCase()}.json`,
+    );
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        const incoming: Character[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed.characters)
+          ? parsed.characters
+          : [];
+        if (incoming.length === 0) {
+          alert('File non valido o nessun personaggio trovato.');
+          return;
+        }
+        importCharacters(incoming);
+        alert(`${incoming.length} personaggio${incoming.length > 1 ? 'i' : ''} importato${incoming.length > 1 ? '/i' : ''} con successo.`);
+      } catch {
+        alert('Errore nella lettura del file. Assicurati che sia un file JSON valido.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const openChar = (id: string) => {
     setActive(id);
@@ -29,11 +84,37 @@ export function HomePage() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Create button */}
         <button
-          className="pf-btn pf-btn-gold w-full py-4 text-lg mb-8"
+          className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3"
           onClick={() => navigate('/create')}
         >
           ✨ Crea Nuovo Personaggio
         </button>
+
+        {/* Save / Load buttons */}
+        <div className="flex gap-2 mb-8">
+          <button
+            className="pf-btn pf-btn-outline flex-1 py-2 text-sm"
+            onClick={exportAll}
+            disabled={characters.length === 0}
+            title="Esporta tutti i personaggi in un file JSON"
+          >
+            💾 Esporta tutto
+          </button>
+          <button
+            className="pf-btn pf-btn-outline flex-1 py-2 text-sm"
+            onClick={() => fileInputRef.current?.click()}
+            title="Importa personaggi da un file JSON"
+          >
+            📂 Importa
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+        </div>
 
         {/* Character list */}
         {characters.length === 0 ? (
@@ -105,6 +186,13 @@ export function HomePage() {
                       </button>
                       <button
                         className="pf-btn pf-btn-ghost text-xs px-3 py-1"
+                        onClick={e => exportChar(char, e)}
+                        title="Esporta personaggio"
+                      >
+                        💾
+                      </button>
+                      <button
+                        className="pf-btn pf-btn-ghost text-xs px-3 py-1"
                         onClick={e => {
                           e.stopPropagation();
                           if (confirm(`Eliminare ${char.name}?`)) deleteCharacter(char.id);
@@ -122,7 +210,7 @@ export function HomePage() {
 
         {/* Footer info */}
         <div className="mt-8 text-center text-xs" style={{ color: '#4b3620' }}>
-          Pathfinder 1° Edizione · I dati dei personaggi sono salvati localmente nel browser
+          Pathfinder 1° Edizione · Dati salvati nel browser · Esporta/Importa per backup su file
         </div>
       </div>
     </div>
