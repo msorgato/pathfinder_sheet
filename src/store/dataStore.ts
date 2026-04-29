@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { FEATS } from '../data/feats';
 import { SPELLS } from '../data/spells';
+import { auth } from '../lib/firebase';
+import { saveDataStore, loadDataStore } from '../lib/firestoreSync';
 import type { FeatDefinition, SpellDefinition } from '../types';
 
 interface DataState {
@@ -12,6 +13,9 @@ interface DataState {
   spellPatches: Record<string, Partial<Omit<SpellDefinition, 'id'>>>;
   extraSpells: SpellDefinition[];
   hiddenSpellIds: string[];
+
+  loadFromFirestore: (uid: string) => Promise<void>;
+  clearStore: () => void;
 
   patchFeat: (id: string, patch: Partial<Omit<FeatDefinition, 'id'>>) => void;
   addFeat: (feat: FeatDefinition) => void;
@@ -31,155 +35,208 @@ interface DataState {
   mergeExtraSpells: (spells: SpellDefinition[]) => void;
 }
 
-export const useDataStore = create<DataState>()(
-  persist(
-    (set, get) => ({
-      featPatches: {},
-      extraFeats: [],
-      hiddenFeatIds: [],
+const defaultState = {
+  featPatches: {} as Record<string, Partial<Omit<FeatDefinition, 'id'>>>,
+  extraFeats: [] as FeatDefinition[],
+  hiddenFeatIds: [] as string[],
+  spellPatches: {} as Record<string, Partial<Omit<SpellDefinition, 'id'>>>,
+  extraSpells: [] as SpellDefinition[],
+  hiddenSpellIds: [] as string[],
+};
 
-      spellPatches: {},
-      extraSpells: [],
-      hiddenSpellIds: [],
+function syncable(state: typeof defaultState) {
+  const { featPatches, extraFeats, hiddenFeatIds, spellPatches, extraSpells, hiddenSpellIds } = state;
+  return { featPatches, extraFeats, hiddenFeatIds, spellPatches, extraSpells, hiddenSpellIds };
+}
 
-      patchFeat: (id, patch) =>
-        set(s => ({ featPatches: { ...s.featPatches, [id]: { ...s.featPatches[id], ...patch } } })),
+export const useDataStore = create<DataState>()((set, get) => ({
+  ...defaultState,
 
-      addFeat: (feat) =>
-        set(s => ({ extraFeats: [...s.extraFeats.filter(f => f.id !== feat.id), feat] })),
+  loadFromFirestore: async (uid) => {
+    const raw = await loadDataStore(uid);
+    if (!raw) return;
+    set({
+      featPatches:   (raw.featPatches   as typeof defaultState.featPatches)   ?? {},
+      extraFeats:    (raw.extraFeats    as FeatDefinition[])                  ?? [],
+      hiddenFeatIds: (raw.hiddenFeatIds as string[])                          ?? [],
+      spellPatches:  (raw.spellPatches  as typeof defaultState.spellPatches)  ?? {},
+      extraSpells:   (raw.extraSpells   as SpellDefinition[])                 ?? [],
+      hiddenSpellIds:(raw.hiddenSpellIds as string[])                         ?? [],
+    });
+  },
 
-      hideFeat: (id) =>
-        set(s => ({ hiddenFeatIds: s.hiddenFeatIds.includes(id) ? s.hiddenFeatIds : [...s.hiddenFeatIds, id] })),
+  clearStore: () => set({ ...defaultState }),
 
-      deleteFeat: (id) =>
-        set(s => ({
-          extraFeats: s.extraFeats.filter(f => f.id !== id),
-          featPatches: Object.fromEntries(Object.entries(s.featPatches).filter(([k]) => k !== id)),
-        })),
+  patchFeat: (id, patch) => {
+    set(s => ({ featPatches: { ...s.featPatches, [id]: { ...s.featPatches[id], ...patch } } }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      resetFeat: (id) =>
-        set(s => ({
-          featPatches: Object.fromEntries(Object.entries(s.featPatches).filter(([k]) => k !== id)),
-          hiddenFeatIds: s.hiddenFeatIds.filter(h => h !== id),
-        })),
+  addFeat: (feat) => {
+    set(s => ({ extraFeats: [...s.extraFeats.filter(f => f.id !== feat.id), feat] }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      patchSpell: (id, patch) =>
-        set(s => ({ spellPatches: { ...s.spellPatches, [id]: { ...s.spellPatches[id], ...patch } } })),
+  hideFeat: (id) => {
+    set(s => ({ hiddenFeatIds: s.hiddenFeatIds.includes(id) ? s.hiddenFeatIds : [...s.hiddenFeatIds, id] }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      addSpell: (spell) =>
-        set(s => ({ extraSpells: [...s.extraSpells.filter(sp => sp.id !== spell.id), spell] })),
+  deleteFeat: (id) => {
+    set(s => ({
+      extraFeats: s.extraFeats.filter(f => f.id !== id),
+      featPatches: Object.fromEntries(Object.entries(s.featPatches).filter(([k]) => k !== id)),
+    }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      hideSpell: (id) =>
-        set(s => ({ hiddenSpellIds: s.hiddenSpellIds.includes(id) ? s.hiddenSpellIds : [...s.hiddenSpellIds, id] })),
+  resetFeat: (id) => {
+    set(s => ({
+      featPatches: Object.fromEntries(Object.entries(s.featPatches).filter(([k]) => k !== id)),
+      hiddenFeatIds: s.hiddenFeatIds.filter(h => h !== id),
+    }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      deleteSpell: (id) =>
-        set(s => ({
-          extraSpells: s.extraSpells.filter(sp => sp.id !== id),
-          spellPatches: Object.fromEntries(Object.entries(s.spellPatches).filter(([k]) => k !== id)),
-        })),
+  patchSpell: (id, patch) => {
+    set(s => ({ spellPatches: { ...s.spellPatches, [id]: { ...s.spellPatches[id], ...patch } } }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      resetSpell: (id) =>
-        set(s => ({
-          spellPatches: Object.fromEntries(Object.entries(s.spellPatches).filter(([k]) => k !== id)),
-          hiddenSpellIds: s.hiddenSpellIds.filter(h => h !== id),
-        })),
+  addSpell: (spell) => {
+    set(s => ({ extraSpells: [...s.extraSpells.filter(sp => sp.id !== spell.id), spell] }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      exportData: () => {
-        const s = get();
-        const hiddenF = new Set(s.hiddenFeatIds);
-        const hiddenS = new Set(s.hiddenSpellIds);
-        const feats = [
-          ...FEATS.filter(f => !hiddenF.has(f.id)).map(f => ({ ...f, ...s.featPatches[f.id] })),
-          ...s.extraFeats,
-        ];
-        const spells = [
-          ...SPELLS.filter(sp => !hiddenS.has(sp.id)).map(sp => ({ ...sp, ...s.spellPatches[sp.id] })),
-          ...s.extraSpells,
-        ];
-        return { version: 2, exportedAt: new Date().toISOString(), feats, spells };
-      },
+  hideSpell: (id) => {
+    set(s => ({ hiddenSpellIds: s.hiddenSpellIds.includes(id) ? s.hiddenSpellIds : [...s.hiddenSpellIds, id] }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-      importData: (raw) => {
-        if (!raw || typeof raw !== 'object') return;
-        const d = raw as Record<string, unknown>;
+  deleteSpell: (id) => {
+    set(s => ({
+      extraSpells: s.extraSpells.filter(sp => sp.id !== id),
+      spellPatches: Object.fromEntries(Object.entries(s.spellPatches).filter(([k]) => k !== id)),
+    }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-        const baseFeatMap = new Map(FEATS.map(f => [f.id, f]));
-        const baseSpellMap = new Map(SPELLS.map(s => [s.id, s]));
+  resetSpell: (id) => {
+    set(s => ({
+      spellPatches: Object.fromEntries(Object.entries(s.spellPatches).filter(([k]) => k !== id)),
+      hiddenSpellIds: s.hiddenSpellIds.filter(h => h !== id),
+    }));
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
 
-        const incomingFeats = (d.feats as FeatDefinition[] | undefined) ?? [];
-        const incomingSpells = (d.spells as SpellDefinition[] | undefined) ?? [];
+  exportData: () => {
+    const s = get();
+    const hiddenF = new Set(s.hiddenFeatIds);
+    const hiddenS = new Set(s.hiddenSpellIds);
+    const feats = [
+      ...FEATS.filter(f => !hiddenF.has(f.id)).map(f => ({ ...f, ...s.featPatches[f.id] })),
+      ...s.extraFeats,
+    ];
+    const spells = [
+      ...SPELLS.filter(sp => !hiddenS.has(sp.id)).map(sp => ({ ...sp, ...s.spellPatches[sp.id] })),
+      ...s.extraSpells,
+    ];
+    return { version: 2, exportedAt: new Date().toISOString(), feats, spells };
+  },
 
-        const incomingFeatIds = new Set(incomingFeats.map(f => f.id));
-        const incomingSpellIds = new Set(incomingSpells.map(s => s.id));
+  importData: (raw) => {
+    if (!raw || typeof raw !== 'object') return;
+    const d = raw as Record<string, unknown>;
 
-        // base items missing from import → hidden
-        const hiddenFeatIds = FEATS.filter(f => !incomingFeatIds.has(f.id)).map(f => f.id);
-        const hiddenSpellIds = SPELLS.filter(s => !incomingSpellIds.has(s.id)).map(s => s.id);
+    const baseFeatMap  = new Map(FEATS.map(f => [f.id, f]));
+    const baseSpellMap = new Map(SPELLS.map(s => [s.id, s]));
 
-        const featPatches: DataState['featPatches'] = {};
-        const extraFeats: FeatDefinition[] = [];
-        for (const feat of incomingFeats) {
-          const base = baseFeatMap.get(feat.id);
-          if (base) {
-            const patch: Partial<Omit<FeatDefinition, 'id'>> = {};
-            (Object.keys(feat) as Array<keyof FeatDefinition>).forEach(k => {
-              if (k !== 'id' && JSON.stringify(feat[k]) !== JSON.stringify(base[k])) {
-                (patch as Record<string, unknown>)[k] = feat[k];
-              }
-            });
-            if (Object.keys(patch).length) featPatches[feat.id] = patch;
-          } else {
-            extraFeats.push(feat);
+    const incomingFeats  = (d.feats  as FeatDefinition[]  | undefined) ?? [];
+    const incomingSpells = (d.spells as SpellDefinition[] | undefined) ?? [];
+
+    const incomingFeatIds  = new Set(incomingFeats.map(f => f.id));
+    const incomingSpellIds = new Set(incomingSpells.map(s => s.id));
+
+    const hiddenFeatIds  = FEATS.filter(f  => !incomingFeatIds.has(f.id)).map(f => f.id);
+    const hiddenSpellIds = SPELLS.filter(s => !incomingSpellIds.has(s.id)).map(s => s.id);
+
+    const featPatches: DataState['featPatches'] = {};
+    const extraFeats: FeatDefinition[] = [];
+    for (const feat of incomingFeats) {
+      const base = baseFeatMap.get(feat.id);
+      if (base) {
+        const patch: Partial<Omit<FeatDefinition, 'id'>> = {};
+        (Object.keys(feat) as Array<keyof FeatDefinition>).forEach(k => {
+          if (k !== 'id' && JSON.stringify(feat[k]) !== JSON.stringify(base[k])) {
+            (patch as Record<string, unknown>)[k] = feat[k];
           }
-        }
+        });
+        if (Object.keys(patch).length) featPatches[feat.id] = patch;
+      } else {
+        extraFeats.push(feat);
+      }
+    }
 
-        const spellPatches: DataState['spellPatches'] = {};
-        const extraSpells: SpellDefinition[] = [];
-        for (const spell of incomingSpells) {
-          const base = baseSpellMap.get(spell.id);
-          if (base) {
-            const patch: Partial<Omit<SpellDefinition, 'id'>> = {};
-            (Object.keys(spell) as Array<keyof SpellDefinition>).forEach(k => {
-              if (k !== 'id' && JSON.stringify(spell[k]) !== JSON.stringify(base[k])) {
-                (patch as Record<string, unknown>)[k] = spell[k];
-              }
-            });
-            if (Object.keys(patch).length) spellPatches[spell.id] = patch;
-          } else {
-            extraSpells.push(spell);
+    const spellPatches: DataState['spellPatches'] = {};
+    const extraSpells: SpellDefinition[] = [];
+    for (const spell of incomingSpells) {
+      const base = baseSpellMap.get(spell.id);
+      if (base) {
+        const patch: Partial<Omit<SpellDefinition, 'id'>> = {};
+        (Object.keys(spell) as Array<keyof SpellDefinition>).forEach(k => {
+          if (k !== 'id' && JSON.stringify(spell[k]) !== JSON.stringify(base[k])) {
+            (patch as Record<string, unknown>)[k] = spell[k];
           }
-        }
-
-        set({ featPatches, extraFeats, hiddenFeatIds, spellPatches, extraSpells, hiddenSpellIds });
-      },
-
-      mergeExtraFeats: (incoming) => {
-        set(s => {
-          const existingIds = new Set([
-            ...FEATS.map(f => f.id),
-            ...s.extraFeats.map(f => f.id),
-          ]);
-          const newFeats = incoming.filter(f => !existingIds.has(f.id));
-          if (newFeats.length === 0) return s;
-          return { extraFeats: [...s.extraFeats, ...newFeats] };
         });
-      },
+        if (Object.keys(patch).length) spellPatches[spell.id] = patch;
+      } else {
+        extraSpells.push(spell);
+      }
+    }
 
-      mergeExtraSpells: (incoming) => {
-        set(s => {
-          const existingIds = new Set([
-            ...SPELLS.map(sp => sp.id),
-            ...s.extraSpells.map(sp => sp.id),
-          ]);
-          const newSpells = incoming.filter(sp => !existingIds.has(sp.id));
-          if (newSpells.length === 0) return s;
-          return { extraSpells: [...s.extraSpells, ...newSpells] };
-        });
-      },
-    }),
-    { name: 'pathfinder-data' },
-  ),
-);
+    set({ featPatches, extraFeats, hiddenFeatIds, spellPatches, extraSpells, hiddenSpellIds });
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
+
+  mergeExtraFeats: (incoming) => {
+    set(s => {
+      const existingIds = new Set([
+        ...FEATS.map(f => f.id),
+        ...s.extraFeats.map(f => f.id),
+      ]);
+      const newFeats = incoming.filter(f => !existingIds.has(f.id));
+      if (newFeats.length === 0) return s;
+      return { extraFeats: [...s.extraFeats, ...newFeats] };
+    });
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
+
+  mergeExtraSpells: (incoming) => {
+    set(s => {
+      const existingIds = new Set([
+        ...SPELLS.map(sp => sp.id),
+        ...s.extraSpells.map(sp => sp.id),
+      ]);
+      const newSpells = incoming.filter(sp => !existingIds.has(sp.id));
+      if (newSpells.length === 0) return s;
+      return { extraSpells: [...s.extraSpells, ...newSpells] };
+    });
+    const u = auth.currentUser?.uid;
+    if (u) saveDataStore(u, syncable(get())).catch(console.error);
+  },
+}));
 
 export function useMergedFeats(): FeatDefinition[] {
   const { featPatches, extraFeats, hiddenFeatIds } = useDataStore();
