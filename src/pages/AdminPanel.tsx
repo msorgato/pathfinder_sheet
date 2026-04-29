@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore, useMergedFeats, useMergedSpells } from '../store/dataStore';
+import { useThemeStore } from '../store/themeStore';
+import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
 import { FEATS } from '../data/feats';
 import { SPELLS } from '../data/spells';
 import type { FeatDefinition, SpellDefinition, SpellSchool } from '../types';
@@ -272,6 +274,8 @@ export function AdminPanel() {
   const store = useDataStore();
   const mergedFeats = useMergedFeats();
   const mergedSpells = useMergedSpells();
+  const theme = useThemeStore(s => s.theme);
+  const isCyber = theme === 'cyberpunk';
 
   const baseFeatIds = new Set(FEATS.map(f => f.id));
   const baseSpellIds = new Set(SPELLS.map(s => s.id));
@@ -373,14 +377,18 @@ export function AdminPanel() {
       {/* Header */}
       <div className="pf-header px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--theme-accent)', fontFamily: 'var(--theme-font)' }}>
-            Pannello Amministrativo
+          <h1
+            className={`text-xl font-bold ${isCyber ? 'cyber-title' : ''}`}
+            style={{ color: 'var(--theme-accent)', fontFamily: 'var(--theme-font)', letterSpacing: isCyber ? '0.1em' : undefined }}
+          >
+            {isCyber ? '[ SYS ] DATA MANAGER' : 'Pannello Amministrativo'}
           </h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>
-            Gestisci Talenti e Incantesimi
+            {isCyber ? '// TALENTI · INCANTESIMI · ACCESSO PRIVILEGIATO' : 'Gestisci Talenti e Incantesimi'}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <ThemeSwitcher />
           <button onClick={handleExport} className="pf-btn pf-btn-outline text-xs px-3 py-1.5">
             Esporta Dati
           </button>

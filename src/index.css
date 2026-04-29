@@ -171,6 +171,55 @@ body {
   97%            { text-shadow: 0 0 4px var(--theme-accent-glow); }
 }
 
+@keyframes cyber-glitch {
+  0%, 82%, 100% {
+    transform: translateX(0);
+    text-shadow: 0 0 10px #00ffff, 0 0 28px rgba(0,255,255,0.6);
+  }
+  83% {
+    transform: translateX(-6px) skewX(-2deg);
+    text-shadow: -4px 0 #ff00cc, 4px 0 #00ffff;
+    clip-path: inset(10% 0 72% 0);
+  }
+  85% {
+    transform: translateX(6px) skewX(2deg);
+    text-shadow: 4px 0 #ff00cc, -4px 0 #00ffff;
+    clip-path: inset(58% 0 18% 0);
+  }
+  87% {
+    transform: translateX(-3px);
+    text-shadow: -2px 0 #ff00cc;
+    clip-path: inset(32% 0 40% 0);
+  }
+  89% {
+    transform: translateX(0);
+    clip-path: none;
+    text-shadow: 0 0 10px #00ffff, 0 0 28px rgba(0,255,255,0.6);
+  }
+}
+
+@keyframes cyber-scan-fast {
+  0%   { top: -60px; opacity: 1; }
+  100% { top: 100%;  opacity: 0; }
+}
+
+@keyframes neon-border-pulse {
+  0%, 100% {
+    box-shadow: -2px 0 10px rgba(0,255,255,0.20),
+                inset 0 0 20px rgba(0,255,255,0.03);
+  }
+  50% {
+    box-shadow: -3px 0 24px rgba(0,255,255,0.55),
+                0 0 40px rgba(0,255,255,0.12),
+                inset 0 0 30px rgba(0,255,255,0.07);
+  }
+}
+
+@keyframes cyber-btn-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(0,255,255,0.35), inset 0 0 6px rgba(0,255,255,0.05); }
+  50%       { box-shadow: 0 0 18px rgba(0,255,255,0.70), inset 0 0 14px rgba(0,255,255,0.10); }
+}
+
 /* ================================================================
    ANIMATION HELPERS
    ================================================================ */
@@ -397,18 +446,106 @@ body {
    CYBERPUNK EFFECTS
    ================================================================ */
 
-[data-theme="cyberpunk"] .pf-panel {
-  border-left: 2px solid var(--theme-accent);
-  box-shadow: -2px 0 8px rgba(0, 255, 255, 0.10), inset 0 0 20px rgba(0, 255, 255, 0.02);
-}
-[data-theme="cyberpunk"] .pf-panel:hover {
-  box-shadow: -2px 0 16px rgba(0, 255, 255, 0.22);
-}
-
+/* Grid: doppia griglia cyan + magenta a scala diversa */
 [data-theme="cyberpunk"] .theme-root {
   background-image:
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
+    linear-gradient(rgba(0, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(255, 0, 204, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 204, 0.025) 1px, transparent 1px);
+  background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+}
+
+/* Header: scanlines statiche + barra mobile veloce */
+[data-theme="cyberpunk"] .pf-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 255, 255, 0.045) 2px,
+    rgba(0, 255, 255, 0.045) 3px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+[data-theme="cyberpunk"] .pf-header::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 255, 255, 0.14) 50%,
+    transparent 100%
+  );
+  animation: cyber-scan-fast 2.2s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Pannelli: bordo sinistro neon, glow solo su hover */
+[data-theme="cyberpunk"] .pf-panel {
+  border-left: 2px solid var(--theme-accent);
+  border-top: 1px solid rgba(0, 255, 255, 0.12);
+  box-shadow: -2px 0 6px rgba(0, 255, 255, 0.08), inset 0 0 20px rgba(0, 255, 255, 0.02);
+}
+[data-theme="cyberpunk"] .pf-panel:hover {
+  box-shadow: -4px 0 28px rgba(0, 255, 255, 0.55),
+              0 0 40px rgba(0, 255, 255, 0.12),
+              inset 0 0 30px rgba(0, 255, 255, 0.07);
+  animation: neon-border-pulse 1.8s ease-in-out infinite;
+}
+
+/* Stat box */
+[data-theme="cyberpunk"] .stat-box {
+  border-left: 2px solid rgba(0, 255, 255, 0.4);
+  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.04);
+}
+
+/* Titolo con glitch */
+[data-theme="cyberpunk"] .cyber-title {
+  animation: cyber-glitch 6s ease-in-out infinite;
+  text-shadow: 0 0 10px #00ffff, 0 0 28px rgba(0, 255, 255, 0.6);
+}
+
+/* Neon text generico */
+[data-theme="cyberpunk"] .neon-text {
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.9), 0 0 20px rgba(0, 255, 255, 0.5);
+  animation: neon-flicker 4s ease-in-out infinite;
+}
+
+/* Bottone gold → neon cyan outline, glow animato solo su hover */
+[data-theme="cyberpunk"] .pf-btn-gold {
+  background: transparent;
+  color: var(--theme-accent);
+  border: 1px solid var(--theme-accent);
+  box-shadow: 0 0 4px rgba(0, 255, 255, 0.20);
+}
+[data-theme="cyberpunk"] .pf-btn-gold:hover {
+  background: rgba(0, 255, 255, 0.08);
+  filter: none;
+  animation: cyber-btn-glow 1.6s ease-in-out infinite;
+}
+
+/* Outline button */
+[data-theme="cyberpunk"] .pf-btn-outline {
+  text-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
+}
+[data-theme="cyberpunk"] .pf-btn-outline:hover {
+  box-shadow: 0 0 14px rgba(0, 255, 255, 0.40);
+}
+
+/* Input focus magenta glow */
+[data-theme="cyberpunk"] .pf-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 1px var(--theme-accent), 0 0 14px rgba(0, 255, 255, 0.35);
+}
+
+/* Tab attivo */
+[data-theme="cyberpunk"] .tab-active {
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.7);
 }
 

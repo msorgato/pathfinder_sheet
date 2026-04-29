@@ -72,6 +72,7 @@ export function HomePage() {
   };
 
   const isEva = theme === 'eva01';
+  const isCyber = theme === 'cyberpunk';
 
   return (
     <div
@@ -96,27 +97,29 @@ export function HomePage() {
             filter: 'drop-shadow(0 0 8px var(--theme-accent-glow))',
           }}
         >
-          {isEva ? '⬡' : '✦'}
+          {isEva ? '⬡' : isCyber ? '◈' : '✦'}
         </div>
 
         <h1
-          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''}`}
-          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)' }}
+          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''} ${isCyber ? 'cyber-title' : ''}`}
+          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)', letterSpacing: isCyber ? '0.08em' : undefined }}
         >
-          {isEva ? '[ NERV ] PATHFINDER' : '⚔️ Pathfinder'}
+          {isEva ? '[ NERV ] PATHFINDER' : isCyber ? '// PATHFINDER.EXE' : '⚔️ Pathfinder'}
         </h1>
         <h2
-          className="text-xl anim-enter d1"
+          className={`text-xl anim-enter d1 ${isCyber ? 'neon-text' : ''}`}
           style={{ color: 'var(--theme-accent)' }}
         >
-          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : 'Gestione Schede Personaggio'}
+          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : isCyber ? 'CHARACTER MANAGEMENT SYSTEM v1.0' : 'Gestione Schede Personaggio'}
         </h2>
         <p
           className="text-sm mt-2 anim-enter d2"
-          style={{ color: 'var(--theme-text-muted)' }}
+          style={{ color: 'var(--theme-text-muted)', letterSpacing: isCyber ? '0.05em' : undefined }}
         >
           {isEva
             ? 'PF1e · MULTICLASSE · LEVEL UP LV.20 · SINCRONIZZAZIONE 100%'
+            : isCyber
+            ? 'PF1e · MULTICLASS · LEVEL CAP 20 · UPLINK ACTIVE'
             : 'Crea e gestisci i tuoi personaggi PF1e · Multiclasse · Level up fino al 20°'}
         </p>
       </div>
@@ -126,9 +129,9 @@ export function HomePage() {
         <button
           className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3 anim-enter d3"
           onClick={() => navigate('/create')}
-          style={{ letterSpacing: isEva ? '0.12em' : undefined }}
+          style={{ letterSpacing: isEva || isCyber ? '0.12em' : undefined }}
         >
-          {isEva ? '[ + NUOVO PILOTA ]' : '✨ Crea Nuovo Personaggio'}
+          {isEva ? '[ + NUOVO PILOTA ]' : isCyber ? '> NEW_CHARACTER.INIT' : '✨ Crea Nuovo Personaggio'}
         </button>
 
         {/* Save / Load */}
@@ -161,14 +164,16 @@ export function HomePage() {
         {characters.length === 0 ? (
           <div className="pf-panel p-10 text-center anim-scale-in d5">
             <div className="text-5xl mb-4 anim-float">
-              {isEva ? '🤖' : '🧙'}
+              {isEva ? '🤖' : isCyber ? '💀' : '🧙'}
             </div>
             <p className="text-lg mb-2" style={{ color: 'var(--theme-text-muted)' }}>
-              {isEva ? 'Nessun pilota registrato.' : 'Nessun personaggio.'}
+              {isEva ? 'Nessun pilota registrato.' : isCyber ? 'NO_DATA_FOUND.' : 'Nessun personaggio.'}
             </p>
             <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
               {isEva
                 ? 'Crea un nuovo pilota per iniziare la missione.'
+                : isCyber
+                ? 'Run NEW_CHARACTER.INIT to bootstrap a new agent.'
                 : 'Clicca su "Crea Nuovo Personaggio" per iniziare la tua avventura.'}
             </p>
           </div>
@@ -178,7 +183,7 @@ export function HomePage() {
               className="text-sm font-bold uppercase tracking-wider mb-3 anim-enter d5"
               style={{ color: 'var(--theme-border-strong)' }}
             >
-              {isEva ? '// PILOTI REGISTRATI' : 'I tuoi personaggi'}
+              {isEva ? '// PILOTI REGISTRATI' : isCyber ? '> AGENTS_ONLINE' : 'I tuoi personaggi'}
             </h3>
             {characters.map((char, i) => {
               const race = getRace(char.race);
