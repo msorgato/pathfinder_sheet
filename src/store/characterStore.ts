@@ -77,6 +77,7 @@ interface CharacterState {
   unprepareSpell: (id: string, slot: number, classId: string, spellLevel: number) => void;
   useSpellSlot: (id: string, classId: string, spellLevel: number) => void;
   recoverAllSpellSlots: (id: string) => void;
+  clearPreparedSpells: (id: string, classId: string) => void;
 
   // HP management
   takeDamage: (id: string, amount: number) => void;
@@ -328,6 +329,16 @@ export const useCharacterStore = create<CharacterState>()(
           characters: s.characters.map(c =>
             c.id === id
               ? { ...c, preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })) }
+              : c,
+          ),
+        }));
+      },
+
+      clearPreparedSpells: (id, classId) => {
+        set(s => ({
+          characters: s.characters.map(c =>
+            c.id === id
+              ? { ...c, preparedSpells: c.preparedSpells.filter(sp => sp.classId !== classId || sp.spellLevel === 0) }
               : c,
           ),
         }));
