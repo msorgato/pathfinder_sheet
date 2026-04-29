@@ -15,9 +15,9 @@ const ALIGNMENTS: { id: Alignment; label: string; desc: string }[] = [
 ];
 
 const AL_COLORS: Record<Alignment, string> = {
-  LG: '#4ade80', NG: '#86efac', CG: '#6ee7b7',
+  LG: 'var(--theme-hp-high)', NG: '#86efac', CG: '#6ee7b7',
   LN: '#93c5fd', TN: '#d1d5db', CN: '#c4b5fd',
-  LE: '#fca5a5', NE: '#f87171', CE: '#ef4444',
+  LE: '#fca5a5', NE: '#f87171', CE: 'var(--theme-hp-low)',
 };
 
 interface Details {
@@ -58,12 +58,12 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
       <div className="space-y-5">
         {/* Identity */}
         <div className="pf-panel p-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#c8a443' }}>
+          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-accent)' }}>
             Identità
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="text-xs mb-1 block" style={{ color: '#8b5e3c' }}>
+              <label className="text-xs mb-1 block" style={{ color: 'var(--theme-border-strong)' }}>
                 Nome Personaggio *
               </label>
               <input
@@ -74,11 +74,11 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
               />
             </div>
             <div>
-              <label className="text-xs mb-1 block" style={{ color: '#8b5e3c' }}>Nome Giocatore</label>
+              <label className="text-xs mb-1 block" style={{ color: 'var(--theme-border-strong)' }}>Nome Giocatore</label>
               <input className="pf-input" value={details.playerName ?? ''} onChange={e => upd('playerName', e.target.value)} />
             </div>
             <div>
-              <label className="text-xs mb-1 block" style={{ color: '#8b5e3c' }}>Divinità</label>
+              <label className="text-xs mb-1 block" style={{ color: 'var(--theme-border-strong)' }}>Divinità</label>
               <input className="pf-input" value={details.deity ?? ''} onChange={e => upd('deity', e.target.value)} placeholder="Es. Iomedae" />
             </div>
           </div>
@@ -86,7 +86,7 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
 
         {/* Alignment */}
         <div className="pf-panel p-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#c8a443' }}>
+          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-accent)' }}>
             Allineamento *
           </h3>
           <div className="grid grid-cols-3 gap-2">
@@ -103,8 +103,8 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
                 <div className="text-xs font-bold" style={{ color: AL_COLORS[al.id] }}>
                   {al.id}
                 </div>
-                <div className="text-xs" style={{ color: '#d1c5a8' }}>{al.label}</div>
-                <div className="text-xs" style={{ color: '#8b8b6b' }}>{al.desc}</div>
+                <div className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>{al.label}</div>
+                <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>{al.desc}</div>
               </button>
             ))}
           </div>
@@ -112,7 +112,7 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
 
         {/* Physical */}
         <div className="pf-panel p-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#c8a443' }}>
+          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-accent)' }}>
             Aspetto Fisico
           </h3>
           <div className="grid grid-cols-3 gap-3">
@@ -125,7 +125,7 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
               ['Occhi', 'eyes'],
             ].map(([label, key]) => (
               <div key={key}>
-                <label className="text-xs mb-1 block" style={{ color: '#8b5e3c' }}>{label}</label>
+                <label className="text-xs mb-1 block" style={{ color: 'var(--theme-border-strong)' }}>{label}</label>
                 <input
                   className="pf-input"
                   value={(details as Record<string, string>)[key] ?? ''}
@@ -138,7 +138,7 @@ export function Step7_Details({ details, onChange, onFinish, onBack }: Props) {
 
         {/* Background */}
         <div className="pf-panel p-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#c8a443' }}>
+          <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-accent)' }}>
             Background / Storia
           </h3>
           <textarea

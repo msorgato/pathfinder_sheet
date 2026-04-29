@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { getClass } from '../../data/classes';
-import { getFeat } from '../../data/feats';
+import { useMergedFeats } from '../../store/dataStore';
 import type { Character } from '../../types';
 
 interface Props { char: Character }
 
 export function FeaturesPanel({ char }: Props) {
   const [tab, setTab] = useState<'features' | 'feats'>('features');
+  const mergedFeats = useMergedFeats();
 
   const allFeatures = char.classes.flatMap(e => {
     const cls = getClass(e.classId);
@@ -25,13 +26,13 @@ export function FeaturesPanel({ char }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-3 border-b" style={{ borderColor: '#4b3620' }}>
+      <div className="flex gap-3 border-b" style={{ borderColor: 'var(--theme-ghost-border)' }}>
         <button
           onClick={() => setTab('features')}
           className="px-4 py-2 text-sm font-semibold border-b-2 transition-all"
           style={{
-            borderColor: tab === 'features' ? '#c8a443' : 'transparent',
-            color: tab === 'features' ? '#c8a443' : '#9ca3af',
+            borderColor: tab === 'features' ? 'var(--theme-accent)' : 'transparent',
+            color: tab === 'features' ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
             background: 'transparent',
           }}
         >
@@ -41,8 +42,8 @@ export function FeaturesPanel({ char }: Props) {
           onClick={() => setTab('feats')}
           className="px-4 py-2 text-sm font-semibold border-b-2 transition-all"
           style={{
-            borderColor: tab === 'feats' ? '#c8a443' : 'transparent',
-            color: tab === 'feats' ? '#c8a443' : '#9ca3af',
+            borderColor: tab === 'feats' ? 'var(--theme-accent)' : 'transparent',
+            color: tab === 'feats' ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
             background: 'transparent',
           }}
         >
@@ -56,7 +57,7 @@ export function FeaturesPanel({ char }: Props) {
             <div key={level}>
               <div
                 className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded mb-2"
-                style={{ background: '#2a1f0e', color: '#8b5e3c', borderLeft: '2px solid #c8a443' }}
+                style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-border-strong)', borderLeft: '2px solid var(--theme-accent)' }}
               >
                 Livello {level}
               </div>
@@ -66,18 +67,18 @@ export function FeaturesPanel({ char }: Props) {
                     <div className="flex items-start gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm" style={{ color: '#c8a443' }}>{f.name}</span>
+                          <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{f.name}</span>
                           {f.type && (
                             <span
                               className="text-xs px-1 rounded"
-                              style={{ background: '#3a2a1a', color: '#9ca3af' }}
+                              style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-text-neutral)' }}
                             >
                               {f.type}
                             </span>
                           )}
-                          <span className="text-xs" style={{ color: '#6b4226' }}>{f.className}</span>
+                          <span className="text-xs" style={{ color: 'var(--theme-border)' }}>{f.className}</span>
                         </div>
-                        <p className="text-xs mt-1" style={{ color: '#d1c5a8' }}>{f.description}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--theme-text-muted)' }}>{f.description}</p>
                         {f.choices && (
                           <div className="mt-1 text-xs" style={{ color: '#9b7fd4' }}>
                             Scelte: {f.choices.slice(0, 6).join(', ')}{f.choices.length > 6 ? '...' : ''}
@@ -91,7 +92,7 @@ export function FeaturesPanel({ char }: Props) {
             </div>
           ))}
           {sortedLevels.length === 0 && (
-            <p className="text-sm text-center py-4" style={{ color: '#8b8b6b' }}>
+            <p className="text-sm text-center py-4" style={{ color: 'var(--theme-text-faint)' }}>
               Nessuna capacità di classe.
             </p>
           )}
@@ -101,29 +102,29 @@ export function FeaturesPanel({ char }: Props) {
       {tab === 'feats' && (
         <div className="space-y-2">
           {char.feats.length === 0 && (
-            <p className="text-sm text-center py-4" style={{ color: '#8b8b6b' }}>Nessun talento.</p>
+            <p className="text-sm text-center py-4" style={{ color: 'var(--theme-text-faint)' }}>Nessun talento.</p>
           )}
           {char.feats.map(featId => {
-            const feat = getFeat(featId);
+            const feat = mergedFeats.find(f => f.id === featId);
             return (
               <div key={featId} className="pf-panel p-3">
                 <div className="flex items-start gap-2">
                   <div>
-                    <div className="font-semibold text-sm" style={{ color: '#c8a443' }}>
+                    <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
                       {feat?.name ?? featId}
                     </div>
                     {feat?.prerequisites && (
-                      <div className="text-xs" style={{ color: '#8b5e3c' }}>
+                      <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>
                         Prerequisiti: {feat.prerequisites}
                       </div>
                     )}
-                    <div className="text-xs mt-0.5" style={{ color: '#d1c5a8' }}>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>
                       {feat?.benefit ?? '—'}
                     </div>
                   </div>
                   <span
                     className="ml-auto text-xs px-1 rounded shrink-0"
-                    style={{ background: '#3a2a1a', color: '#8b5e3c' }}
+                    style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-border-strong)' }}
                   >
                     {feat?.type ?? 'Generale'}
                   </span>

@@ -26,41 +26,41 @@ export function CombatStats({ char, onQuickRoll }: Props) {
   const cmd = 10 + bab + abilityMod(scores.str) + abilityMod(scores.dex);
   const init = abilityMod(scores.dex);
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
-  const hpColor = hpPct > 50 ? '#4ade80' : hpPct > 25 ? '#fbbf24' : '#ef4444';
+  const hpColor = hpPct > 50 ? 'var(--theme-hp-high)' : hpPct > 25 ? 'var(--theme-hp-mid)' : 'var(--theme-hp-low)';
 
   return (
     <div className="space-y-4">
       {/* HP */}
       <div className="pf-panel p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: '#c8a443' }}>Punti Ferita</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Punti Ferita</h3>
           <button
             className="pf-btn pf-btn-outline text-xs px-3 py-1"
             onClick={() => fullRest(char.id)}
           >Riposo Completo</button>
         </div>
         {/* HP bar */}
-        <div className="h-4 rounded-full mb-3 overflow-hidden" style={{ background: '#1a1209', border: '1px solid #4b3620' }}>
+        <div className="h-4 rounded-full mb-3 overflow-hidden" style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-ghost-border)' }}>
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${hpPct}%`, background: hpColor }}
           />
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span style={{ color: '#d1c5a8' }}>Attuali:</span>
+          <span style={{ color: 'var(--theme-text-muted)' }}>Attuali:</span>
           <span className="text-2xl font-bold" style={{ color: hpColor }}>{char.currentHp}</span>
-          <span style={{ color: '#8b8b6b' }}>/ {maxHp}</span>
+          <span style={{ color: 'var(--theme-text-faint)' }}>/ {maxHp}</span>
           {char.tempHp > 0 && (
-            <span className="text-sm" style={{ color: '#60a5fa' }}>+{char.tempHp} temp</span>
+            <span className="text-sm" style={{ color: 'var(--theme-info)' }}>+{char.tempHp} temp</span>
           )}
         </div>
         <div className="flex gap-2 mt-3">
-          <HpButton label="Danno" color="#ef4444" onSubmit={v => takeDamage(char.id, v)} />
-          <HpButton label="Cura" color="#4ade80" onSubmit={v => heal(char.id, v)} />
-          <HpButton label="Temp HP" color="#60a5fa" onSubmit={v => setTempHp(char.id, v)} />
+          <HpButton label="Danno" color="var(--theme-hp-low)" onSubmit={v => takeDamage(char.id, v)} />
+          <HpButton label="Cura" color="var(--theme-hp-high)" onSubmit={v => heal(char.id, v)} />
+          <HpButton label="Temp HP" color="var(--theme-info)" onSubmit={v => setTempHp(char.id, v)} />
         </div>
         {char.nonLethalDamage > 0 && (
-          <div className="mt-2 text-xs" style={{ color: '#fbbf24' }}>
+          <div className="mt-2 text-xs" style={{ color: 'var(--theme-hp-mid)' }}>
             Danno non letale: {char.nonLethalDamage}
           </div>
         )}
@@ -74,9 +74,9 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           { label: 'Preso Sorpresa', value: String(10), detail: 'Senza DES' },
         ].map(({ label, value, detail }) => (
           <div key={label} className="stat-box py-3">
-            <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>{label}</div>
-            <div className="text-2xl font-bold" style={{ color: '#f5edd6' }}>{value}</div>
-            <div className="text-xs" style={{ color: '#6b6b5b' }}>{detail}</div>
+            <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
+            <div className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>{value}</div>
+            <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>{detail}</div>
           </div>
         ))}
       </div>
@@ -88,7 +88,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           value={modStr(bab)}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab }) : undefined}
           extra={bab >= 6 ? (
-            <div className="text-xs" style={{ color: '#9ca3af' }}>
+            <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>
               {modStr(bab)}/{modStr(bab - 5)}
               {bab >= 11 ? `/${modStr(bab - 10)}` : ''}
               {bab >= 16 ? `/${modStr(bab - 15)}` : ''}
@@ -113,7 +113,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
             label={label}
             value={modStr(value)}
             detail={detail}
-            valueColor={value >= 0 ? '#4ade80' : '#ef4444'}
+            valueColor={value >= 0 ? 'var(--theme-hp-high)' : 'var(--theme-hp-low)'}
             onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: value }) : undefined}
           />
         ))}
@@ -127,8 +127,8 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: cmb }) : undefined}
         />
         <div className="stat-box py-3">
-          <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>CMD</div>
-          <div className="text-2xl font-bold" style={{ color: '#f5edd6' }}>{cmd}</div>
+          <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>CMD</div>
+          <div className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>{cmd}</div>
         </div>
       </div>
     </div>
@@ -152,12 +152,12 @@ function RollableStat({
       onClick={onRoll}
       title={onRoll ? `Tira 1d20 ${value} (${label})` : undefined}
     >
-      <div className="text-xs uppercase tracking-wider" style={{ color: '#8b5e3c' }}>{label}</div>
-      <div className="text-2xl font-bold" style={{ color: valueColor ?? '#c8a443' }}>{value}</div>
-      {detail && <div className="text-xs" style={{ color: '#6b6b5b' }}>{detail}</div>}
+      <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
+      <div className="text-2xl font-bold" style={{ color: valueColor ?? 'var(--theme-accent)' }}>{value}</div>
+      {detail && <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>{detail}</div>}
       {extra}
       {onRoll && (
-        <div className="text-xs mt-0.5 opacity-50" style={{ color: '#c8a443' }}>🎲</div>
+        <div className="text-xs mt-0.5 opacity-50" style={{ color: 'var(--theme-accent)' }}>🎲</div>
       )}
     </div>
   );

@@ -82,6 +82,7 @@ export interface FeatDefinition {
   prerequisites?: string;
   benefit: string;
   type: 'Combat' | 'General' | 'Metamagic' | 'Item Creation' | 'Teamwork';
+  repeatable?: boolean;
 }
 
 export interface SkillDefinition {

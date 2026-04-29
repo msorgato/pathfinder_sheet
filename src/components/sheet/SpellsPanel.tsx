@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { getClass } from '../../data/classes';
-import { getSpell, getSpellsForClass } from '../../data/spells';
+import { useMergedSpells } from '../../store/dataStore';
 import { computeSpellSlots } from '../../utils/calculations';
 import { effectiveAbilityScores } from '../../utils/calculations';
 import type { Character, PreparedSpell } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
 
 const SCHOOL_COLORS: Record<string, string> = {
-  Evocation: '#ef4444', Conjuration: '#3b82f6', Abjuration: '#6366f1',
+  Evocation: 'var(--theme-hp-low)', Conjuration: '#3b82f6', Abjuration: '#6366f1',
   Divination: '#a855f7', Enchantment: '#ec4899', Illusion: '#14b8a6',
-  Necromancy: '#22c55e', Transmutation: '#f59e0b', Universal: '#9ca3af',
+  Necromancy: '#22c55e', Transmutation: '#f59e0b', Universal: 'var(--theme-text-neutral)',
 };
 
 interface Props { char: Character }
@@ -19,6 +19,9 @@ export function SpellsPanel({ char }: Props) {
   const [activeClassId, setActiveClassId] = useState<string | null>(null);
   const [activeLevel, setActiveLevel] = useState(0);
   const [tab, setTab] = useState<'slots' | 'known' | 'browse'>('slots');
+  const mergedSpells = useMergedSpells();
+  const getSpell = (id: string) => mergedSpells.find(s => s.id === id);
+  const getSpellsForClass = (classId: string) => mergedSpells.filter(s => classId in s.levels);
 
   const scores = effectiveAbilityScores(char);
 
@@ -27,7 +30,7 @@ export function SpellsPanel({ char }: Props) {
     return (
       <div className="pf-panel p-8 text-center">
         <div className="text-4xl mb-3">⚔️</div>
-        <p style={{ color: '#d1c5a8' }}>Nessuna classe incantatore.</p>
+        <p style={{ color: 'var(--theme-text-muted)' }}>Nessuna classe incantatore.</p>
       </div>
     );
   }
@@ -59,9 +62,9 @@ export function SpellsPanel({ char }: Props) {
               onClick={() => setActiveClassId(e.classId)}
               className="pf-btn text-sm px-4 py-1"
               style={{
-                background: currentClassId === e.classId ? '#6b4226' : '#2a1f0e',
-                color: currentClassId === e.classId ? '#c8a443' : '#9ca3af',
-                border: `1px solid ${currentClassId === e.classId ? '#c8a443' : '#4b3620'}`,
+                background: currentClassId === e.classId ? 'var(--theme-border)' : 'var(--theme-bg-panel)',
+                color: currentClassId === e.classId ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
+                border: `1px solid ${currentClassId === e.classId ? 'var(--theme-accent)' : 'var(--theme-ghost-border)'}`,
               }}
             >
               {getClass(e.classId)?.name} (LV {e.level})
@@ -71,10 +74,10 @@ export function SpellsPanel({ char }: Props) {
       )}
 
       {/* Info bar */}
-      <div className="pf-panel p-3 flex flex-wrap gap-4 text-sm" style={{ color: '#d1c5a8' }}>
+      <div className="pf-panel p-3 flex flex-wrap gap-4 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
         <span>✨ {currentCls.name} LV {currentClassEntry.level}</span>
         <span>{isSpontaneous ? 'Spontaneo' : 'Preparato'}</span>
-        <span>Car: <strong style={{ color: '#c8a443' }}>{ABIL_LABEL[spellcasting.ability]}</strong> {abilityScore}</span>
+        <span>Car: <strong style={{ color: 'var(--theme-accent)' }}>{ABIL_LABEL[spellcasting.ability]}</strong> {abilityScore}</span>
         <span>Max: {spellcasting.maxSpellLevel}° livello</span>
         <button
           className="pf-btn pf-btn-outline text-xs px-3 py-0.5 ml-auto"
@@ -85,7 +88,7 @@ export function SpellsPanel({ char }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b" style={{ borderColor: '#4b3620' }}>
+      <div className="flex border-b" style={{ borderColor: 'var(--theme-ghost-border)' }}>
         {[
           { id: 'slots', label: 'Slot & Preparati' },
           { id: 'known', label: isSpontaneous ? 'Conosciuti' : 'Lista' },
@@ -96,8 +99,8 @@ export function SpellsPanel({ char }: Props) {
             onClick={() => setTab(t.id as typeof tab)}
             className="px-4 py-2 text-sm font-semibold border-b-2 transition-all"
             style={{
-              borderColor: tab === t.id ? '#c8a443' : 'transparent',
-              color: tab === t.id ? '#c8a443' : '#9ca3af',
+              borderColor: tab === t.id ? 'var(--theme-accent)' : 'transparent',
+              color: tab === t.id ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
               background: 'transparent',
             }}
           >
@@ -115,11 +118,11 @@ export function SpellsPanel({ char }: Props) {
             return (
               <div key={s.level} className="pf-panel p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-sm" style={{ color: '#c8a443' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
                     {s.level === 0 ? 'Trucchetti (0°)' : `${s.level}° Livello`}
                   </span>
                   <div className="flex items-center gap-2 text-sm">
-                    <span style={{ color: '#d1c5a8' }}>{total - used} / {total}</span>
+                    <span style={{ color: 'var(--theme-text-muted)' }}>{total - used} / {total}</span>
                     {s.bonus > 0 && (
                       <span className="text-xs" style={{ color: '#9b7fd4' }}>+{s.bonus} bonus</span>
                     )}
@@ -142,8 +145,8 @@ export function SpellsPanel({ char }: Props) {
                         }}
                         className="w-6 h-6 rounded-full border-2 transition-all"
                         style={{
-                          background: isUsed ? '#4b3620' : '#c8a443',
-                          borderColor: isUsed ? '#6b4226' : '#e0b84d',
+                          background: isUsed ? 'var(--theme-ghost-border)' : 'var(--theme-accent)',
+                          borderColor: isUsed ? 'var(--theme-border)' : '#e0b84d',
                         }}
                       />
                     );
@@ -156,10 +159,10 @@ export function SpellsPanel({ char }: Props) {
                     <div
                       key={`${ps.slot}-${ps.spellId}`}
                       className="mt-1 flex items-center gap-2 text-xs rounded px-2 py-1"
-                      style={{ background: ps.used ? '#1a1209' : 'rgba(200,164,67,0.08)', opacity: ps.used ? 0.5 : 1 }}
+                      style={{ background: ps.used ? 'var(--theme-bg)' : 'rgba(200,164,67,0.08)', opacity: ps.used ? 0.5 : 1 }}
                     >
-                      <span style={{ color: ps.used ? '#6b6b5b' : '#f5edd6' }}>{spell?.name ?? ps.spellId}</span>
-                      {ps.used && <span style={{ color: '#6b6b5b' }}>(usato)</span>}
+                      <span style={{ color: ps.used ? 'var(--theme-text-faint)' : 'var(--theme-text)' }}>{spell?.name ?? ps.spellId}</span>
+                      {ps.used && <span style={{ color: 'var(--theme-text-faint)' }}>(usato)</span>}
                     </div>
                   );
                 })}
@@ -173,7 +176,7 @@ export function SpellsPanel({ char }: Props) {
       {tab === 'known' && (
         <div className="space-y-2">
           {knownForClass.length === 0 && (
-            <p className="text-sm" style={{ color: '#8b8b6b' }}>
+            <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
               {isSpontaneous ? 'Nessun incantesimo conosciuto.' : 'Tutti gli incantesimi della lista sono disponibili per la preparazione.'}
             </p>
           )}
@@ -189,9 +192,9 @@ export function SpellsPanel({ char }: Props) {
                   {ks.spellLevel}°
                 </span>
                 <div>
-                  <div className="font-semibold text-sm" style={{ color: '#c8a443' }}>{spell.name}</div>
-                  <div className="text-xs" style={{ color: '#9ca3af' }}>{spell.castingTime} · {spell.range}</div>
-                  <div className="text-xs mt-0.5" style={{ color: '#d1c5a8' }}>{spell.description}</div>
+                  <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
+                  <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>{spell.castingTime} · {spell.range}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
                 </div>
                 <button
                   className="ml-auto text-xs pf-btn pf-btn-ghost px-2 py-0.5 shrink-0"
@@ -209,9 +212,9 @@ export function SpellsPanel({ char }: Props) {
                 {spell.levels[currentClassId]}°
               </span>
               <div>
-                <div className="font-semibold text-sm" style={{ color: '#c8a443' }}>{spell.name}</div>
-                <div className="text-xs" style={{ color: '#9ca3af' }}>{spell.castingTime} · {spell.range}</div>
-                <div className="text-xs mt-0.5" style={{ color: '#d1c5a8' }}>{spell.description}</div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
+                <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>{spell.castingTime} · {spell.range}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
               </div>
             </div>
           ))}
@@ -256,7 +259,8 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
   onPrepare: (spellId: string, level: number) => void;
 }) {
   const [filterLevel, setFilterLevel] = useState<number | 'all'>('all');
-  const allSpells = getSpellsForClass(classId);
+  const mergedSpells = useMergedSpells();
+  const allSpells = mergedSpells.filter(s => classId in s.levels);
   const filtered = filterLevel === 'all' ? allSpells : allSpells.filter(s => s.levels[classId] === filterLevel);
   const accessibleLevels = slots.map(s => s.level);
 
@@ -266,7 +270,7 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
         <button
           onClick={() => setFilterLevel('all')}
           className="px-3 py-1 rounded text-xs font-semibold"
-          style={{ background: filterLevel === 'all' ? '#c8a443' : '#2a1f0e', color: filterLevel === 'all' ? '#1a1209' : '#f5edd6', border: '1px solid #6b4226' }}
+          style={{ background: filterLevel === 'all' ? 'var(--theme-accent)' : 'var(--theme-bg-panel)', color: filterLevel === 'all' ? 'var(--theme-bg)' : 'var(--theme-text)', border: '1px solid var(--theme-border)' }}
         >
           Tutti
         </button>
@@ -275,7 +279,7 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
             key={lv}
             onClick={() => setFilterLevel(lv)}
             className="px-3 py-1 rounded text-xs font-semibold"
-            style={{ background: filterLevel === lv ? '#c8a443' : '#2a1f0e', color: filterLevel === lv ? '#1a1209' : '#f5edd6', border: '1px solid #6b4226' }}
+            style={{ background: filterLevel === lv ? 'var(--theme-accent)' : 'var(--theme-bg-panel)', color: filterLevel === lv ? 'var(--theme-bg)' : 'var(--theme-text)', border: '1px solid var(--theme-border)' }}
           >
             {lv}°
           </button>
@@ -295,11 +299,11 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
                   {spellLevel}°
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm" style={{ color: '#c8a443' }}>{spell.name}</div>
-                  <div className="text-xs" style={{ color: '#9ca3af' }}>
+                  <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
+                  <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>
                     {spell.castingTime} · {spell.range} · {spell.savingThrow}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: '#d1c5a8' }}>{spell.description}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
                 </div>
                 <div className="flex flex-col gap-1 shrink-0">
                   {isSpontaneous && !isKnown && (
@@ -312,12 +316,12 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
                     </button>
                   )}
                   {isSpontaneous && isKnown && (
-                    <span className="text-xs" style={{ color: '#4ade80' }}>✓</span>
+                    <span className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>✓</span>
                   )}
                   {!isSpontaneous && (
                     <button
                       className="pf-btn text-xs px-2 py-0.5"
-                      style={{ background: 'rgba(200,164,67,0.15)', color: '#c8a443', border: '1px solid #6b4226' }}
+                      style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)', border: '1px solid var(--theme-border)' }}
                       onClick={() => onPrepare(spell.id, spellLevel)}
                     >
                       Prepara
@@ -329,7 +333,7 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
           );
         })}
         {filtered.length === 0 && (
-          <p className="text-sm text-center py-4" style={{ color: '#8b8b6b' }}>
+          <p className="text-sm text-center py-4" style={{ color: 'var(--theme-text-faint)' }}>
             Nessun incantesimo disponibile.
           </p>
         )}

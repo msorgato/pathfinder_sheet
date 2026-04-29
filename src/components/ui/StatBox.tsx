@@ -13,7 +13,7 @@ export function StatBox({ label, score, onChange, size = 'md' }: Props) {
 
   return (
     <div className={`stat-box ${sizeClass} flex flex-col items-center gap-1`}>
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#c8a443' }}>
+      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--theme-accent)' }}>
         {label}
       </span>
       {onChange ? (
@@ -26,13 +26,13 @@ export function StatBox({ label, score, onChange, size = 'md' }: Props) {
           onChange={e => onChange(Number(e.target.value))}
         />
       ) : (
-        <span className="text-xl font-bold" style={{ color: '#f5edd6' }}>{score}</span>
+        <span className="text-xl font-bold" style={{ color: 'var(--theme-text)' }}>{score}</span>
       )}
       <div
         className="modifier-badge text-sm"
         style={{
-          color: mod >= 0 ? '#c8a443' : '#e57373',
-          borderColor: mod >= 0 ? '#6b4226' : '#8b1a1a',
+          color: mod >= 0 ? 'var(--theme-accent)' : '#e57373',
+          borderColor: mod >= 0 ? 'var(--theme-border)' : 'var(--theme-danger)',
         }}
       >
         {modStr(mod)}

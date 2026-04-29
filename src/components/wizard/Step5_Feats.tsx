@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { FEATS } from '../../data/feats';
-import type { FeatDefinition } from '../../types';
+import { useMergedFeats } from '../../store/dataStore';
 import { getRace } from '../../data/races';
 import { WizardLayout } from './WizardLayout';
 
@@ -15,6 +14,7 @@ interface Props {
 export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }: Props) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<string>('All');
+  const FEATS = useMergedFeats();
 
   const race = getRace(raceId);
   const bonusFeat = race?.bonusFeat ? 1 : 0;
@@ -45,13 +45,13 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
       nextDisabled={selectedFeats.length < 1}
     >
       <div className="pf-panel p-3 mb-4 flex items-center justify-between">
-        <span className="text-sm" style={{ color: '#d1c5a8' }}>
+        <span className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
           Talenti da scegliere: {totalFeats}
-          {bonusFeat > 0 && <span style={{ color: '#c8a443' }}> (incluso 1 bonus razza)</span>}
+          {bonusFeat > 0 && <span style={{ color: 'var(--theme-accent)' }}> (incluso 1 bonus razza)</span>}
         </span>
         <span
           className="text-xl font-bold"
-          style={{ color: selectedFeats.length === totalFeats ? '#4ade80' : '#c8a443' }}
+          style={{ color: selectedFeats.length === totalFeats ? 'var(--theme-hp-high)' : 'var(--theme-accent)' }}
         >
           {selectedFeats.length}/{totalFeats}
         </span>
@@ -65,9 +65,9 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
             onClick={() => setFilter(t)}
             className="pf-btn text-xs px-3 py-1"
             style={{
-              background: filter === t ? '#c8a443' : '#2a1f0e',
-              color: filter === t ? '#1a1209' : '#f5edd6',
-              border: `1px solid ${filter === t ? '#c8a443' : '#6b4226'}`,
+              background: filter === t ? 'var(--theme-accent)' : 'var(--theme-bg-panel)',
+              color: filter === t ? 'var(--theme-bg)' : 'var(--theme-text)',
+              border: `1px solid ${filter === t ? 'var(--theme-accent)' : 'var(--theme-border)'}`,
             }}
           >
             {t}
@@ -85,7 +85,7 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
       {/* Selected feats */}
       {selectedFeats.length > 0 && (
         <div className="mb-4">
-          <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#4ade80' }}>
+          <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--theme-hp-high)' }}>
             Selezionati
           </div>
           <div className="space-y-1">
@@ -99,8 +99,8 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
                   style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid #2d6b3a' }}
                   onClick={() => toggle(fid)}
                 >
-                  <span className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f.name}</span>
-                  <span className="text-xs ml-auto" style={{ color: '#6b4226' }}>✕ rimuovi</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--theme-hp-high)' }}>{f.name}</span>
+                  <span className="text-xs ml-auto" style={{ color: 'var(--theme-border)' }}>✕ rimuovi</span>
                 </div>
               );
             })}
@@ -125,21 +125,26 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="font-semibold text-sm" style={{ color: '#c8a443' }}>{f.name}</span>
+                  <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{f.name}</span>
                   <span
                     className="ml-2 text-xs px-1 rounded"
-                    style={{ background: '#3a2a1a', color: '#8b5e3c' }}
+                    style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-border-strong)' }}
                   >
                     {f.type}
                   </span>
+                  {f.repeatable && (
+                    <span className="ml-1 text-xs px-1 rounded" style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-text-faint)' }}>
+                      ripetibile
+                    </span>
+                  )}
                 </div>
               </div>
               {f.prerequisites && (
-                <div className="text-xs mt-0.5" style={{ color: '#8b5e3c' }}>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--theme-border-strong)' }}>
                   Prerequisiti: {f.prerequisites}
                 </div>
               )}
-              <div className="text-xs mt-1" style={{ color: '#d1c5a8' }}>{f.benefit}</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
             </button>
           );
         })}

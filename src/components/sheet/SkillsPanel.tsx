@@ -45,8 +45,8 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: '#c8a443' }}>Abilità</h3>
-        <span className="text-xs" style={{ color: '#8b8b6b' }}>
+        <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Abilità</h3>
+        <span className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
           Gradi: {usedPoints}/{totalSkillPoints}
         </span>
       </div>
@@ -61,9 +61,9 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
         <button
           className="pf-btn text-xs px-3"
           style={{
-            background: onlyTrained ? '#c8a443' : '#2a1f0e',
-            color: onlyTrained ? '#1a1209' : '#f5edd6',
-            border: '1px solid #6b4226',
+            background: onlyTrained ? 'var(--theme-accent)' : 'var(--theme-bg-panel)',
+            color: onlyTrained ? 'var(--theme-bg)' : 'var(--theme-text)',
+            border: '1px solid var(--theme-border)',
           }}
           onClick={() => setOnlyTrained(t => !t)}
         >
@@ -73,7 +73,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
 
       <div className="space-y-1">
         {/* Header */}
-        <div className="grid text-xs px-2 mb-1" style={{ gridTemplateColumns: '1fr 20px 40px 40px 40px 50px', color: '#6b6b5b' }}>
+        <div className="grid text-xs px-2 mb-1" style={{ gridTemplateColumns: '1fr 20px 40px 40px 40px 50px', color: 'var(--theme-text-faint)' }}>
           <span>Abilità</span>
           <span></span>
           <span className="text-center">Car</span>
@@ -99,22 +99,22 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
               }}
             >
               <div>
-                <span className="text-sm" style={{ color: ranks > 0 ? '#f5edd6' : '#9ca3af' }}>
+                <span className="text-sm" style={{ color: ranks > 0 ? 'var(--theme-text)' : 'var(--theme-text-neutral)' }}>
                   {skill.name}
                 </span>
-                {skill.trainedOnly && <span className="ml-1 text-xs" style={{ color: '#6b4226' }}>*</span>}
+                {skill.trainedOnly && <span className="ml-1 text-xs" style={{ color: 'var(--theme-border)' }}>*</span>}
               </div>
-              <div className="text-xs text-center" style={{ color: '#4ade80' }}>
+              <div className="text-xs text-center" style={{ color: 'var(--theme-hp-high)' }}>
                 {isClass ? '✓' : ''}
               </div>
-              <div className="text-xs text-center" style={{ color: '#8b5e3c' }}>
+              <div className="text-xs text-center" style={{ color: 'var(--theme-border-strong)' }}>
                 {AB_LABELS[skill.ability]}
               </div>
               <div className="text-center">
                 <input
                   type="number"
                   className="w-8 text-center text-xs rounded border"
-                  style={{ background: '#1a1209', borderColor: '#4b3620', color: '#f5edd6', padding: '1px 2px' }}
+                  style={{ background: 'var(--theme-bg)', borderColor: 'var(--theme-ghost-border)', color: 'var(--theme-text)', padding: '1px 2px' }}
                   value={ranks}
                   min={0}
                   max={char.totalLevel}
@@ -125,7 +125,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                 <input
                   type="number"
                   className="w-8 text-center text-xs rounded border"
-                  style={{ background: '#1a1209', borderColor: '#4b3620', color: '#f5edd6', padding: '1px 2px' }}
+                  style={{ background: 'var(--theme-bg)', borderColor: 'var(--theme-ghost-border)', color: 'var(--theme-text)', padding: '1px 2px' }}
                   value={misc}
                   onChange={e => setSkillMisc(char.id, skill.id, Number(e.target.value))}
                 />
@@ -134,7 +134,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                 <button
                   className="text-sm font-bold px-1 rounded transition-colors"
                   style={{
-                    color: total >= 10 ? '#c8a443' : total >= 5 ? '#d1c5a8' : '#9ca3af',
+                    color: total >= 10 ? 'var(--theme-accent)' : total >= 5 ? 'var(--theme-text-muted)' : 'var(--theme-text-neutral)',
                     cursor: onQuickRoll ? 'pointer' : 'default',
                     background: 'transparent',
                   }}

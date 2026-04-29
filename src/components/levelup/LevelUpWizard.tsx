@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CLASSES } from '../../data/classes';
 import { SKILLS } from '../../data/skills';
-import { FEATS } from '../../data/feats';
+import { useMergedFeats } from '../../store/dataStore';
 import { getClass } from '../../data/classes';
 import { getRace } from '../../data/races';
 import {
@@ -21,6 +21,7 @@ interface Props {
 
 export function LevelUpWizard({ char, onClose }: Props) {
   const { levelUp } = useCharacterStore();
+  const FEATS = useMergedFeats();
   const nextLevel = char.totalLevel + 1;
   const scores = effectiveAbilityScores(char);
 
@@ -107,19 +108,19 @@ export function LevelUpWizard({ char, onClose }: Props) {
     >
       <div
         className="w-full max-w-lg rounded-xl shadow-2xl flex flex-col"
-        style={{ background: '#1e1508', border: '2px solid #c8a443', maxHeight: '90vh' }}
+        style={{ background: 'var(--theme-bg-panel-2)', border: '2px solid var(--theme-accent)', maxHeight: '90vh' }}
       >
         {/* Header */}
         <div className="pf-header px-6 py-4 rounded-t-xl flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold" style={{ color: '#f5edd6' }}>
+            <h2 className="text-xl font-bold" style={{ color: 'var(--theme-text)' }}>
               ⬆ Level Up → {nextLevel}
             </h2>
-            <p className="text-xs mt-0.5" style={{ color: '#c8a443' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--theme-accent)' }}>
               Passo {stepIdx + 1} di {steps.length}
             </p>
           </div>
-          <button onClick={onClose} className="text-2xl" style={{ color: '#c8a443' }}>✕</button>
+          <button onClick={onClose} className="text-2xl" style={{ color: 'var(--theme-accent)' }}>✕</button>
         </div>
 
         {/* Progress */}
@@ -129,7 +130,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
               <div
                 key={s}
                 className="flex-1 h-1 rounded-full"
-                style={{ background: i <= stepIdx ? '#c8a443' : '#4b3620' }}
+                style={{ background: i <= stepIdx ? 'var(--theme-accent)' : 'var(--theme-ghost-border)' }}
               />
             ))}
           </div>
@@ -141,7 +142,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: CLASS */}
           {step === 'class' && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: '#c8a443' }}>
+              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
                 Scegli la classe da aumentare
               </h3>
               <div className="space-y-2">
@@ -153,27 +154,27 @@ export function LevelUpWizard({ char, onClose }: Props) {
                       key={e.classId}
                       onClick={() => setSelectedClassId(e.classId)}
                       className="w-full pf-panel p-3 text-left"
-                      style={{ borderColor: selectedClassId === e.classId ? '#c8a443' : '#6b4226' }}
+                      style={{ borderColor: selectedClassId === e.classId ? 'var(--theme-accent)' : 'var(--theme-border)' }}
                     >
-                      <span className="font-semibold" style={{ color: '#c8a443' }}>{cls?.name}</span>
-                      <span className="ml-2 text-sm" style={{ color: '#9ca3af' }}>LV {e.level} → {e.level + 1}</span>
-                      <span className="ml-2 text-xs" style={{ color: '#6b4226' }}>(multiclasse)</span>
+                      <span className="font-semibold" style={{ color: 'var(--theme-accent)' }}>{cls?.name}</span>
+                      <span className="ml-2 text-sm" style={{ color: 'var(--theme-text-neutral)' }}>LV {e.level} → {e.level + 1}</span>
+                      <span className="ml-2 text-xs" style={{ color: 'var(--theme-border)' }}>(multiclasse)</span>
                     </button>
                   );
                 })}
                 {/* New class option */}
                 <div className="mt-2">
-                  <p className="text-xs mb-2" style={{ color: '#8b5e3c' }}>Oppure aggiungi una nuova classe (multiclasse):</p>
+                  <p className="text-xs mb-2" style={{ color: 'var(--theme-border-strong)' }}>Oppure aggiungi una nuova classe (multiclasse):</p>
                   <div className="grid grid-cols-2 gap-2">
                     {CLASSES.filter(c => !char.classes.find(e => e.classId === c.id)).map(c => (
                       <button
                         key={c.id}
                         onClick={() => setSelectedClassId(c.id)}
                         className="pf-panel p-2 text-left text-sm"
-                        style={{ borderColor: selectedClassId === c.id ? '#c8a443' : '#4b3620' }}
+                        style={{ borderColor: selectedClassId === c.id ? 'var(--theme-accent)' : 'var(--theme-ghost-border)' }}
                       >
-                        <span style={{ color: '#d1c5a8' }}>{c.name}</span>
-                        <span className="ml-1 text-xs" style={{ color: '#6b4226' }}>d{c.hitDie}</span>
+                        <span style={{ color: 'var(--theme-text-muted)' }}>{c.name}</span>
+                        <span className="ml-1 text-xs" style={{ color: 'var(--theme-border)' }}>d{c.hitDie}</span>
                       </button>
                     ))}
                   </div>
@@ -183,13 +184,13 @@ export function LevelUpWizard({ char, onClose }: Props) {
               {/* New features preview */}
               {newFeatures.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#8b5e3c' }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--theme-border-strong)' }}>
                     Nuove capacità:
                   </p>
                   {newFeatures.map(f => (
                     <div key={f.name} className="text-xs pf-panel p-2 mb-1">
-                      <span className="font-semibold" style={{ color: '#c8a443' }}>{f.name}: </span>
-                      <span style={{ color: '#d1c5a8' }}>{f.description}</span>
+                      <span className="font-semibold" style={{ color: 'var(--theme-accent)' }}>{f.name}: </span>
+                      <span style={{ color: 'var(--theme-text-muted)' }}>{f.description}</span>
                     </div>
                   ))}
                 </div>
@@ -200,19 +201,19 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: HP */}
           {step === 'hp' && selectedCls && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: '#c8a443' }}>
+              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
                 Tira i Punti Ferita (d{maxHpRoll})
               </h3>
               <div className="flex gap-3 mb-4">
                 <button
                   onClick={() => { setUseMax(false); setHpRoll(null); }}
                   className="pf-btn flex-1"
-                  style={{ background: !useMax ? '#2a1f0e' : '#1a1209', border: `1px solid ${!useMax ? '#c8a443' : '#4b3620'}`, color: !useMax ? '#c8a443' : '#9ca3af' }}
+                  style={{ background: !useMax ? 'var(--theme-bg-panel)' : 'var(--theme-bg)', border: `1px solid ${!useMax ? 'var(--theme-accent)' : 'var(--theme-ghost-border)'}`, color: !useMax ? 'var(--theme-accent)' : 'var(--theme-text-neutral)' }}
                 >Tiro Dado</button>
                 <button
                   onClick={() => { setUseMax(true); setHpRoll(maxHpRoll); }}
                   className="pf-btn flex-1"
-                  style={{ background: useMax ? '#2a1f0e' : '#1a1209', border: `1px solid ${useMax ? '#c8a443' : '#4b3620'}`, color: useMax ? '#c8a443' : '#9ca3af' }}
+                  style={{ background: useMax ? 'var(--theme-bg-panel)' : 'var(--theme-bg)', border: `1px solid ${useMax ? 'var(--theme-accent)' : 'var(--theme-ghost-border)'}`, color: useMax ? 'var(--theme-accent)' : 'var(--theme-text-neutral)' }}
                 >Massimo ({maxHpRoll})</button>
               </div>
               {!useMax && (
@@ -223,7 +224,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
                   >
                     🎲 Tira d{maxHpRoll}
                   </button>
-                  <span className="text-3xl font-bold" style={{ color: hpRoll ? '#c8a443' : '#6b6b5b' }}>
+                  <span className="text-3xl font-bold" style={{ color: hpRoll ? 'var(--theme-accent)' : 'var(--theme-text-faint)' }}>
                     {hpRoll ?? '?'}
                   </span>
                   <input
@@ -237,9 +238,9 @@ export function LevelUpWizard({ char, onClose }: Props) {
                 </div>
               )}
               {useMax && (
-                <p className="text-sm" style={{ color: '#4ade80' }}>✓ Massimo: +{maxHpRoll} PF</p>
+                <p className="text-sm" style={{ color: 'var(--theme-hp-high)' }}>✓ Massimo: +{maxHpRoll} PF</p>
               )}
-              <p className="text-xs mt-3" style={{ color: '#8b8b6b' }}>
+              <p className="text-xs mt-3" style={{ color: 'var(--theme-text-faint)' }}>
                 Il modificatore di Costituzione ({abilityMod(scores.con) >= 0 ? '+' : ''}{abilityMod(scores.con)}) viene aggiunto automaticamente.
               </p>
             </div>
@@ -249,15 +250,15 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {step === 'skills' && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold" style={{ color: '#c8a443' }}>Gradi di Abilità</h3>
+                <h3 className="text-base font-bold" style={{ color: 'var(--theme-accent)' }}>Gradi di Abilità</h3>
                 <span
                   className="text-xl font-bold"
-                  style={{ color: deltaLeft === 0 ? '#4ade80' : deltaLeft < 0 ? '#ef4444' : '#c8a443' }}
+                  style={{ color: deltaLeft === 0 ? 'var(--theme-hp-high)' : deltaLeft < 0 ? 'var(--theme-hp-low)' : 'var(--theme-accent)' }}
                 >
                   {deltaLeft} rimasti
                 </span>
               </div>
-              <p className="text-xs mb-3" style={{ color: '#8b8b6b' }}>
+              <p className="text-xs mb-3" style={{ color: 'var(--theme-text-faint)' }}>
                 {skillPointsThisLevel} punti ({selectedCls?.skillsPerLevel ?? 2} classe + INT {abilityMod(scores.int) >= 0 ? '+' : ''}{abilityMod(scores.int)})
                 {bonusFromRace > 0 ? ` +${bonusFromRace} razza` : ''}
               </p>
@@ -271,17 +272,17 @@ export function LevelUpWizard({ char, onClose }: Props) {
                     <div key={sk.id} className="flex items-center gap-2 px-2 py-1 rounded"
                       style={{ background: delta > 0 ? 'rgba(200,164,67,0.06)' : 'transparent' }}
                     >
-                      <span className="w-4 text-xs" style={{ color: '#4ade80' }}>{isClass ? '✓' : ''}</span>
-                      <span className="flex-1 text-sm" style={{ color: delta > 0 ? '#f5edd6' : '#9ca3af' }}>
+                      <span className="w-4 text-xs" style={{ color: 'var(--theme-hp-high)' }}>{isClass ? '✓' : ''}</span>
+                      <span className="flex-1 text-sm" style={{ color: delta > 0 ? 'var(--theme-text)' : 'var(--theme-text-neutral)' }}>
                         {sk.name}
                       </span>
-                      <span className="text-xs w-12 text-right" style={{ color: '#6b6b5b' }}>
+                      <span className="text-xs w-12 text-right" style={{ color: 'var(--theme-text-faint)' }}>
                         gradi: {finalRank}/{nextLevel}
                       </span>
                       <div className="flex gap-1">
                         <button
                           className="w-6 h-6 rounded flex items-center justify-center text-sm"
-                          style={{ background: '#1a1209', border: '1px solid #4b3620', color: '#c8a443' }}
+                          style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-ghost-border)', color: 'var(--theme-accent)' }}
                           onClick={() => {
                             if (delta > 0) setSkillRanksDelta(d => ({ ...d, [sk.id]: delta - 1 }));
                           }}
@@ -289,7 +290,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
                         >−</button>
                         <button
                           className="w-6 h-6 rounded flex items-center justify-center text-sm"
-                          style={{ background: '#1a1209', border: '1px solid #4b3620', color: '#c8a443' }}
+                          style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-ghost-border)', color: 'var(--theme-accent)' }}
                           onClick={() => {
                             if (deltaLeft > 0 && finalRank < nextLevel) {
                               setSkillRanksDelta(d => ({ ...d, [sk.id]: delta + 1 }));
@@ -308,7 +309,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: FEAT */}
           {step === 'feat' && needsFeat && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: '#c8a443' }}>
+              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
                 Scegli un Talento (livello {nextLevel})
               </h3>
               <input
@@ -318,20 +319,30 @@ export function LevelUpWizard({ char, onClose }: Props) {
                 onChange={e => setFeatSearch(e.target.value)}
               />
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {FEATS.filter(f => f.name.toLowerCase().includes(featSearch.toLowerCase())).map(f => (
+                {FEATS.filter(f =>
+                  f.name.toLowerCase().includes(featSearch.toLowerCase()) &&
+                  (!char.feats.includes(f.id) || f.repeatable)
+                ).map(f => (
                   <button
                     key={f.id}
                     onClick={() => setSelectedFeat(f.id)}
                     className="w-full text-left pf-panel p-3 transition-all"
-                    style={{ borderColor: selectedFeat === f.id ? '#c8a443' : '#6b4226' }}
+                    style={{ borderColor: selectedFeat === f.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}
                   >
-                    <div className="font-semibold text-sm" style={{ color: selectedFeat === f.id ? '#c8a443' : '#f5edd6' }}>
-                      {f.name}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm" style={{ color: selectedFeat === f.id ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
+                        {f.name}
+                      </span>
+                      {f.repeatable && (
+                        <span className="text-xs px-1 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-faint)' }}>
+                          ripetibile
+                        </span>
+                      )}
                     </div>
                     {f.prerequisites && (
-                      <div className="text-xs" style={{ color: '#8b5e3c' }}>Prerequisiti: {f.prerequisites}</div>
+                      <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
                     )}
-                    <div className="text-xs mt-0.5" style={{ color: '#d1c5a8' }}>{f.benefit}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
                   </button>
                 ))}
               </div>
@@ -341,10 +352,10 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: ABILITY */}
           {step === 'ability' && needsAbility && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: '#c8a443' }}>
+              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
                 Aumento Caratteristica (livello {nextLevel})
               </h3>
-              <p className="text-sm mb-4" style={{ color: '#d1c5a8' }}>
+              <p className="text-sm mb-4" style={{ color: 'var(--theme-text-muted)' }}>
                 Ai livelli 4, 8, 12, 16, 20 puoi aumentare una caratteristica di +1.
               </p>
               <div className="grid grid-cols-3 gap-3">
@@ -353,14 +364,14 @@ export function LevelUpWizard({ char, onClose }: Props) {
                     key={key}
                     onClick={() => setAbilityIncrease(key)}
                     className="stat-box py-3 transition-all cursor-pointer"
-                    style={{ borderColor: abilityIncrease === key ? '#c8a443' : '#4b3620' }}
+                    style={{ borderColor: abilityIncrease === key ? 'var(--theme-accent)' : 'var(--theme-ghost-border)' }}
                   >
-                    <div className="text-xs font-bold uppercase" style={{ color: '#8b5e3c' }}>
+                    <div className="text-xs font-bold uppercase" style={{ color: 'var(--theme-border-strong)' }}>
                       {ABILITY_LABELS[key]}
                     </div>
-                    <div className="text-xl font-bold" style={{ color: '#f5edd6' }}>{scores[key]}</div>
+                    <div className="text-xl font-bold" style={{ color: 'var(--theme-text)' }}>{scores[key]}</div>
                     {abilityIncrease === key && (
-                      <div className="text-xs" style={{ color: '#4ade80' }}>→ {scores[key] + 1}</div>
+                      <div className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>→ {scores[key] + 1}</div>
                     )}
                   </button>
                 ))}
@@ -371,33 +382,33 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: CONFIRM */}
           {step === 'confirm' && (
             <div className="space-y-3">
-              <h3 className="text-base font-bold" style={{ color: '#c8a443' }}>Conferma Level Up</h3>
+              <h3 className="text-base font-bold" style={{ color: 'var(--theme-accent)' }}>Conferma Level Up</h3>
               <div className="pf-panel p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span style={{ color: '#d1c5a8' }}>Classe:</span>
-                  <span style={{ color: '#c8a443' }}>{getClass(selectedClassId)?.name}</span>
+                  <span style={{ color: 'var(--theme-text-muted)' }}>Classe:</span>
+                  <span style={{ color: 'var(--theme-accent)' }}>{getClass(selectedClassId)?.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: '#d1c5a8' }}>Livello totale:</span>
-                  <span style={{ color: '#c8a443' }}>{char.totalLevel} → {nextLevel}</span>
+                  <span style={{ color: 'var(--theme-text-muted)' }}>Livello totale:</span>
+                  <span style={{ color: 'var(--theme-accent)' }}>{char.totalLevel} → {nextLevel}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: '#d1c5a8' }}>PF guadagnati:</span>
-                  <span style={{ color: '#4ade80' }}>
+                  <span style={{ color: 'var(--theme-text-muted)' }}>PF guadagnati:</span>
+                  <span style={{ color: 'var(--theme-hp-high)' }}>
                     +{(useMax ? maxHpRoll : hpRoll) ?? 0} (+{abilityMod(scores.con)} COS)
                     = +{((useMax ? maxHpRoll : hpRoll) ?? 0) + abilityMod(scores.con)}
                   </span>
                 </div>
                 {selectedFeat && (
                   <div className="flex justify-between">
-                    <span style={{ color: '#d1c5a8' }}>Talento:</span>
+                    <span style={{ color: 'var(--theme-text-muted)' }}>Talento:</span>
                     <span style={{ color: '#9b7fd4' }}>{FEATS.find(f => f.id === selectedFeat)?.name}</span>
                   </div>
                 )}
                 {abilityIncrease && (
                   <div className="flex justify-between">
-                    <span style={{ color: '#d1c5a8' }}>Caratteristica:</span>
-                    <span style={{ color: '#c8a443' }}>
+                    <span style={{ color: 'var(--theme-text-muted)' }}>Caratteristica:</span>
+                    <span style={{ color: 'var(--theme-accent)' }}>
                       {ABILITY_LABELS[abilityIncrease]} {scores[abilityIncrease]} → {scores[abilityIncrease] + 1}
                     </span>
                   </div>
@@ -406,7 +417,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
                   const sk = SKILLS.find(s => s.id === id);
                   return (
                     <div key={id} className="flex justify-between">
-                      <span style={{ color: '#d1c5a8' }}>+{v} {sk?.name}</span>
+                      <span style={{ color: 'var(--theme-text-muted)' }}>+{v} {sk?.name}</span>
                     </div>
                   );
                 })}
@@ -416,7 +427,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 flex justify-between gap-3" style={{ borderTop: '1px solid #4b3620' }}>
+        <div className="px-6 py-4 flex justify-between gap-3" style={{ borderTop: '1px solid var(--theme-ghost-border)' }}>
           <button className="pf-btn pf-btn-ghost" onClick={stepIdx > 0 ? goBack : onClose}>
             {stepIdx > 0 ? '← Indietro' : 'Annulla'}
           </button>

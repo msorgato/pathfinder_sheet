@@ -1,9 +1,11 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
+import { useThemeStore } from '../store/themeStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, maxHP } from '../utils/calculations';
+import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
 import type { Character } from '../types';
 
 function triggerJsonDownload(data: object, filename: string) {
@@ -19,6 +21,7 @@ function triggerJsonDownload(data: object, filename: string) {
 export function HomePage() {
   const navigate = useNavigate();
   const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
+  const theme = useThemeStore(s => s.theme);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const exportAll = () => {
@@ -68,30 +71,68 @@ export function HomePage() {
     navigate(`/character/${id}`);
   };
 
+  const isEva = theme === 'eva01';
+
   return (
-    <div className="min-h-screen" style={{ background: '#1a1209' }}>
+    <div
+      className="min-h-screen theme-root"
+      style={{ background: 'var(--theme-bg)' }}
+    >
       {/* Hero header */}
       <div className="pf-header px-6 py-8 text-center">
-        <h1 className="text-4xl font-bold mb-2" style={{ color: '#f5edd6', fontFamily: 'Georgia, serif' }}>
-          ⚔️ Pathfinder
+        {/* Theme switcher top-right */}
+        <div className="absolute top-3 right-4 z-10">
+          <ThemeSwitcher />
+        </div>
+
+        {/* Decorative spinning rune */}
+        <div
+          className="anim-spin mx-auto mb-3 select-none"
+          style={{
+            width: 48,
+            height: 48,
+            fontSize: 36,
+            color: 'var(--theme-accent)',
+            filter: 'drop-shadow(0 0 8px var(--theme-accent-glow))',
+          }}
+        >
+          {isEva ? '⬡' : '✦'}
+        </div>
+
+        <h1
+          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''}`}
+          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)' }}
+        >
+          {isEva ? '[ NERV ] PATHFINDER' : '⚔️ Pathfinder'}
         </h1>
-        <h2 className="text-xl" style={{ color: '#c8a443' }}>Gestione Schede Personaggio</h2>
-        <p className="text-sm mt-2" style={{ color: '#d1c5a8' }}>
-          Crea e gestisci i tuoi personaggi PF1e · Multiclasse · Level up fino al 20°
+        <h2
+          className="text-xl anim-enter d1"
+          style={{ color: 'var(--theme-accent)' }}
+        >
+          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : 'Gestione Schede Personaggio'}
+        </h2>
+        <p
+          className="text-sm mt-2 anim-enter d2"
+          style={{ color: 'var(--theme-text-muted)' }}
+        >
+          {isEva
+            ? 'PF1e · MULTICLASSE · LEVEL UP LV.20 · SINCRONIZZAZIONE 100%'
+            : 'Crea e gestisci i tuoi personaggi PF1e · Multiclasse · Level up fino al 20°'}
         </p>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Create button */}
         <button
-          className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3"
+          className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3 anim-enter d3"
           onClick={() => navigate('/create')}
+          style={{ letterSpacing: isEva ? '0.12em' : undefined }}
         >
-          ✨ Crea Nuovo Personaggio
+          {isEva ? '[ + NUOVO PILOTA ]' : '✨ Crea Nuovo Personaggio'}
         </button>
 
-        {/* Save / Load buttons */}
-        <div className="flex gap-2 mb-8">
+        {/* Save / Load */}
+        <div className="flex gap-2 mb-8 anim-enter d4">
           <button
             className="pf-btn pf-btn-outline flex-1 py-2 text-sm"
             onClick={exportAll}
@@ -118,36 +159,68 @@ export function HomePage() {
 
         {/* Character list */}
         {characters.length === 0 ? (
-          <div className="pf-panel p-10 text-center">
-            <div className="text-5xl mb-4">🧙</div>
-            <p className="text-lg mb-2" style={{ color: '#d1c5a8' }}>Nessun personaggio.</p>
-            <p className="text-sm" style={{ color: '#8b8b6b' }}>
-              Clicca su "Crea Nuovo Personaggio" per iniziare la tua avventura.
+          <div className="pf-panel p-10 text-center anim-scale-in d5">
+            <div className="text-5xl mb-4 anim-float">
+              {isEva ? '🤖' : '🧙'}
+            </div>
+            <p className="text-lg mb-2" style={{ color: 'var(--theme-text-muted)' }}>
+              {isEva ? 'Nessun pilota registrato.' : 'Nessun personaggio.'}
+            </p>
+            <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
+              {isEva
+                ? 'Crea un nuovo pilota per iniziare la missione.'
+                : 'Clicca su "Crea Nuovo Personaggio" per iniziare la tua avventura.'}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#8b5e3c' }}>
-              I tuoi personaggi
+            <h3
+              className="text-sm font-bold uppercase tracking-wider mb-3 anim-enter d5"
+              style={{ color: 'var(--theme-border-strong)' }}
+            >
+              {isEva ? '// PILOTI REGISTRATI' : 'I tuoi personaggi'}
             </h3>
-            {characters.map(char => {
+            {characters.map((char, i) => {
               const race = getRace(char.race);
               const scores = effectiveAbilityScores(char);
               const hp = maxHP(char, scores.con);
               const hpPct = Math.max(0, Math.min(100, (char.currentHp / hp) * 100));
+              const hpColor = hpPct > 50
+                ? 'var(--theme-hp-high)'
+                : hpPct > 25
+                ? 'var(--theme-hp-mid)'
+                : 'var(--theme-hp-low)';
+
+              // delay class by index (capped at d8)
+              const delayClass = `d${Math.min(i + 1, 8)}`;
 
               return (
                 <div
                   key={char.id}
-                  className="pf-panel p-4 cursor-pointer hover:border-yellow-700 transition-all"
+                  className={`pf-panel p-4 cursor-pointer anim-enter ${delayClass}`}
+                  style={{ transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.15s' }}
                   onClick={() => openChar(char.id)}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--theme-accent)';
+                    (e.currentTarget as HTMLDivElement).style.transform = 'translateX(3px)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = '';
+                    (e.currentTarget as HTMLDivElement).style.transform = '';
+                  }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold truncate" style={{ color: '#c8a443' }}>
+                      <h3
+                        className="text-lg font-bold truncate"
+                        style={{ color: 'var(--theme-accent)' }}
+                      >
                         {char.name || 'Senza nome'}
                       </h3>
-                      <div className="flex flex-wrap gap-x-3 text-sm mt-0.5" style={{ color: '#d1c5a8' }}>
+                      <div
+                        className="flex flex-wrap gap-x-3 text-sm mt-0.5"
+                        style={{ color: 'var(--theme-text-muted)' }}
+                      >
                         <span>{race?.name ?? char.race}</span>
                         <span>
                           {char.classes.map(e => {
@@ -155,23 +228,28 @@ export function HomePage() {
                             return `${cls?.name ?? e.classId} ${e.level}`;
                           }).join(' / ')}
                         </span>
-                        <span style={{ color: '#c8a443', fontWeight: 700 }}>LV {char.totalLevel}</span>
+                        <span style={{ color: 'var(--theme-accent)', fontWeight: 700 }}>
+                          LV {char.totalLevel}
+                        </span>
                       </div>
                       {/* HP bar */}
                       <div className="flex items-center gap-2 mt-2">
                         <div
                           className="flex-1 h-1.5 rounded-full overflow-hidden"
-                          style={{ background: '#1a1209', border: '1px solid #4b3620' }}
+                          style={{
+                            background: 'var(--theme-bg)',
+                            border: '1px solid var(--theme-ghost-border)',
+                          }}
                         >
                           <div
                             className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${hpPct}%`,
-                              background: hpPct > 50 ? '#4ade80' : hpPct > 25 ? '#fbbf24' : '#ef4444',
-                            }}
+                            style={{ width: `${hpPct}%`, background: hpColor }}
                           />
                         </div>
-                        <span className="text-xs shrink-0" style={{ color: '#8b8b6b' }}>
+                        <span
+                          className="text-xs shrink-0"
+                          style={{ color: 'var(--theme-text-faint)' }}
+                        >
                           {char.currentHp}/{hp} PF
                         </span>
                       </div>
@@ -208,9 +286,14 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Footer info */}
-        <div className="mt-8 text-center text-xs" style={{ color: '#4b3620' }}>
-          Pathfinder 1° Edizione · Dati salvati nel browser · Esporta/Importa per backup su file
+        {/* Footer */}
+        <div
+          className="mt-8 text-center text-xs anim-fade-in"
+          style={{ color: 'var(--theme-ghost-border)', animationDelay: '0.6s' }}
+        >
+          {isEva
+            ? '[ NERV HQ · SISTEMA PATHFINDER 1e · TUTTI I DATI CLASSIFICATI ]'
+            : 'Pathfinder 1° Edizione · Dati salvati nel browser · Esporta/Importa per backup su file'}
         </div>
       </div>
     </div>

@@ -69,9 +69,9 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
             onClick={() => setMethod(m)}
             className="pf-btn flex-1 text-sm"
             style={{
-              background: method === m ? '#c8a443' : '#2a1f0e',
-              color: method === m ? '#1a1209' : '#f5edd6',
-              border: `1px solid ${method === m ? '#c8a443' : '#6b4226'}`,
+              background: method === m ? 'var(--theme-accent)' : 'var(--theme-bg-panel)',
+              color: method === m ? 'var(--theme-bg)' : 'var(--theme-text)',
+              border: `1px solid ${method === m ? 'var(--theme-accent)' : 'var(--theme-border)'}`,
             }}
           >
             {m === 'pointbuy' ? 'Point Buy' : m === 'standard' ? 'Array Standard' : 'Manuale'}
@@ -81,17 +81,17 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
 
       {method === 'standard' && (
         <div className="pf-panel p-4 mb-4">
-          <p className="text-sm mb-3" style={{ color: '#c8a443' }}>Scegli un array predefinito:</p>
+          <p className="text-sm mb-3" style={{ color: 'var(--theme-accent)' }}>Scegli un array predefinito:</p>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(STANDARD_ARRAYS).map(([name, arr]) => (
               <button
                 key={name}
                 onClick={() => applyArray(arr)}
                 className="p-2 rounded text-sm text-left"
-                style={{ background: '#1a1209', border: '1px solid #6b4226' }}
+                style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-border)' }}
               >
-                <div className="font-bold capitalize mb-1" style={{ color: '#c8a443' }}>{name}</div>
-                <div style={{ color: '#d1c5a8' }}>{arr.join(', ')}</div>
+                <div className="font-bold capitalize mb-1" style={{ color: 'var(--theme-accent)' }}>{name}</div>
+                <div style={{ color: 'var(--theme-text-muted)' }}>{arr.join(', ')}</div>
               </button>
             ))}
           </div>
@@ -100,10 +100,10 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
 
       {method === 'pointbuy' && (
         <div className="pf-panel p-3 mb-4 flex items-center justify-between">
-          <span className="text-sm" style={{ color: '#d1c5a8' }}>Punti disponibili (25):</span>
+          <span className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>Punti disponibili (25):</span>
           <span
             className="text-xl font-bold"
-            style={{ color: pointsLeft === 0 ? '#4ade80' : pointsLeft < 0 ? '#ef4444' : '#c8a443' }}
+            style={{ color: pointsLeft === 0 ? 'var(--theme-hp-high)' : pointsLeft < 0 ? 'var(--theme-hp-low)' : 'var(--theme-accent)' }}
           >
             {pointsLeft}
           </span>
@@ -121,7 +121,7 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
             <div key={key} className="pf-panel p-3 flex items-center gap-3">
               {/* Label */}
               <div className="w-10 text-center">
-                <div className="text-xs font-bold uppercase" style={{ color: '#c8a443' }}>{label}</div>
+                <div className="text-xs font-bold uppercase" style={{ color: 'var(--theme-accent)' }}>{label}</div>
               </div>
 
               {/* Controls */}
@@ -130,15 +130,15 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
                   <>
                     <button
                       className="w-7 h-7 rounded text-lg font-bold flex items-center justify-center"
-                      style={{ background: '#1a1209', border: '1px solid #6b4226', color: '#c8a443' }}
+                      style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-accent)' }}
                       onClick={() => setScore(key, score - 1)}
                     >−</button>
-                    <span className="w-10 text-center text-xl font-bold" style={{ color: '#f5edd6' }}>
+                    <span className="w-10 text-center text-xl font-bold" style={{ color: 'var(--theme-text)' }}>
                       {score}
                     </span>
                     <button
                       className="w-7 h-7 rounded text-lg font-bold flex items-center justify-center"
-                      style={{ background: '#1a1209', border: '1px solid #6b4226', color: '#c8a443' }}
+                      style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-border)', color: 'var(--theme-accent)' }}
                       onClick={() => setScore(key, score + 1)}
                     >+</button>
                   </>
@@ -156,30 +156,30 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
               {/* Modifier */}
               <div
                 className="w-10 text-center font-bold text-sm"
-                style={{ color: mod >= 0 ? '#c8a443' : '#ef4444' }}
+                style={{ color: mod >= 0 ? 'var(--theme-accent)' : 'var(--theme-hp-low)' }}
               >
                 {modStr(mod)}
               </div>
 
               {/* Cost (point buy only) */}
               {method === 'pointbuy' && (
-                <div className="w-12 text-center text-xs" style={{ color: '#9ca3af' }}>
+                <div className="w-12 text-center text-xs" style={{ color: 'var(--theme-text-neutral)' }}>
                   Costo: {cost}
                 </div>
               )}
 
               {/* Description */}
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold" style={{ color: '#d1c5a8' }}>{full}</div>
-                <div className="text-xs truncate" style={{ color: '#8b8b6b' }}>{desc}</div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--theme-text-muted)' }}>{full}</div>
+                <div className="text-xs truncate" style={{ color: 'var(--theme-text-faint)' }}>{desc}</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-4 pf-panel p-3 text-center text-sm" style={{ color: '#8b8b6b' }}>
-        Totale punteggi: <strong style={{ color: '#c8a443' }}>{totalPoints}</strong>
+      <div className="mt-4 pf-panel p-3 text-center text-sm" style={{ color: 'var(--theme-text-faint)' }}>
+        Totale punteggi: <strong style={{ color: 'var(--theme-accent)' }}>{totalPoints}</strong>
       </div>
     </WizardLayout>
   );

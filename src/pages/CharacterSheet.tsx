@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
+import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, totalBAB, totalSave, abilityMod, modStr, maxHP } from '../utils/calculations';
@@ -16,9 +17,9 @@ import type { RollRequest } from '../components/sheet/DiceRoller';
 type Tab = 'overview' | 'skills' | 'spells' | 'features' | 'notes';
 
 const ALIGNMENT_COLORS: Record<string, string> = {
-  LG: '#4ade80', NG: '#86efac', CG: '#6ee7b7',
+  LG: 'var(--theme-hp-high)', NG: '#86efac', CG: '#6ee7b7',
   LN: '#93c5fd', TN: '#d1d5db', CN: '#c4b5fd',
-  LE: '#fca5a5', NE: '#f87171', CE: '#ef4444',
+  LE: '#fca5a5', NE: '#f87171', CE: 'var(--theme-hp-low)',
 };
 
 export function CharacterSheet() {
@@ -39,9 +40,9 @@ export function CharacterSheet() {
   const char = characters.find(c => c.id === id);
   if (!char) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#1a1209' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--theme-bg)' }}>
         <div className="text-center">
-          <p className="text-xl mb-4" style={{ color: '#d1c5a8' }}>Personaggio non trovato.</p>
+          <p className="text-xl mb-4" style={{ color: 'var(--theme-text-muted)' }}>Personaggio non trovato.</p>
           <button className="pf-btn pf-btn-gold" onClick={() => navigate('/')}>← Home</button>
         </div>
       </div>
@@ -64,22 +65,22 @@ export function CharacterSheet() {
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#1a1209' }}>
+    <div className="min-h-screen flex flex-col theme-root" style={{ background: 'var(--theme-bg)' }}>
       {/* Top header */}
       <div className="pf-header px-4 py-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <button
             onClick={() => navigate('/')}
             className="mt-1 text-sm px-2 py-1 rounded"
-            style={{ background: 'rgba(0,0,0,0.3)', color: '#c8a443' }}
+            style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--theme-accent)' }}
           >
             ←
           </button>
           <div>
-            <h1 className="text-xl font-bold leading-tight" style={{ color: '#f5edd6', fontFamily: 'Georgia' }}>
+            <h1 className="text-xl font-bold leading-tight" style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)' }}>
               {char.name}
             </h1>
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs mt-1" style={{ color: '#c8a443' }}>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs mt-1" style={{ color: 'var(--theme-accent)' }}>
               <span>{race?.name ?? char.race}</span>
               <span>
                 {classes.map(({ entry, cls }) =>
@@ -87,29 +88,30 @@ export function CharacterSheet() {
                 ).join(' / ')}
               </span>
               <span>LV {char.totalLevel}</span>
-              <span style={{ color: ALIGNMENT_COLORS[char.alignment] ?? '#d1c5a8' }}>
+              <span style={{ color: ALIGNMENT_COLORS[char.alignment] ?? 'var(--theme-text-muted)' }}>
                 {char.alignment}
               </span>
               {char.deity && <span>{char.deity}</span>}
             </div>
             {/* Mini HP bar */}
             <div className="flex items-center gap-2 mt-1.5">
-              <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1209' }}>
+              <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--theme-bg)' }}>
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${hpPct}%`,
-                    background: hpPct > 50 ? '#4ade80' : hpPct > 25 ? '#fbbf24' : '#ef4444',
+                    background: hpPct > 50 ? 'var(--theme-hp-high)' : hpPct > 25 ? 'var(--theme-hp-mid)' : 'var(--theme-hp-low)',
                   }}
                 />
               </div>
-              <span className="text-xs" style={{ color: '#8b8b6b' }}>
+              <span className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
                 {char.currentHp}/{maxHp} PF
               </span>
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 items-end">
+          <ThemeSwitcher />
           {char.totalLevel < 20 && (
             <button
               className="pf-btn pf-btn-gold text-xs px-3 py-1.5 whitespace-nowrap"
@@ -135,38 +137,38 @@ export function CharacterSheet() {
       {/* Quick stats strip */}
       <div
         className="flex overflow-x-auto gap-3 px-4 py-2"
-        style={{ background: '#2a1f0e', borderBottom: '1px solid #4b3620' }}
+        style={{ background: 'var(--theme-bg-panel)', borderBottom: '1px solid var(--theme-ghost-border)' }}
       >
         {(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map(k => {
           const labels: Record<string, string> = { str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR' };
           const mod = abilityMod(scores[k]);
           return (
             <div key={k} className="text-center shrink-0">
-              <div className="text-xs" style={{ color: '#8b5e3c' }}>{labels[k]}</div>
-              <div className="text-sm font-bold" style={{ color: '#f5edd6' }}>{scores[k]}</div>
-              <div className="text-xs" style={{ color: mod >= 0 ? '#c8a443' : '#ef4444' }}>{modStr(mod)}</div>
+              <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>{labels[k]}</div>
+              <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{scores[k]}</div>
+              <div className="text-xs" style={{ color: mod >= 0 ? 'var(--theme-accent)' : 'var(--theme-hp-low)' }}>{modStr(mod)}</div>
             </div>
           );
         })}
-        <div className="w-px shrink-0" style={{ background: '#4b3620' }} />
+        <div className="w-px shrink-0" style={{ background: 'var(--theme-ghost-border)' }} />
         <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: '#8b5e3c' }}>CA</div>
-          <div className="text-sm font-bold" style={{ color: '#f5edd6' }}>{10 + abilityMod(scores.dex)}</div>
+          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>CA</div>
+          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{10 + abilityMod(scores.dex)}</div>
         </div>
         <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: '#8b5e3c' }}>BAB</div>
-          <div className="text-sm font-bold" style={{ color: '#f5edd6' }}>{modStr(totalBAB(char.classes))}</div>
+          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>BAB</div>
+          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{modStr(totalBAB(char.classes))}</div>
         </div>
         <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: '#8b5e3c' }}>INIT</div>
-          <div className="text-sm font-bold" style={{ color: '#f5edd6' }}>{modStr(abilityMod(scores.dex))}</div>
+          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>INIT</div>
+          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{modStr(abilityMod(scores.dex))}</div>
         </div>
       </div>
 
       {/* Tab bar */}
       <div
         className="flex border-b overflow-x-auto"
-        style={{ background: '#1e1508', borderColor: '#4b3620' }}
+        style={{ background: 'var(--theme-bg-panel-2)', borderColor: 'var(--theme-ghost-border)' }}
       >
         {TABS.map(t => (
           <button
@@ -174,8 +176,8 @@ export function CharacterSheet() {
             onClick={() => setTab(t.id)}
             className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-all"
             style={{
-              borderColor: tab === t.id ? '#c8a443' : 'transparent',
-              color: tab === t.id ? '#c8a443' : '#9ca3af',
+              borderColor: tab === t.id ? 'var(--theme-accent)' : 'transparent',
+              color: tab === t.id ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
               background: 'transparent',
             }}
           >
@@ -199,7 +201,7 @@ export function CharacterSheet() {
           <div className="space-y-4">
             <div className="pf-panel p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: '#c8a443' }}>Note</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Note</h3>
                 <button
                   className="pf-btn pf-btn-outline text-xs px-3 py-1"
                   onClick={() => setEditingNotes(e => !e)}
@@ -215,7 +217,7 @@ export function CharacterSheet() {
                   onChange={e => updateCharacter(char.id, { notes: e.target.value })}
                 />
               ) : (
-                <p className="text-sm whitespace-pre-wrap" style={{ color: '#d1c5a8' }}>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--theme-text-muted)' }}>
                   {char.notes || 'Nessuna nota.'}
                 </p>
               )}
@@ -236,8 +238,8 @@ export function CharacterSheet() {
                 ['Occhi', char.eyes ?? '—'],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <span className="font-semibold" style={{ color: '#8b5e3c' }}>{label}: </span>
-                  <span style={{ color: '#d1c5a8' }}>{value}</span>
+                  <span className="font-semibold" style={{ color: 'var(--theme-border-strong)' }}>{label}: </span>
+                  <span style={{ color: 'var(--theme-text-muted)' }}>{value}</span>
                 </div>
               ))}
             </div>
@@ -245,8 +247,8 @@ export function CharacterSheet() {
             {/* Background */}
             {char.background && (
               <div className="pf-panel p-4">
-                <h3 className="text-sm font-bold mb-2" style={{ color: '#c8a443' }}>Background</h3>
-                <p className="text-sm whitespace-pre-wrap" style={{ color: '#d1c5a8' }}>{char.background}</p>
+                <h3 className="text-sm font-bold mb-2" style={{ color: 'var(--theme-accent)' }}>Background</h3>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--theme-text-muted)' }}>{char.background}</p>
               </div>
             )}
           </div>
@@ -262,9 +264,9 @@ export function CharacterSheet() {
         onClick={() => setDiceOpen(o => !o)}
         className="fixed bottom-4 right-4 z-30 w-12 h-12 rounded-full text-xl font-bold shadow-lg transition-transform active:scale-90"
         style={{
-          background: diceOpen ? '#c8a443' : '#2a1f0e',
-          color: diceOpen ? '#1a1209' : '#c8a443',
-          border: '2px solid #c8a443',
+          background: diceOpen ? 'var(--theme-accent)' : 'var(--theme-bg-panel)',
+          color: diceOpen ? 'var(--theme-bg)' : 'var(--theme-accent)',
+          border: '2px solid var(--theme-accent)',
         }}
         title="Lancia i dadi"
       >

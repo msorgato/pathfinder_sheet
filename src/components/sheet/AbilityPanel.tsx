@@ -22,7 +22,7 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
 
   return (
     <div className="pf-panel p-4">
-      <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: '#c8a443' }}>
+      <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--theme-accent)' }}>
         Caratteristiche
       </h3>
       <div className="grid grid-cols-3 gap-3">
@@ -35,16 +35,16 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
 
           return (
             <div key={key} className="stat-box p-3">
-              <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#c8a443' }}>
+              <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--theme-accent)' }}>
                 {ABILITY_LABELS[key]}
               </div>
-              <div className="text-3xl font-bold mb-1" style={{ color: '#f5edd6' }}>{score}</div>
+              <div className="text-3xl font-bold mb-1" style={{ color: 'var(--theme-text)' }}>{score}</div>
               <button
                 className="text-sm font-bold py-0.5 px-2 rounded-full inline-block mb-1 transition-opacity"
                 style={{
                   background: mod >= 0 ? 'rgba(200,164,67,0.15)' : 'rgba(239,68,68,0.15)',
-                  color: mod >= 0 ? '#c8a443' : '#ef4444',
-                  border: `1px solid ${mod >= 0 ? '#6b4226' : '#8b1a1a'}`,
+                  color: mod >= 0 ? 'var(--theme-accent)' : 'var(--theme-hp-low)',
+                  border: `1px solid ${mod >= 0 ? 'var(--theme-border)' : 'var(--theme-danger)'}`,
                   cursor: onQuickRoll ? 'pointer' : 'default',
                 }}
                 title={onQuickRoll ? `Tira 1d20${modStr(mod)}` : undefined}
@@ -52,11 +52,11 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
               >
                 {modStr(mod)}
               </button>
-              <div className="text-xs" style={{ color: '#6b6b5b' }}>
+              <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
                 {base}{racial !== 0 ? ` ${racial >= 0 ? '+' : ''}${racial}R` : ''}
                 {increases !== 0 ? ` +${increases}↑` : ''}
               </div>
-              <div className="text-xs mt-0.5" style={{ color: '#8b8b6b' }}>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-faint)' }}>
                 {ABILITY_FULL[key]}
               </div>
             </div>
