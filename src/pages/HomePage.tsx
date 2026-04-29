@@ -73,6 +73,7 @@ export function HomePage() {
 
   const isEva = theme === 'eva01';
   const isCyber = theme === 'cyberpunk';
+  const isP5 = theme === 'persona5';
 
   return (
     <div
@@ -97,29 +98,31 @@ export function HomePage() {
             filter: 'drop-shadow(0 0 8px var(--theme-accent-glow))',
           }}
         >
-          {isEva ? '⬡' : isCyber ? '◈' : '✦'}
+          {isEva ? '⬡' : isCyber ? '◈' : isP5 ? '♠' : '✦'}
         </div>
 
         <h1
-          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''} ${isCyber ? 'cyber-title' : ''}`}
-          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)', letterSpacing: isCyber ? '0.08em' : undefined }}
+          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''} ${isCyber ? 'cyber-title' : ''} ${isP5 ? 'p5-title' : ''}`}
+          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)', letterSpacing: isCyber || isP5 ? '0.08em' : undefined }}
         >
-          {isEva ? '[ NERV ] PATHFINDER' : isCyber ? '// PATHFINDER.EXE' : '⚔️ Pathfinder'}
+          {isEva ? '[ NERV ] PATHFINDER' : isCyber ? '// PATHFINDER.EXE' : isP5 ? '// PERSONA PATHFINDER //' : '⚔️ Pathfinder'}
         </h1>
         <h2
-          className={`text-xl anim-enter d1 ${isCyber ? 'neon-text' : ''}`}
+          className={`text-xl anim-enter d1 ${isCyber || isP5 ? 'neon-text' : ''}`}
           style={{ color: 'var(--theme-accent)' }}
         >
-          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : isCyber ? 'CHARACTER MANAGEMENT SYSTEM v1.0' : 'Gestione Schede Personaggio'}
+          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : isCyber ? 'CHARACTER MANAGEMENT SYSTEM v1.0' : isP5 ? 'STEAL YOUR DESTINY · PHANTOM THIEVES' : 'Gestione Schede Personaggio'}
         </h2>
         <p
           className="text-sm mt-2 anim-enter d2"
-          style={{ color: 'var(--theme-text-muted)', letterSpacing: isCyber ? '0.05em' : undefined }}
+          style={{ color: 'var(--theme-text-muted)', letterSpacing: isCyber || isP5 ? '0.05em' : undefined }}
         >
           {isEva
             ? 'PF1e · MULTICLASSE · LEVEL UP LV.20 · SINCRONIZZAZIONE 100%'
             : isCyber
             ? 'PF1e · MULTICLASS · LEVEL CAP 20 · UPLINK ACTIVE'
+            : isP5
+            ? 'PF1e · MULTICLASSE · LEVEL CAP 20 · RISVEGLIO IN CORSO'
             : 'Crea e gestisci i tuoi personaggi PF1e · Multiclasse · Level up fino al 20°'}
         </p>
       </div>
@@ -129,9 +132,9 @@ export function HomePage() {
         <button
           className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3 anim-enter d3"
           onClick={() => navigate('/create')}
-          style={{ letterSpacing: isEva || isCyber ? '0.12em' : undefined }}
+          style={{ letterSpacing: isEva || isCyber || isP5 ? '0.12em' : undefined }}
         >
-          {isEva ? '[ + NUOVO PILOTA ]' : isCyber ? '> NEW_CHARACTER.INIT' : '✨ Crea Nuovo Personaggio'}
+          {isEva ? '[ + NUOVO PILOTA ]' : isCyber ? '> NEW_CHARACTER.INIT' : isP5 ? '♠ RISVEGLIA UN PHANTOM THIEF' : '✨ Crea Nuovo Personaggio'}
         </button>
 
         {/* Save / Load */}
@@ -164,16 +167,18 @@ export function HomePage() {
         {characters.length === 0 ? (
           <div className="pf-panel p-10 text-center anim-scale-in d5">
             <div className="text-5xl mb-4 anim-float">
-              {isEva ? '🤖' : isCyber ? '💀' : '🧙'}
+              {isEva ? '🤖' : isCyber ? '💀' : isP5 ? '🃏' : '🧙'}
             </div>
             <p className="text-lg mb-2" style={{ color: 'var(--theme-text-muted)' }}>
-              {isEva ? 'Nessun pilota registrato.' : isCyber ? 'NO_DATA_FOUND.' : 'Nessun personaggio.'}
+              {isEva ? 'Nessun pilota registrato.' : isCyber ? 'NO_DATA_FOUND.' : isP5 ? 'NESSUN PHANTOM THIEF.' : 'Nessun personaggio.'}
             </p>
             <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
               {isEva
                 ? 'Crea un nuovo pilota per iniziare la missione.'
                 : isCyber
                 ? 'Run NEW_CHARACTER.INIT to bootstrap a new agent.'
+                : isP5
+                ? 'Risveglia il tuo Persona e unisciti ai Phantom Thieves.'
                 : 'Clicca su "Crea Nuovo Personaggio" per iniziare la tua avventura.'}
             </p>
           </div>
@@ -183,7 +188,7 @@ export function HomePage() {
               className="text-sm font-bold uppercase tracking-wider mb-3 anim-enter d5"
               style={{ color: 'var(--theme-border-strong)' }}
             >
-              {isEva ? '// PILOTI REGISTRATI' : isCyber ? '> AGENTS_ONLINE' : 'I tuoi personaggi'}
+              {isEva ? '// PILOTI REGISTRATI' : isCyber ? '> AGENTS_ONLINE' : isP5 ? '♠ PHANTOM THIEVES' : 'I tuoi personaggi'}
             </h3>
             {characters.map((char, i) => {
               const race = getRace(char.race);
@@ -298,6 +303,8 @@ export function HomePage() {
         >
           {isEva
             ? '[ NERV HQ · SISTEMA PATHFINDER 1e · TUTTI I DATI CLASSIFICATI ]'
+            : isP5
+            ? '[ METAVERSO ATTIVO · PATHFINDER 1e · CUORI RUBATI CON STILE ]'
             : 'Pathfinder 1° Edizione · Dati salvati nel browser · Esporta/Importa per backup su file'}
         </div>
       </div>
