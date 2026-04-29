@@ -10,6 +10,19 @@ function newId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+  const base = c.baseAbilityScores.con;
+  const racial = c.racialAbilityBonus?.con ?? 0;
+  const increases = c.abilityIncreases.reduce((sum, inc) => sum + (inc.con ?? 0), 0);
+  return Math.floor((base + racial + increases - 10) / 2);
+}
+
+function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+  const totalLevel = c.classes.reduce((s, e) => s + e.level, 0);
+  const base = c.hitPointsRolled.reduce((s, r) => s + r, 0);
+  return base + effectiveConMod(c) * totalLevel;
+}
+
 export function emptyCharacter(id?: string): Character {
   return {
     id: id ?? newId(),
@@ -384,7 +397,7 @@ export const useCharacterStore = create<CharacterState>()(
         set(s => ({
           characters: s.characters.map(c => {
             if (c.id !== id) return c;
-            const maxHp = c.hitPointsRolled.reduce((sum, r) => sum + r, 0);
+            const maxHp = calcMaxHp(c);
             return {
               ...c,
               currentHp: maxHp,
@@ -460,7 +473,7 @@ export const useCharacterStore = create<CharacterState>()(
             full.hitPointsRolled = [classDef.hitDie];
           }
         }
-        full.currentHp = full.hitPointsRolled.reduce((s, r) => s + r, 0);
+        full.currentHp = calcMaxHp(full);
         full.totalLevel = full.classes.reduce((s, e) => s + e.level, 0);
         set(s => ({
           characters: [...s.characters, full],
