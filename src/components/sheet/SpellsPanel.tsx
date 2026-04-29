@@ -19,6 +19,8 @@ export function SpellsPanel({ char }: Props) {
   const [activeClassId, setActiveClassId] = useState<string | null>(null);
   const [activeLevel, setActiveLevel] = useState(0);
   const [tab, setTab] = useState<'slots' | 'known' | 'browse'>('slots');
+  const [listSearch, setListSearch] = useState('');
+  const [listLevel, setListLevel] = useState<number | 'all'>('all');
   const mergedSpells = useMergedSpells();
   const getSpell = (id: string) => mergedSpells.find(s => s.id === id);
   const getSpellsForClass = (classId: string) => mergedSpells.filter(s => classId in s.levels);
@@ -175,10 +177,76 @@ export function SpellsPanel({ char }: Props) {
       {/* KNOWN / LIST TAB */}
       {tab === 'known' && (
         <div className="space-y-2">
-          {knownForClass.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
-              {isSpontaneous ? 'Nessun incantesimo conosciuto.' : 'Tutti gli incantesimi della lista sono disponibili per la preparazione.'}
-            </p>
+          {/* Search + level filter for prepared casters */}
+          {!isSpontaneous && (() => {
+            const accessibleLevels = slots.map(s => s.level);
+            const accessibleSet = new Set(accessibleLevels);
+            const lq = listSearch.toLowerCase();
+            const listSpells = getSpellsForClass(currentClassId)
+              .filter(s => accessibleSet.has(s.levels[currentClassId]))
+              .filter(s => listLevel === 'all' || s.levels[currentClassId] === listLevel)
+              .filter(s => !lq || s.name.toLowerCase().includes(lq) || s.description.toLowerCase().includes(lq));
+            return (
+              <>
+                <input
+                  className="pf-input w-full"
+                  placeholder="Cerca incantesimo..."
+                  value={listSearch}
+                  onChange={e => setListSearch(e.target.value)}
+                />
+                <div className="flex gap-1 flex-wrap">
+                  <button
+                    onClick={() => setListLevel('all')}
+                    className="px-3 py-1 rounded text-xs font-semibold"
+                    style={{ background: listLevel === 'all' ? 'var(--theme-accent)' : 'var(--theme-bg-panel)', color: listLevel === 'all' ? 'var(--theme-bg)' : 'var(--theme-text)', border: '1px solid var(--theme-border)' }}
+                  >
+                    Tutti
+                  </button>
+                  {accessibleLevels.map(lv => (
+                    <button
+                      key={lv}
+                      onClick={() => setListLevel(lv)}
+                      className="px-3 py-1 rounded text-xs font-semibold"
+                      style={{ background: listLevel === lv ? 'var(--theme-accent)' : 'var(--theme-bg-panel)', color: listLevel === lv ? 'var(--theme-bg)' : 'var(--theme-text)', border: '1px solid var(--theme-border)' }}
+                    >
+                      {lv}°
+                    </button>
+                  ))}
+                  <span className="ml-auto text-xs self-center" style={{ color: 'var(--theme-text-faint)' }}>
+                    {listSpells.length} incantesim{listSpells.length === 1 ? 'o' : 'i'}
+                  </span>
+                </div>
+                {listSpells.map(spell => (
+                  <div key={spell.id} className="pf-panel p-3 flex items-start gap-2">
+                    <span
+                      className="text-xs px-1 rounded font-bold shrink-0"
+                      style={{ background: (SCHOOL_COLORS[spell.school] ?? '#9ca3af') + '33', color: SCHOOL_COLORS[spell.school] ?? '#9ca3af' }}
+                    >
+                      {spell.levels[currentClassId]}°
+                    </span>
+                    <div>
+                      <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
+                      <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>{spell.castingTime} · {spell.range}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
+                    </div>
+                    <button
+                      className="ml-auto text-xs pf-btn pf-btn-ghost px-2 py-0.5 shrink-0"
+                      onClick={() => prepareSpell(char.id, { spellId: spell.id, classId: currentClassId, spellLevel: spell.levels[currentClassId], slot: Date.now(), used: false })}
+                    >
+                      Prepara
+                    </button>
+                  </div>
+                ))}
+                {listSpells.length === 0 && (
+                  <p className="text-sm text-center py-4" style={{ color: 'var(--theme-text-faint)' }}>Nessun incantesimo trovato.</p>
+                )}
+              </>
+            );
+          })()}
+
+          {/* Spontaneous: show known spells */}
+          {isSpontaneous && knownForClass.length === 0 && (
+            <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>Nessun incantesimo conosciuto.</p>
           )}
           {isSpontaneous && knownForClass.map(ks => {
             const spell = getSpell(ks.spellId);
@@ -203,21 +271,6 @@ export function SpellsPanel({ char }: Props) {
               </div>
             );
           })}
-          {!isSpontaneous && getSpellsForClass(currentClassId).map(spell => (
-            <div key={spell.id} className="pf-panel p-3 flex items-start gap-2">
-              <span
-                className="text-xs px-1 rounded font-bold shrink-0"
-                style={{ background: (SCHOOL_COLORS[spell.school] ?? '#9ca3af') + '33', color: SCHOOL_COLORS[spell.school] ?? '#9ca3af' }}
-              >
-                {spell.levels[currentClassId]}°
-              </span>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
-                <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>{spell.castingTime} · {spell.range}</div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
@@ -259,13 +312,32 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
   onPrepare: (spellId: string, level: number) => void;
 }) {
   const [filterLevel, setFilterLevel] = useState<number | 'all'>('all');
+  const [search, setSearch] = useState('');
   const mergedSpells = useMergedSpells();
-  const allSpells = mergedSpells.filter(s => classId in s.levels);
-  const filtered = filterLevel === 'all' ? allSpells : allSpells.filter(s => s.levels[classId] === filterLevel);
+
+  // Only show spells for this class, capped to accessible levels
   const accessibleLevels = slots.map(s => s.level);
+  const accessibleSet = new Set(accessibleLevels);
+  const classSpells = mergedSpells
+    .filter(s => classId in s.levels && accessibleSet.has(s.levels[classId]));
+
+  const q = search.toLowerCase();
+  const filtered = classSpells.filter(s => {
+    if (filterLevel !== 'all' && s.levels[classId] !== filterLevel) return false;
+    if (q && !s.name.toLowerCase().includes(q) && !s.description.toLowerCase().includes(q)) return false;
+    return true;
+  });
 
   return (
     <div>
+      {/* Search */}
+      <input
+        className="pf-input w-full mb-2"
+        placeholder="Cerca incantesimo..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+      {/* Level filter */}
       <div className="flex gap-1 flex-wrap mb-3">
         <button
           onClick={() => setFilterLevel('all')}
@@ -284,6 +356,9 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
             {lv}°
           </button>
         ))}
+        <span className="ml-auto text-xs self-center" style={{ color: 'var(--theme-text-faint)' }}>
+          {filtered.length} risultat{filtered.length === 1 ? 'o' : 'i'}
+        </span>
       </div>
       <div className="space-y-2">
         {filtered.map(spell => {
@@ -334,7 +409,7 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
         })}
         {filtered.length === 0 && (
           <p className="text-sm text-center py-4" style={{ color: 'var(--theme-text-faint)' }}>
-            Nessun incantesimo disponibile.
+            Nessun incantesimo trovato.
           </p>
         )}
       </div>

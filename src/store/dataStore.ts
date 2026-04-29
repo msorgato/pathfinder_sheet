@@ -27,6 +27,8 @@ interface DataState {
 
   exportData: () => object;
   importData: (raw: unknown) => void;
+  mergeExtraFeats: (feats: FeatDefinition[]) => void;
+  mergeExtraSpells: (spells: SpellDefinition[]) => void;
 }
 
 export const useDataStore = create<DataState>()(
@@ -149,6 +151,30 @@ export const useDataStore = create<DataState>()(
         }
 
         set({ featPatches, extraFeats, hiddenFeatIds, spellPatches, extraSpells, hiddenSpellIds });
+      },
+
+      mergeExtraFeats: (incoming) => {
+        set(s => {
+          const existingIds = new Set([
+            ...FEATS.map(f => f.id),
+            ...s.extraFeats.map(f => f.id),
+          ]);
+          const newFeats = incoming.filter(f => !existingIds.has(f.id));
+          if (newFeats.length === 0) return s;
+          return { extraFeats: [...s.extraFeats, ...newFeats] };
+        });
+      },
+
+      mergeExtraSpells: (incoming) => {
+        set(s => {
+          const existingIds = new Set([
+            ...SPELLS.map(sp => sp.id),
+            ...s.extraSpells.map(sp => sp.id),
+          ]);
+          const newSpells = incoming.filter(sp => !existingIds.has(sp.id));
+          if (newSpells.length === 0) return s;
+          return { extraSpells: [...s.extraSpells, ...newSpells] };
+        });
       },
     }),
     { name: 'pathfinder-data' },

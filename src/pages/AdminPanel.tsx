@@ -270,6 +270,8 @@ export function AdminPanel() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mergeFeatsRef = useRef<HTMLInputElement>(null);
+  const mergeSpellsRef = useRef<HTMLInputElement>(null);
 
   const store = useDataStore();
   const mergedFeats = useMergedFeats();
@@ -306,6 +308,52 @@ export function AdminPanel() {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
         store.importData(parsed);
+      } catch {
+        alert('File non valido');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleMergeFeats = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        const incoming: FeatDefinition[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed.feats)
+          ? parsed.feats
+          : [];
+        if (incoming.length === 0) { alert('Nessun talento trovato nel file.'); return; }
+        store.mergeExtraFeats(incoming);
+        alert(`Importazione completata. Talenti aggiunti (quelli già presenti sono stati ignorati).`);
+      } catch {
+        alert('File non valido');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleMergeSpells = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        const incoming: SpellDefinition[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed.spells)
+          ? parsed.spells
+          : [];
+        if (incoming.length === 0) { alert('Nessun incantesimo trovato nel file.'); return; }
+        store.mergeExtraSpells(incoming);
+        alert(`Importazione completata. Incantesimi aggiunti (quelli già presenti sono stati ignorati).`);
       } catch {
         alert('File non valido');
       }
@@ -395,10 +443,18 @@ export function AdminPanel() {
           <button onClick={() => fileInputRef.current?.click()} className="pf-btn pf-btn-ghost text-xs px-3 py-1.5">
             Importa Dati
           </button>
+          <button onClick={() => mergeFeatsRef.current?.click()} className="pf-btn pf-btn-outline text-xs px-3 py-1.5" title="Aggiunge nuovi talenti senza toccare quelli esistenti">
+            + Importa Talenti
+          </button>
+          <button onClick={() => mergeSpellsRef.current?.click()} className="pf-btn pf-btn-outline text-xs px-3 py-1.5" title="Aggiunge nuovi incantesimi senza toccare quelli esistenti">
+            + Importa Incantesimi
+          </button>
           <button onClick={() => navigate('/')} className="pf-btn pf-btn-ghost text-xs px-3 py-1.5">
             ← Home
           </button>
           <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+          <input ref={mergeFeatsRef} type="file" accept=".json" className="hidden" onChange={handleMergeFeats} />
+          <input ref={mergeSpellsRef} type="file" accept=".json" className="hidden" onChange={handleMergeSpells} />
         </div>
       </div>
 
