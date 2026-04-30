@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { useThemeStore } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, maxHP } from '../utils/calculations';
@@ -22,6 +23,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
   const theme = useThemeStore(s => s.theme);
+  const { user, signOut } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const exportAll = () => {
@@ -82,9 +84,28 @@ export function HomePage() {
     >
       {/* Hero header */}
       <div className="pf-header px-6 py-8 text-center">
-        {/* Theme switcher top-right */}
-        <div className="absolute top-3 right-4 z-10">
+        {/* Theme switcher + user info top-right */}
+        <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
           <ThemeSwitcher />
+          {user && (
+            <div className="flex items-center gap-2">
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName ?? ''}
+                  className="w-7 h-7 rounded-full"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <button
+                className="pf-btn pf-btn-ghost text-xs px-2 py-1"
+                onClick={signOut}
+                title={`Esci (${user.email})`}
+              >
+                Esci
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Decorative spinning rune */}
@@ -305,7 +326,7 @@ export function HomePage() {
             ? '[ NERV HQ · SISTEMA PATHFINDER 1e · TUTTI I DATI CLASSIFICATI ]'
             : isP5
             ? '[ METAVERSO ATTIVO · PATHFINDER 1e · CUORI RUBATI CON STILE ]'
-            : 'Pathfinder 1° Edizione · Dati salvati nel browser · Esporta/Importa per backup su file'}
+            : 'Pathfinder 1° Edizione · Dati sincronizzati su Cloud · Esporta/Importa per backup su file'}
         </div>
       </div>
     </div>
