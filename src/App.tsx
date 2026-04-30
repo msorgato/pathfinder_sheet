@@ -9,6 +9,7 @@ import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/authStore';
 import { useCharacterStore } from './store/characterStore';
 import { useDataStore } from './store/dataStore';
+import { isAdminEmail } from './config/admins';
 
 function LoadingScreen() {
   return (
@@ -68,7 +69,7 @@ function App() {
         <Route path="/"               element={user ? <HomePage />                     : <Navigate to="/login" replace />} />
         <Route path="/create"         element={user ? <CharacterWizard />              : <Navigate to="/login" replace />} />
         <Route path="/character/:id"  element={user ? <CharacterSheet />               : <Navigate to="/login" replace />} />
-        <Route path="/admin"          element={user ? <AdminPanel />                   : <Navigate to="/login" replace />} />
+        <Route path="/admin"          element={user && isAdminEmail(user.email) ? <AdminPanel /> : <Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
