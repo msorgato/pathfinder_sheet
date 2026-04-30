@@ -37,14 +37,12 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Bootstrap the Firebase auth listener once
   useEffect(() => {
     const unsubscribe = init();
     return unsubscribe;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load / clear Firestore data whenever auth state changes
   useEffect(() => {
     if (authLoading) return;
     if (user) {
@@ -66,11 +64,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
-        <Route path="/"               element={user ? <HomePage />        : <Navigate to="/login" replace />} />
-        <Route path="/create"         element={user ? <CharacterWizard /> : <Navigate to="/login" replace />} />
-        <Route path="/character/:id"  element={user ? <CharacterSheet />  : <Navigate to="/login" replace />} />
-        <Route path="/admin"          element={user ? <AdminPanel />      : <Navigate to="/login" replace />} />
+        <Route path="/login"          element={user ? <Navigate to="/" replace />      : <LoginPage />} />
+        <Route path="/"               element={user ? <HomePage />                     : <Navigate to="/login" replace />} />
+        <Route path="/create"         element={user ? <CharacterWizard />              : <Navigate to="/login" replace />} />
+        <Route path="/character/:id"  element={user ? <CharacterSheet />               : <Navigate to="/login" replace />} />
+        <Route path="/admin"          element={user ? <AdminPanel />                   : <Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

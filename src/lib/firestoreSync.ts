@@ -10,8 +10,14 @@ const charCol    = (uid: string) => collection(db, 'users', uid, 'characters');
 const charDocRef = (uid: string, charId: string) => doc(db, 'users', uid, 'characters', charId);
 const dataDocRef = (uid: string) => doc(db, 'users', uid, 'settings', 'dataStore');
 
+// Firestore rejects documents containing `undefined` values.
+// JSON round-trip is the simplest way to strip them all recursively.
+function clean<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 export async function saveCharacter(uid: string, char: Character): Promise<void> {
-  await setDoc(charDocRef(uid, char.id), char);
+  await setDoc(charDocRef(uid, char.id), clean(char));
 }
 
 export async function deleteCharacterDoc(uid: string, charId: string): Promise<void> {
@@ -24,7 +30,7 @@ export async function loadCharacters(uid: string): Promise<Character[]> {
 }
 
 export async function saveDataStore(uid: string, data: object): Promise<void> {
-  await setDoc(dataDocRef(uid), data);
+  await setDoc(dataDocRef(uid), clean(data));
 }
 
 export async function loadDataStore(uid: string): Promise<Record<string, unknown> | null> {

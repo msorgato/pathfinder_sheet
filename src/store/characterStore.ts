@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { getClass } from '../data/classes';
 import { auth } from '../lib/firebase';
-import {
-  saveCharacter, deleteCharacterDoc, loadCharacters,
-} from '../lib/firestoreSync';
+import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firestoreSync';
 import type {
   Character, CharacterClassEntry, SkillRank,
   KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment,
@@ -11,6 +9,19 @@ import type {
 
 function newId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+  const base = c.baseAbilityScores.con;
+  const racial = c.racialAbilityBonus?.con ?? 0;
+  const increases = c.abilityIncreases.reduce((sum, inc) => sum + (inc.con ?? 0), 0);
+  return Math.floor((base + racial + increases - 10) / 2);
+}
+
+function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+  const totalLevel = c.classes.reduce((s, e) => s + e.level, 0);
+  const base = c.hitPointsRolled.reduce((s, r) => s + r, 0);
+  return base + effectiveConMod(c) * totalLevel;
 }
 
 export function emptyCharacter(id?: string): Character {
@@ -43,26 +54,13 @@ export function emptyCharacter(id?: string): Character {
   };
 }
 
-function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
-  const base = c.baseAbilityScores.con;
-  const racial = c.racialAbilityBonus?.con ?? 0;
-  const increases = c.abilityIncreases.reduce((sum, inc) => sum + (inc.con ?? 0), 0);
-  return Math.floor((base + racial + increases - 10) / 2);
-}
-
-function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
-  const totalLevel = c.classes.reduce((s, e) => s + e.level, 0);
-  const base = c.hitPointsRolled.reduce((s, r) => s + r, 0);
-  return base + effectiveConMod(c) * totalLevel;
-}
-
 function uid(): string | null {
   return auth.currentUser?.uid ?? null;
 }
 
 function syncChar(char: Character): void {
   const u = uid();
-  if (u) saveCharacter(u, char).catch(console.error);
+  if (u) saveCharacter(u, char).catch(err => console.error('[Firestore] saveCharacter failed:', err));
 }
 
 interface CharacterState {
@@ -154,9 +152,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   },
 
   updateCharacter: (id, patch) => {
-    set(s => ({
-      characters: s.characters.map(c => c.id === id ? { ...c, ...patch } : c),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, ...patch } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
@@ -164,9 +160,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   setAbilityScore: (id, key, value) => {
     set(s => ({
       characters: s.characters.map(c =>
-        c.id === id
-          ? { ...c, baseAbilityScores: { ...c.baseAbilityScores, [key]: value } }
-          : c,
+        c.id === id ? { ...c, baseAbilityScores: { ...c.baseAbilityScores, [key]: value } } : c,
       ),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -175,9 +169,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
 
   setRacialBonus: (id, bonus) => {
     set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, racialAbilityBonus: bonus } : c,
-      ),
+      characters: s.characters.map(c => c.id === id ? { ...c, racialAbilityBonus: bonus } : c),
     }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
@@ -187,13 +179,8 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
-        const existing = c.classes.find(e => e.classId === classId);
-        if (existing) return c;
-        return {
-          ...c,
-          classes: [...c.classes, { classId, level: 1, favoredClassBonus: [] }],
-          totalLevel: c.totalLevel + 1,
-        };
+        if (c.classes.find(e => e.classId === classId)) return c;
+        return { ...c, classes: [...c.classes, { classId, level: 1, favoredClassBonus: [] }], totalLevel: c.totalLevel + 1 };
       }),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -203,9 +190,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   setClasses: (id, classes) => {
     set(s => ({
       characters: s.characters.map(c =>
-        c.id === id
-          ? { ...c, classes, totalLevel: classes.reduce((sum, e) => sum + e.level, 0) }
-          : c,
+        c.id === id ? { ...c, classes, totalLevel: classes.reduce((sum, e) => sum + e.level, 0) } : c,
       ),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -216,38 +201,22 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== charId) return c;
-
-        let classes = c.classes.map(e =>
-          e.classId === classId ? { ...e, level: e.level + 1 } : e,
-        );
+        let classes = c.classes.map(e => e.classId === classId ? { ...e, level: e.level + 1 } : e);
         if (!classes.find(e => e.classId === classId)) {
           classes = [...classes, { classId, level: 1, favoredClassBonus: [] }];
         }
         const totalLevel = classes.reduce((sum, e) => sum + e.level, 0);
-
         const skills = [...c.skills];
         Object.entries(skillRanks).forEach(([skillId, newRanks]) => {
           const idx = skills.findIndex(sk => sk.skillId === skillId);
           if (idx >= 0) skills[idx] = { ...skills[idx], ranks: newRanks };
           else skills.push({ skillId, ranks: newRanks, misc: 0 });
         });
-
-        let abilityIncreases = [...c.abilityIncreases];
-        if (abilityIncrease) {
-          abilityIncreases = [...abilityIncreases, { [abilityIncrease]: 1 }];
-        }
-
+        const abilityIncreases = abilityIncrease
+          ? [...c.abilityIncreases, { [abilityIncrease]: 1 }]
+          : c.abilityIncreases;
         const feats = newFeat ? [...c.feats, newFeat] : c.feats;
-
-        return {
-          ...c,
-          classes,
-          totalLevel,
-          hitPointsRolled: [...c.hitPointsRolled, hpRoll],
-          skills,
-          feats,
-          abilityIncreases,
-        };
+        return { ...c, classes, totalLevel, hitPointsRolled: [...c.hitPointsRolled, hpRoll], skills, feats, abilityIncreases };
       }),
     }));
     const updated = get().characters.find(c => c.id === charId);
@@ -285,31 +254,19 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   },
 
   addFeat: (id, featId) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, feats: [...c.feats, featId] } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, feats: [...c.feats, featId] } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
 
   removeFeat: (id, featId) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, feats: c.feats.filter(f => f !== featId) } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, feats: c.feats.filter(f => f !== featId) } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
 
   addKnownSpell: (id, spell) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, knownSpells: [...c.knownSpells, spell] } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, knownSpells: [...c.knownSpells, spell] } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
@@ -318,12 +275,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c =>
         c.id === id
-          ? {
-              ...c,
-              knownSpells: c.knownSpells.filter(
-                sp => !(sp.spellId === spellId && sp.classId === classId),
-              ),
-            }
+          ? { ...c, knownSpells: c.knownSpells.filter(sp => !(sp.spellId === spellId && sp.classId === classId)) }
           : c,
       ),
     }));
@@ -332,11 +284,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   },
 
   prepareSpell: (id, spell) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, preparedSpells: [...c.preparedSpells, spell] } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, preparedSpells: [...c.preparedSpells, spell] } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
@@ -345,12 +293,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c =>
         c.id === id
-          ? {
-              ...c,
-              preparedSpells: c.preparedSpells.filter(
-                sp => !(sp.slot === slot && sp.classId === classId && sp.spellLevel === spellLevel),
-              ),
-            }
+          ? { ...c, preparedSpells: c.preparedSpells.filter(sp => !(sp.slot === slot && sp.classId === classId && sp.spellLevel === spellLevel)) }
           : c,
       ),
     }));
@@ -362,13 +305,12 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
-        const preparedSpells = c.preparedSpells.map(sp => {
-          if (sp.classId === classId && sp.spellLevel === spellLevel && !sp.used) {
-            return { ...sp, used: true };
-          }
-          return sp;
-        });
-        return { ...c, preparedSpells };
+        return {
+          ...c,
+          preparedSpells: c.preparedSpells.map(sp =>
+            sp.classId === classId && sp.spellLevel === spellLevel && !sp.used ? { ...sp, used: true } : sp,
+          ),
+        };
       }),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -378,9 +320,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   recoverAllSpellSlots: (id) => {
     set(s => ({
       characters: s.characters.map(c =>
-        c.id === id
-          ? { ...c, preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })) }
-          : c,
+        c.id === id ? { ...c, preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })) } : c,
       ),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -405,11 +345,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
         if (c.id !== id) return c;
         let remaining = amount;
         let tempHp = c.tempHp;
-        if (tempHp > 0) {
-          const absorbed = Math.min(tempHp, remaining);
-          tempHp -= absorbed;
-          remaining -= absorbed;
-        }
+        if (tempHp > 0) { const absorbed = Math.min(tempHp, remaining); tempHp -= absorbed; remaining -= absorbed; }
         return { ...c, tempHp, currentHp: c.currentHp - remaining };
       }),
     }));
@@ -418,21 +354,13 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   },
 
   heal: (id, amount) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, currentHp: c.currentHp + amount } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, currentHp: c.currentHp + amount } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
 
   setTempHp: (id, amount) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, tempHp: amount } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, tempHp: amount } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
@@ -441,10 +369,9 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
-        const maxHp = calcMaxHp(c);
         return {
           ...c,
-          currentHp: maxHp,
+          currentHp: calcMaxHp(c),
           tempHp: 0,
           nonLethalDamage: 0,
           preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })),
@@ -456,11 +383,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   },
 
   addEquipment: (id, item) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, equipment: [...c.equipment, item] } : c,
-      ),
-    }));
+    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, equipment: [...c.equipment, item] } : c) }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
   },
@@ -468,9 +391,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   removeEquipment: (id, itemId) => {
     set(s => ({
       characters: s.characters.map(c =>
-        c.id === id
-          ? { ...c, equipment: c.equipment.filter(i => i.id !== itemId) }
-          : c,
+        c.id === id ? { ...c, equipment: c.equipment.filter(i => i.id !== itemId) } : c,
       ),
     }));
     const updated = get().characters.find(c => c.id === id);
@@ -481,10 +402,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c =>
         c.id === id
-          ? {
-              ...c,
-              equipment: c.equipment.map(i => i.id === itemId ? { ...i, ...patch } : i),
-            }
+          ? { ...c, equipment: c.equipment.map(i => i.id === itemId ? { ...i, ...patch } : i) }
           : c,
       ),
     }));
@@ -514,9 +432,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   setWizardDraft: (draft) => set({ wizardDraft: draft }),
 
   updateWizardDraft: (patch) => {
-    set(s => ({
-      wizardDraft: s.wizardDraft ? { ...s.wizardDraft, ...patch } : { ...patch },
-    }));
+    set(s => ({ wizardDraft: s.wizardDraft ? { ...s.wizardDraft, ...patch } : { ...patch } }));
   },
 
   commitWizardDraft: () => {
@@ -527,17 +443,11 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     if (full.hitPointsRolled.length === 0 && full.classes.length > 0) {
       const cls = full.classes[0];
       const classDef = getClass(cls.classId);
-      if (classDef) {
-        full.hitPointsRolled = [classDef.hitDie];
-      }
+      if (classDef) full.hitPointsRolled = [classDef.hitDie];
     }
     full.currentHp = calcMaxHp(full);
     full.totalLevel = full.classes.reduce((s, e) => s + e.level, 0);
-    set(s => ({
-      characters: [...s.characters, full],
-      activeId: id,
-      wizardDraft: null,
-    }));
+    set(s => ({ characters: [...s.characters, full], activeId: id, wizardDraft: null }));
     syncChar(full);
     return id;
   },
