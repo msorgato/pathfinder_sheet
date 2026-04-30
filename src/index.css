@@ -88,6 +88,34 @@
   --theme-scroll-hover:  #1a5a88;
 }
 
+[data-theme="persona5"] {
+  --theme-bg:            #0a0000;
+  --theme-bg-panel:      #180808;
+  --theme-bg-panel-2:    #0f0404;
+  --theme-accent:        #e8001a;
+  --theme-accent-dim:    #aa0012;
+  --theme-accent-glow:   rgba(232, 0, 26, 0.50);
+  --theme-text:          #ffffff;
+  --theme-text-muted:    #ddbbbb;
+  --theme-text-faint:    #886666;
+  --theme-text-neutral:  #aaaaaa;
+  --theme-border:        #5c0010;
+  --theme-border-strong: #cc001a;
+  --theme-ghost-border:  #250008;
+  --theme-header-1:      #050000;
+  --theme-header-2:      #200005;
+  --theme-danger:        #ff6600;
+  --theme-danger-hover:  #ff8800;
+  --theme-info:          #ffd700;
+  --theme-hp-high:       #ff3300;
+  --theme-hp-mid:        #ff9900;
+  --theme-hp-low:        #ff0000;
+  --theme-font:          'Arial Black', 'Impact', 'Arial', sans-serif;
+  --theme-scroll-track:  #0a0000;
+  --theme-scroll-thumb:  #5c0010;
+  --theme-scroll-hover:  #cc001a;
+}
+
 
 /* ================================================================
    GLOBAL
@@ -563,5 +591,140 @@ body {
 /* Tab attivo */
 [data-theme="cyberpunk"] .tab-active {
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.7);
+}
+
+/* ================================================================
+   PERSONA 5 EFFECTS
+   ================================================================ */
+
+/* clip-path shorthand reused across elements */
+/* Panel shape: top-right corner cut + bottom-left corner cut */
+/* Button shape: parallelogram */
+
+@keyframes p5-title-beat {
+  0%, 100% { text-shadow: 5px 5px 0 #000, -1px -1px 0 rgba(232,0,26,0.9); }
+  50%       { text-shadow: 5px 5px 0 #000, -2px -2px 0 rgba(232,0,26,1), 0 0 32px rgba(232,0,26,0.55); }
+}
+
+@keyframes p5-btn-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(232,0,26,0.45), inset 0 0 8px rgba(232,0,26,0.10); }
+  50%       { box-shadow: 0 0 32px rgba(232,0,26,0.80), inset 0 0 16px rgba(232,0,26,0.22); }
+}
+
+/* Panel slides in from left with a skew snap */
+@keyframes p5-panel-enter {
+  0%   { transform: translateX(-18px) skewX(-4deg); opacity: 0;
+         clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); }
+  55%  { transform: translateX(4px)  skewX(1deg);  opacity: 1;
+         clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); }
+  100% { transform: translateX(0)    skewX(0deg);  opacity: 1;
+         clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); }
+}
+
+/* Heavy diagonal stripe on page background */
+[data-theme="persona5"] .theme-root {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,       transparent 16px,
+    rgba(232,0,26,0.040)  16px,      rgba(232,0,26,0.040)  32px
+  );
+}
+
+/* Header: diagonal bottom-right cut + red baseline */
+[data-theme="persona5"] .pf-header {
+  border-bottom: 4px solid var(--theme-accent);
+  box-shadow: 0 6px 36px rgba(232,0,26,0.40);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), calc(100% - 90px) 100%, 0 100%);
+}
+
+/* Panels: dual corner cut (top-right + bottom-left) + red left stripe */
+[data-theme="persona5"] .pf-panel {
+  border-left: 4px solid var(--theme-accent) !important;
+  border-color: var(--theme-border) !important;
+  border-left-color: var(--theme-accent) !important;
+  box-shadow: -5px 0 16px rgba(232,0,26,0.18);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  animation: p5-panel-enter 0.30s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+[data-theme="persona5"] .pf-panel:hover {
+  box-shadow: -6px 0 28px rgba(232,0,26,0.55), 0 0 10px rgba(232,0,26,0.12);
+}
+
+/* Stat boxes: parallelogram via skew, content counter-skewed */
+[data-theme="persona5"] .stat-box {
+  transform: skewX(-7deg);
+  border-bottom: 2px solid var(--theme-accent) !important;
+  border-color: var(--theme-accent) !important;
+  box-shadow: 0 3px 12px rgba(232,0,26,0.14), inset 0 0 16px rgba(232,0,26,0.04);
+  overflow: hidden;
+}
+[data-theme="persona5"] .stat-box > * {
+  transform: skewX(7deg);
+  display: block;
+}
+
+/* P5 title: italic + block shadow + beat */
+[data-theme="persona5"] .p5-title {
+  font-style: italic;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 5px 5px 0 #000, -1px -1px 0 rgba(232,0,26,0.9);
+  animation: p5-title-beat 2.4s ease-in-out infinite;
+}
+
+/* Neon text (subtitle) */
+[data-theme="persona5"] .neon-text {
+  text-shadow: 0 0 8px var(--theme-accent-glow), 0 0 20px var(--theme-accent-glow);
+  font-style: italic;
+  font-weight: 700;
+  animation: neon-flicker 5s ease-in-out infinite;
+}
+
+/* Primary button: parallelogram + italic uppercase + red pulse */
+[data-theme="persona5"] .pf-btn-gold {
+  background: linear-gradient(135deg, #e8001a 0%, #8a000f 100%);
+  color: #fff;
+  border-color: #ff2233;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  animation: p5-btn-pulse 2.2s ease-in-out infinite;
+}
+[data-theme="persona5"] .pf-btn-gold:hover {
+  background: linear-gradient(135deg, #ff0020 0%, #cc0018 100%);
+  box-shadow: 0 0 32px rgba(232,0,26,0.75), 0 0 70px rgba(232,0,26,0.28);
+}
+
+/* Outline buttons: smaller parallelogram */
+[data-theme="persona5"] .pf-btn-outline {
+  border-color: var(--theme-accent);
+  color: var(--theme-accent);
+  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+[data-theme="persona5"] .pf-btn-outline:hover {
+  background: rgba(232,0,26,0.10);
+  box-shadow: 0 0 16px rgba(232,0,26,0.45);
+}
+
+/* Ghost buttons: keep shape, dim red border */
+[data-theme="persona5"] .pf-btn-ghost {
+  clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+}
+
+/* Input focus */
+[data-theme="persona5"] .pf-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 1px var(--theme-accent), 0 0 14px rgba(232,0,26,0.38);
+}
+
+/* Active tab: skew + glow */
+[data-theme="persona5"] .tab-active {
+  text-shadow: 0 0 10px rgba(232,0,26,0.85);
+  font-style: italic;
+  transform: skewX(-4deg);
+  display: inline-block;
 }
 
