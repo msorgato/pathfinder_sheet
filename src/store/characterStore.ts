@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { getClass } from '../data/classes';
 import { auth } from '../lib/firebase';
 import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firestoreSync';
+import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 import type {
   Character, CharacterClassEntry, SkillRank,
   KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment,
@@ -11,14 +12,19 @@ function newId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases' | 'age' | 'race'>): number {
   const base = c.baseAbilityScores.con;
   const racial = c.racialAbilityBonus?.con ?? 0;
   const increases = c.abilityIncreases.reduce((sum, inc) => sum + (inc.con ?? 0), 0);
-  return Math.floor((base + racial + increases - 10) / 2);
+  let ageMod = 0;
+  if (c.age) {
+    const cat = getAgeCategory(c.race, c.age);
+    if (cat) ageMod = AGE_MODIFIERS[cat].con ?? 0;
+  }
+  return Math.floor((base + racial + increases + ageMod - 10) / 2);
 }
 
-function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases'>): number {
+function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases' | 'age' | 'race'>): number {
   const totalLevel = c.classes.reduce((s, e) => s + e.level, 0);
   const base = c.hitPointsRolled.reduce((s, r) => s + r, 0);
   return base + effectiveConMod(c) * totalLevel;

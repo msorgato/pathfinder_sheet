@@ -179,6 +179,7 @@ export function CharacterWizard() {
 
   return (
     <Step7_Details
+      raceId={state.raceId}
       details={state.details}
       onChange={details => setState(s => ({ ...s, details }))}
       onFinish={finish}
