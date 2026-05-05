@@ -1,6 +1,7 @@
 import type { Character, CharacterClassEntry, AbilityKey } from '../types';
 import { getClass } from '../data/classes';
 import { getBonusSpells } from '../data/spellSlots';
+import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 
 // ── Ability modifier ─────────────────────────────────────────────────────────
 export function abilityMod(score: number): number {
@@ -11,7 +12,7 @@ export function modStr(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-// ── Effective ability scores (base + racial + increases) ─────────────────────
+// ── Effective ability scores (base + racial + increases + age) ───────────────
 export function effectiveAbilityScores(char: Character): Record<AbilityKey, number> {
   const result = { ...char.baseAbilityScores };
   const racialBonus = char.racialAbilityBonus ?? {};
@@ -23,6 +24,15 @@ export function effectiveAbilityScores(char: Character): Record<AbilityKey, numb
       result[k] += inc[k] ?? 0;
     });
   });
+  if (char.age) {
+    const cat = getAgeCategory(char.race, char.age);
+    if (cat) {
+      const mods = AGE_MODIFIERS[cat];
+      (Object.keys(mods) as AbilityKey[]).forEach(k => {
+        result[k] += mods[k] ?? 0;
+      });
+    }
+  }
   return result;
 }
 
