@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
-import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
+import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, totalBAB, totalSave, abilityMod, modStr, maxHP } from '../utils/calculations';
@@ -111,7 +111,7 @@ export function CharacterSheet() {
           </div>
         </div>
         <div className="flex flex-col gap-1 items-end">
-          <ThemeSwitcher />
+          <UserPreferencesPanel />
           {char.totalLevel < 20 && (
             <button
               className="pf-btn pf-btn-gold text-xs px-3 py-1.5 whitespace-nowrap"
