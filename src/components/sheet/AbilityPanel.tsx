@@ -1,5 +1,6 @@
 import type { Character, AbilityKey } from '../../types';
 import { effectiveAbilityScores, abilityMod, modStr } from '../../utils/calculations';
+import { getRace } from '../../data/races';
 import type { RollRequest } from './DiceRoller';
 
 const ABILITY_LABELS: Record<AbilityKey, string> = {
@@ -19,6 +20,7 @@ interface Props {
 export function AbilityPanel({ char, onQuickRoll }: Props) {
   const scores = effectiveAbilityScores(char);
   const abilities: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  const raceModifiers = getRace(char.race)?.abilityModifiers ?? {};
 
   return (
     <div className="pf-panel p-4">
@@ -29,7 +31,9 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
         {abilities.map(key => {
           const score = scores[key];
           const base = char.baseAbilityScores[key];
-          const racial = char.racialAbilityBonus?.[key] ?? 0;
+          const fixedRacial = raceModifiers[key] ?? 0;
+          const selectableRacial = char.racialAbilityBonus?.[key] ?? 0;
+          const racial = fixedRacial + selectableRacial;
           const increases = char.abilityIncreases.reduce((s, inc) => s + (inc[key] ?? 0), 0);
           const mod = abilityMod(score);
 

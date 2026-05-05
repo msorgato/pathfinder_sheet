@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getClass } from '../data/classes';
+import { getRace } from '../data/races';
 import { auth } from '../lib/firebase';
 import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firestoreSync';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
@@ -14,14 +15,15 @@ function newId(): string {
 
 function effectiveConMod(c: Pick<Character, 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases' | 'age' | 'race'>): number {
   const base = c.baseAbilityScores.con;
-  const racial = c.racialAbilityBonus?.con ?? 0;
+  const fixedRacial = getRace(c.race)?.abilityModifiers.con ?? 0;
+  const selectableRacial = c.racialAbilityBonus?.con ?? 0;
   const increases = c.abilityIncreases.reduce((sum, inc) => sum + (inc.con ?? 0), 0);
   let ageMod = 0;
   if (c.age) {
     const cat = getAgeCategory(c.race, c.age);
     if (cat) ageMod = AGE_MODIFIERS[cat].con ?? 0;
   }
-  return Math.floor((base + racial + increases + ageMod - 10) / 2);
+  return Math.floor((base + fixedRacial + selectableRacial + increases + ageMod - 10) / 2);
 }
 
 function calcMaxHp(c: Pick<Character, 'hitPointsRolled' | 'classes' | 'baseAbilityScores' | 'racialAbilityBonus' | 'abilityIncreases' | 'age' | 'race'>): number {
@@ -88,7 +90,7 @@ interface CharacterState {
   addClass: (id: string, classId: string) => void;
   setClasses: (id: string, classes: CharacterClassEntry[]) => void;
 
-  levelUp: (charId: string, classId: string, hpRoll: number, skillRanks: Record<string, number>, newFeat?: string, abilityIncrease?: AbilityKey) => void;
+  levelUp: (charId: string, classId: string, hpRoll: number, skillRanks: Record<string, number>, newFeat?: string, abilityIncrease?: AbilityKey, newSpells?: KnownSpell[]) => void;
 
   setSkillRanks: (id: string, skillId: string, ranks: number) => void;
   setSkillMisc: (id: string, skillId: string, misc: number) => void;
@@ -101,6 +103,7 @@ interface CharacterState {
   prepareSpell: (id: string, spell: PreparedSpell) => void;
   unprepareSpell: (id: string, slot: number, classId: string, spellLevel: number) => void;
   useSpellSlot: (id: string, classId: string, spellLevel: number) => void;
+  recoverSpellSlot: (id: string, classId: string, spellLevel: number) => void;
   recoverAllSpellSlots: (id: string) => void;
   clearPreparedSpells: (id: string, classId: string) => void;
 
@@ -203,7 +206,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     if (updated) syncChar(updated);
   },
 
-  levelUp: (charId, classId, hpRoll, skillRanks, newFeat, abilityIncrease) => {
+  levelUp: (charId, classId, hpRoll, skillRanks, newFeat, abilityIncrease, newSpells) => {
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== charId) return c;
@@ -222,7 +225,8 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
           ? [...c.abilityIncreases, { [abilityIncrease]: 1 }]
           : c.abilityIncreases;
         const feats = newFeat ? [...c.feats, newFeat] : c.feats;
-        return { ...c, classes, totalLevel, hitPointsRolled: [...c.hitPointsRolled, hpRoll], skills, feats, abilityIncreases };
+        const knownSpells = newSpells ? [...c.knownSpells, ...newSpells] : c.knownSpells;
+        return { ...c, classes, totalLevel, hitPointsRolled: [...c.hitPointsRolled, hpRoll], skills, feats, abilityIncreases, knownSpells };
       }),
     }));
     const updated = get().characters.find(c => c.id === charId);
@@ -311,10 +315,31 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
+        const existing = c.spellSlots.find(ss => ss.classId === classId && ss.spellLevel === spellLevel);
+        const spellSlots = existing
+          ? c.spellSlots.map(ss =>
+              ss.classId === classId && ss.spellLevel === spellLevel
+                ? { ...ss, used: ss.used + 1 }
+                : ss,
+            )
+          : [...c.spellSlots, { classId, spellLevel, total: 0, used: 1 }];
+        return { ...c, spellSlots };
+      }),
+    }));
+    const updated = get().characters.find(c => c.id === id);
+    if (updated) syncChar(updated);
+  },
+
+  recoverSpellSlot: (id, classId, spellLevel) => {
+    set(s => ({
+      characters: s.characters.map(c => {
+        if (c.id !== id) return c;
         return {
           ...c,
-          preparedSpells: c.preparedSpells.map(sp =>
-            sp.classId === classId && sp.spellLevel === spellLevel && !sp.used ? { ...sp, used: true } : sp,
+          spellSlots: c.spellSlots.map(ss =>
+            ss.classId === classId && ss.spellLevel === spellLevel
+              ? { ...ss, used: Math.max(0, ss.used - 1) }
+              : ss,
           ),
         };
       }),
@@ -326,7 +351,9 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
   recoverAllSpellSlots: (id) => {
     set(s => ({
       characters: s.characters.map(c =>
-        c.id === id ? { ...c, preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })) } : c,
+        c.id === id
+          ? { ...c, spellSlots: c.spellSlots.map(ss => ({ ...ss, used: 0 })) }
+          : c,
       ),
     }));
     const updated = get().characters.find(c => c.id === id);

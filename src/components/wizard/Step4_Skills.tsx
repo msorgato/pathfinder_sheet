@@ -65,7 +65,7 @@ export function Step4_Skills({
       </div>
 
       <div className="space-y-1">
-        {SKILLS.map(skill => {
+        {[...SKILLS].sort((a, b) => a.name.localeCompare(b.name)).map(skill => {
           const isClass = classSkills.has(skill.id);
           const rank = skillRanks[skill.id] ?? 0;
           const mod = abilityMod(abilityScores[skill.ability]);

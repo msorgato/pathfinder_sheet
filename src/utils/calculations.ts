@@ -1,5 +1,6 @@
 import type { Character, CharacterClassEntry, AbilityKey } from '../types';
 import { getClass } from '../data/classes';
+import { getRace } from '../data/races';
 import { getBonusSpells } from '../data/spellSlots';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 
@@ -12,13 +13,24 @@ export function modStr(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-// ── Effective ability scores (base + racial + increases + age) ───────────────
+// ── Effective ability scores (base + fixed racial + selectable racial + increases + age) ─
 export function effectiveAbilityScores(char: Character): Record<AbilityKey, number> {
   const result = { ...char.baseAbilityScores };
+
+  // Fixed racial modifiers (e.g. Elf: DEX+2, INT+2, CON-2)
+  const race = getRace(char.race);
+  if (race) {
+    (Object.keys(race.abilityModifiers) as AbilityKey[]).forEach(k => {
+      result[k] += (race.abilityModifiers[k] ?? 0);
+    });
+  }
+
+  // Selectable racial bonus (e.g. Human: +2 to chosen stat)
   const racialBonus = char.racialAbilityBonus ?? {};
-  (Object.keys(result) as AbilityKey[]).forEach(k => {
+  (Object.keys(racialBonus) as AbilityKey[]).forEach(k => {
     result[k] += racialBonus[k] ?? 0;
   });
+
   char.abilityIncreases.forEach(inc => {
     (Object.keys(inc) as AbilityKey[]).forEach(k => {
       result[k] += inc[k] ?? 0;

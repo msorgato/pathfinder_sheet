@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, totalBAB, totalSave, abilityMod, modStr, maxHP } from '../utils/calculations';
@@ -31,6 +32,7 @@ export function CharacterSheet() {
   const [editingNotes, setEditingNotes] = useState(false);
   const [diceOpen, setDiceOpen] = useState(false);
   const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleQuickRoll = (req: RollRequest) => {
     setDiceOpen(true);
@@ -122,12 +124,7 @@ export function CharacterSheet() {
           )}
           <button
             className="pf-btn pf-btn-ghost text-xs px-3 py-1"
-            onClick={() => {
-              if (confirm('Eliminare questo personaggio?')) {
-                deleteCharacter(char.id);
-                navigate('/');
-              }
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
           >
             🗑 Elimina
           </button>
@@ -257,6 +254,17 @@ export function CharacterSheet() {
 
       {showLevelUp && (
         <LevelUpWizard char={char} onClose={() => setShowLevelUp(false)} />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Elimina personaggio"
+          message={`Vuoi eliminare "${char.name}"? L'azione non può essere annullata.`}
+          confirmLabel="Elimina"
+          danger
+          onConfirm={() => { deleteCharacter(char.id); navigate('/'); }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
 
       {/* Floating dice button */}

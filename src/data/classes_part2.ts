@@ -250,6 +250,7 @@ export const CLASSES_PART2: ClassDefinition[] = [
       spellList: WIZARD_SPELLS,
       maxSpellLevel: 9,
       bonusSpellsFromAbility: true,
+      usesSpellbook: true,
     },
     features: [
       { level: 1, name: 'Scuola Arcana', description: 'Sceglie una scuola di specializzazione oppure nessuna (mago universalista). La scuola opposta non può essere preparata.', choices: ['Abiurazione','Ammaliamento','Divinazione','Evocazione','Illusione','Invocazione','Necromanzia','Trasmutazione','Universalista'] },
