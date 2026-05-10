@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { getClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
-import { computeSpellSlots } from '../../utils/calculations';
-import { effectiveAbilityScores } from '../../utils/calculations';
+import { computeSpellSlots, effectiveAbilityScores, spellDC } from '../../utils/calculations';
 import type { Character, PreparedSpell } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -56,7 +55,7 @@ export function SpellsPanel({ char }: Props) {
   const isSpellbook = !!spellcasting.usesSpellbook;
 
   const preparedForClass = char.preparedSpells.filter(ps => ps.classId === currentClassId);
-  const usedAtLevel = (lv: number) => char.spellSlots.find(ss => ss.classId === currentClassId && ss.spellLevel === lv)?.used ?? 0;
+  const usedAtLevel = (lv: number) => (char.spellSlots ?? []).find(ss => ss.classId === currentClassId && ss.spellLevel === lv)?.used ?? 0;
   const totalSlotsAtLevel = (lv: number) => slots.find(s => s.level === lv)?.total ?? 0;
 
   const knownForClass = char.knownSpells.filter(ks => ks.classId === currentClassId);
@@ -141,9 +140,20 @@ export function SpellsPanel({ char }: Props) {
             return (
               <div key={s.level} className="pf-panel p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
-                    {isCantrip ? 'Trucchetti (0°)' : `${s.level}° Livello`}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
+                      {isCantrip ? 'Trucchetti (0°)' : `${s.level}° Livello`}
+                    </span>
+                    {!isCantrip && (
+                      <span
+                        className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                        style={{ background: 'rgba(200,164,67,0.1)', color: 'var(--theme-text-neutral)', border: '1px solid var(--theme-border)' }}
+                        title={`CD = 10 + ${s.level} (livello) + ${spellDC(s.level, abilityScore) - 10 - s.level} (mod ${ABIL_LABEL[spellcasting.ability] ?? spellcasting.ability})`}
+                      >
+                        CD {spellDC(s.level, abilityScore)}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 text-sm">
                     {isCantrip ? (
                       <span className="text-xs font-semibold" style={{ color: 'var(--theme-hp-high)' }}>∞ Illimitati</span>
@@ -162,6 +172,7 @@ export function SpellsPanel({ char }: Props) {
                   <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: total }).map((_, i) => {
                       const isUsed = i < used;
+                      const isBonus = i >= s.base;
                       const pipKey = `${s.level}-${i}`;
                       return (
                         <button
@@ -173,8 +184,8 @@ export function SpellsPanel({ char }: Props) {
                           }}
                           className={`w-6 h-6 rounded-full border-2 transition-colors${animatingPips.has(pipKey) ? ' pip-pop' : ''}`}
                           style={{
-                            background: isUsed ? 'var(--theme-ghost-border)' : 'var(--theme-accent)',
-                            borderColor: isUsed ? 'var(--theme-border)' : '#e0b84d',
+                            background: isUsed ? 'var(--theme-ghost-border)' : isBonus ? '#9b7fd4' : 'var(--theme-accent)',
+                            borderColor: isUsed ? 'var(--theme-border)' : isBonus ? '#b89fd4' : '#e0b84d',
                           }}
                         />
                       );

@@ -131,7 +131,8 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
 
   loadFromFirestore: async (uid) => {
     const chars = await loadCharacters(uid);
-    set({ characters: chars, activeId: null });
+    const merged = chars.map(c => ({ ...emptyCharacter(c.id), ...c }));
+    set({ characters: merged, activeId: null });
   },
 
   clearStore: () => set({ characters: [], activeId: null, wizardDraft: null }),
@@ -315,14 +316,15 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
-        const existing = c.spellSlots.find(ss => ss.classId === classId && ss.spellLevel === spellLevel);
+        const slots = c.spellSlots ?? [];
+        const existing = slots.find(ss => ss.classId === classId && ss.spellLevel === spellLevel);
         const spellSlots = existing
-          ? c.spellSlots.map(ss =>
+          ? slots.map(ss =>
               ss.classId === classId && ss.spellLevel === spellLevel
                 ? { ...ss, used: ss.used + 1 }
                 : ss,
             )
-          : [...c.spellSlots, { classId, spellLevel, total: 0, used: 1 }];
+          : [...slots, { classId, spellLevel, total: 0, used: 1 }];
         return { ...c, spellSlots };
       }),
     }));
@@ -336,7 +338,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
         if (c.id !== id) return c;
         return {
           ...c,
-          spellSlots: c.spellSlots.map(ss =>
+          spellSlots: (c.spellSlots ?? []).map(ss =>
             ss.classId === classId && ss.spellLevel === spellLevel
               ? { ...ss, used: Math.max(0, ss.used - 1) }
               : ss,
@@ -352,7 +354,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c =>
         c.id === id
-          ? { ...c, spellSlots: c.spellSlots.map(ss => ({ ...ss, used: 0 })) }
+          ? { ...c, spellSlots: (c.spellSlots ?? []).map(ss => ({ ...ss, used: 0 })) }
           : c,
       ),
     }));

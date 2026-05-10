@@ -156,6 +156,11 @@ export function armorClass(dexScore: number, armorBonus = 0, shieldBonus = 0, na
   return 10 + abilityMod(dexScore) + armorBonus + shieldBonus + naturalArmor + deflection + misc;
 }
 
+// ── Spell DC ─────────────────────────────────────────────────────────────────
+export function spellDC(spellLevel: number, abilityScore: number): number {
+  return 10 + spellLevel + abilityMod(abilityScore);
+}
+
 // ── Spells known for spontaneous casters ─────────────────────────────────────
 export function spellsKnownAtLevel(classId: string, classLevel: number): number[] {
   const cls = getClass(classId);
