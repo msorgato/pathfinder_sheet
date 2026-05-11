@@ -27,10 +27,12 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
     char.classes.flatMap(e => getClass(e.classId)?.classSkills ?? []),
   );
 
-  const filtered = SKILLS.filter(s => {
-    if (onlyTrained && !char.skills.find(sk => sk.skillId === s.id && sk.ranks > 0)) return false;
-    return s.name.toLowerCase().includes(search.toLowerCase());
-  });
+  const filtered = SKILLS
+    .filter(s => {
+      if (onlyTrained && !char.skills.find(sk => sk.skillId === s.id && sk.ranks > 0)) return false;
+      return s.name.toLowerCase().includes(search.toLowerCase());
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const totalSkillPoints = char.totalLevel > 0
     ? char.classes.reduce((sum, entry) => {

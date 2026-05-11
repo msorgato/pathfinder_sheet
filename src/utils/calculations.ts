@@ -1,5 +1,6 @@
 import type { Character, CharacterClassEntry, AbilityKey } from '../types';
 import { getClass } from '../data/classes';
+import { getRace } from '../data/races';
 import { getBonusSpells } from '../data/spellSlots';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 
@@ -12,13 +13,24 @@ export function modStr(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-// ── Effective ability scores (base + racial + increases + age) ───────────────
+// ── Effective ability scores (base + fixed racial + selectable racial + increases + age) ─
 export function effectiveAbilityScores(char: Character): Record<AbilityKey, number> {
   const result = { ...char.baseAbilityScores };
+
+  // Fixed racial modifiers (e.g. Elf: DEX+2, INT+2, CON-2)
+  const race = getRace(char.race);
+  if (race) {
+    (Object.keys(race.abilityModifiers) as AbilityKey[]).forEach(k => {
+      result[k] += (race.abilityModifiers[k] ?? 0);
+    });
+  }
+
+  // Selectable racial bonus (e.g. Human: +2 to chosen stat)
   const racialBonus = char.racialAbilityBonus ?? {};
-  (Object.keys(result) as AbilityKey[]).forEach(k => {
+  (Object.keys(racialBonus) as AbilityKey[]).forEach(k => {
     result[k] += racialBonus[k] ?? 0;
   });
+
   char.abilityIncreases.forEach(inc => {
     (Object.keys(inc) as AbilityKey[]).forEach(k => {
       result[k] += inc[k] ?? 0;
@@ -142,6 +154,11 @@ export function featLevels(): number[] {
 // ── Armor class ──────────────────────────────────────────────────────────────
 export function armorClass(dexScore: number, armorBonus = 0, shieldBonus = 0, naturalArmor = 0, deflection = 0, misc = 0): number {
   return 10 + abilityMod(dexScore) + armorBonus + shieldBonus + naturalArmor + deflection + misc;
+}
+
+// ── Spell DC ─────────────────────────────────────────────────────────────────
+export function spellDC(spellLevel: number, abilityScore: number): number {
+  return 10 + spellLevel + abilityMod(abilityScore);
 }
 
 // ── Spells known for spontaneous casters ─────────────────────────────────────

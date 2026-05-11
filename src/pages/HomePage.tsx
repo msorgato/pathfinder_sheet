@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { useThemeStore } from '../store/themeStore';
@@ -6,6 +6,7 @@ import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, maxHP } from '../utils/calculations';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { Character } from '../types';
 
 function triggerJsonDownload(data: object, filename: string) {
@@ -23,6 +24,7 @@ export function HomePage() {
   const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
   const theme = useThemeStore(s => s.theme);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingDelete, setPendingDelete] = useState<Character | null>(null);
 
   const exportAll = () => {
     if (characters.length === 0) return;
@@ -283,7 +285,7 @@ export function HomePage() {
                         className="pf-btn pf-btn-ghost text-xs px-3 py-1"
                         onClick={e => {
                           e.stopPropagation();
-                          if (confirm(`Eliminare ${char.name}?`)) deleteCharacter(char.id);
+                          setPendingDelete(char);
                         }}
                       >
                         🗑
@@ -308,6 +310,17 @@ export function HomePage() {
             : 'Pathfinder 1° Edizione · Dati sincronizzati su Cloud · Esporta/Importa per backup su file'}
         </div>
       </div>
+
+      {pendingDelete && (
+        <ConfirmModal
+          title="Elimina personaggio"
+          message={`Vuoi eliminare "${pendingDelete.name}"? L'azione non può essere annullata.`}
+          confirmLabel="Elimina"
+          danger
+          onConfirm={() => { deleteCharacter(pendingDelete.id); setPendingDelete(null); }}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   );
 }

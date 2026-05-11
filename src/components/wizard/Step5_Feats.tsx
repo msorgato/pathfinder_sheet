@@ -20,12 +20,14 @@ export function Step5_Feats({ raceId, selectedFeats, onChange, onNext, onBack }:
   const bonusFeat = race?.bonusFeat ? 1 : 0;
   const totalFeats = 1 + bonusFeat; // level 1 feat + racial bonus feat
 
-  const filtered = FEATS.filter(f => {
-    const matchSearch = f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.benefit.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'All' || f.type === filter;
-    return matchSearch && matchFilter;
-  });
+  const filtered = FEATS
+    .filter(f => {
+      const matchSearch = f.name.toLowerCase().includes(search.toLowerCase()) ||
+        f.benefit.toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filter === 'All' || f.type === filter;
+      return matchSearch && matchFilter;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const types = ['All', 'Combat', 'General', 'Metamagic'];
 

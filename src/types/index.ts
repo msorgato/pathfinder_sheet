@@ -50,6 +50,7 @@ export interface ClassDefinition {
     spellList: string[];
     maxSpellLevel: number;
     bonusSpellsFromAbility: boolean;
+    usesSpellbook?: boolean;
   };
   armorProficiencies: string[];
   weaponProficiencies: string;

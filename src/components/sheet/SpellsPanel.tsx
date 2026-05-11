@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { getClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
-import { computeSpellSlots } from '../../utils/calculations';
-import { effectiveAbilityScores } from '../../utils/calculations';
+import { computeSpellSlots, effectiveAbilityScores, spellDC } from '../../utils/calculations';
 import type { Character, PreparedSpell } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 const SCHOOL_COLORS: Record<string, string> = {
   Evocation: 'var(--theme-hp-low)', Conjuration: '#3b82f6', Abjuration: '#6366f1',
@@ -15,7 +15,7 @@ const SCHOOL_COLORS: Record<string, string> = {
 interface Props { char: Character }
 
 export function SpellsPanel({ char }: Props) {
-  const { addKnownSpell, removeKnownSpell, prepareSpell, unprepareSpell, useSpellSlot, recoverAllSpellSlots, clearPreparedSpells } = useCharacterStore();
+  const { addKnownSpell, removeKnownSpell, prepareSpell, unprepareSpell, markPreparedSpellUsed, useSpellSlot, recoverSpellSlot, recoverAllSpellSlots, clearPreparedSpells } = useCharacterStore();
   const [activeClassId, setActiveClassId] = useState<string | null>(null);
   const [activeLevel, setActiveLevel] = useState(0);
   const [tab, setTab] = useState<'slots' | 'known' | 'browse'>('slots');
@@ -23,6 +23,7 @@ export function SpellsPanel({ char }: Props) {
   const [listLevel, setListLevel] = useState<number | 'all'>('all');
   const [animatingPips, setAnimatingPips] = useState<Set<string>>(new Set());
   const [listPrepAnim, setListPrepAnim] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const triggerPipAnim = (key: string) => {
     setAnimatingPips(prev => new Set(prev).add(key));
@@ -51,9 +52,10 @@ export function SpellsPanel({ char }: Props) {
   const abilityScore = scores[spellcasting.ability];
   const slots = computeSpellSlots(currentClassId, currentClassEntry.level, abilityScore);
   const isSpontaneous = spellcasting.type === 'spontaneous';
+  const isSpellbook = !!spellcasting.usesSpellbook;
 
   const preparedForClass = char.preparedSpells.filter(ps => ps.classId === currentClassId);
-  const usedAtLevel = (lv: number) => preparedForClass.filter(ps => ps.spellLevel === lv && ps.used).length;
+  const usedAtLevel = (lv: number) => (char.spellSlots ?? []).find(ss => ss.classId === currentClassId && ss.spellLevel === lv)?.used ?? 0;
   const totalSlotsAtLevel = (lv: number) => slots.find(s => s.level === lv)?.total ?? 0;
 
   const knownForClass = char.knownSpells.filter(ks => ks.classId === currentClassId);
@@ -98,7 +100,7 @@ export function SpellsPanel({ char }: Props) {
           {!isSpontaneous && (
             <button
               className="pf-btn pf-btn-ghost text-xs px-3 py-0.5"
-              onClick={() => { if (confirm('Svuotare tutti gli incantesimi preparati?')) clearPreparedSpells(char.id, currentClassId); }}
+              onClick={() => setShowClearConfirm(true)}
             >
               🗑 Svuota preparati
             </button>
@@ -110,7 +112,7 @@ export function SpellsPanel({ char }: Props) {
       <div className="flex border-b" style={{ borderColor: 'var(--theme-ghost-border)' }}>
         {[
           { id: 'slots', label: 'Slot & Preparati' },
-          { id: 'known', label: isSpontaneous ? 'Conosciuti' : 'Lista' },
+          { id: 'known', label: isSpontaneous ? 'Conosciuti' : isSpellbook ? 'Libro' : 'Lista' },
           { id: 'browse', label: 'Sfoglia' },
         ].map(t => (
           <button
@@ -138,9 +140,20 @@ export function SpellsPanel({ char }: Props) {
             return (
               <div key={s.level} className="pf-panel p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
-                    {isCantrip ? 'Trucchetti (0°)' : `${s.level}° Livello`}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>
+                      {isCantrip ? 'Trucchetti (0°)' : `${s.level}° Livello`}
+                    </span>
+                    {!isCantrip && (
+                      <span
+                        className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                        style={{ background: 'rgba(200,164,67,0.1)', color: 'var(--theme-text-neutral)', border: '1px solid var(--theme-border)' }}
+                        title={`CD = 10 + ${s.level} (livello) + ${spellDC(s.level, abilityScore) - 10 - s.level} (mod ${ABIL_LABEL[spellcasting.ability] ?? spellcasting.ability})`}
+                      >
+                        CD {spellDC(s.level, abilityScore)}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 text-sm">
                     {isCantrip ? (
                       <span className="text-xs font-semibold" style={{ color: 'var(--theme-hp-high)' }}>∞ Illimitati</span>
@@ -159,6 +172,7 @@ export function SpellsPanel({ char }: Props) {
                   <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: total }).map((_, i) => {
                       const isUsed = i < used;
+                      const isBonus = i >= s.base;
                       const pipKey = `${s.level}-${i}`;
                       return (
                         <button
@@ -166,15 +180,12 @@ export function SpellsPanel({ char }: Props) {
                           onClick={() => {
                             triggerPipAnim(pipKey);
                             if (!isUsed) useSpellSlot(char.id, currentClassId, s.level);
-                            else {
-                              const ps = preparedForClass.find(p => p.spellLevel === s.level && p.used);
-                              if (ps) unprepareSpell(char.id, ps.slot, currentClassId, s.level);
-                            }
+                            else recoverSpellSlot(char.id, currentClassId, s.level);
                           }}
                           className={`w-6 h-6 rounded-full border-2 transition-colors${animatingPips.has(pipKey) ? ' pip-pop' : ''}`}
                           style={{
-                            background: isUsed ? 'var(--theme-ghost-border)' : 'var(--theme-accent)',
-                            borderColor: isUsed ? 'var(--theme-border)' : '#e0b84d',
+                            background: isUsed ? 'var(--theme-ghost-border)' : isBonus ? '#9b7fd4' : 'var(--theme-accent)',
+                            borderColor: isUsed ? 'var(--theme-border)' : isBonus ? '#b89fd4' : '#e0b84d',
                           }}
                         />
                       );
@@ -185,17 +196,27 @@ export function SpellsPanel({ char }: Props) {
                 {preparedForClass.filter(ps => ps.spellLevel === s.level).map(ps => {
                   const spell = getSpell(ps.spellId);
                   return (
-                    <div
+                    <button
                       key={`${ps.slot}-${ps.spellId}`}
-                      className="mt-1 flex items-center gap-2 text-xs rounded px-2 py-1"
-                      style={{ background: isCantrip ? 'rgba(200,164,67,0.06)' : ps.used ? 'var(--theme-bg)' : 'rgba(200,164,67,0.08)', opacity: (!isCantrip && ps.used) ? 0.5 : 1 }}
+                      className="mt-1 w-full flex items-center gap-2 text-xs rounded px-2 py-1 text-left transition-all"
+                      style={{
+                        background: isCantrip ? 'rgba(200,164,67,0.06)' : ps.used ? 'rgba(0,0,0,0.15)' : 'rgba(200,164,67,0.08)',
+                        opacity: (!isCantrip && ps.used) ? 0.55 : 1,
+                        cursor: isCantrip ? 'default' : 'pointer',
+                        border: 'none',
+                      }}
+                      title={isCantrip ? undefined : ps.used ? 'Click per recuperare lo slot' : 'Click per usare lo slot'}
+                      onClick={() => { if (!isCantrip) markPreparedSpellUsed(char.id, ps.slot, ps.classId, ps.spellLevel); }}
                     >
-                      <span style={{ color: (!isCantrip && ps.used) ? 'var(--theme-text-faint)' : 'var(--theme-text)' }}>
+                      <span style={{
+                        color: (!isCantrip && ps.used) ? 'var(--theme-text-faint)' : 'var(--theme-text)',
+                        textDecoration: (!isCantrip && ps.used) ? 'line-through' : 'none',
+                      }}>
                         {spell?.name ?? ps.spellId}
                       </span>
-                      {!isCantrip && ps.used && <span style={{ color: 'var(--theme-text-faint)' }}>(usato)</span>}
-                      {isCantrip && <span className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>∞</span>}
-                    </div>
+                      {!isCantrip && ps.used && <span className="ml-auto shrink-0" style={{ color: 'var(--theme-text-faint)' }}>↩ recupera</span>}
+                      {isCantrip && <span className="text-xs ml-auto" style={{ color: 'var(--theme-hp-high)' }}>∞</span>}
+                    </button>
                   );
                 })}
               </div>
@@ -207,15 +228,71 @@ export function SpellsPanel({ char }: Props) {
       {/* KNOWN / LIST TAB */}
       {tab === 'known' && (
         <div className="space-y-2">
-          {/* Search + level filter for prepared casters */}
-          {!isSpontaneous && (() => {
+          {/* Spellbook casters: show only known spells with Prepara button */}
+          {isSpellbook && knownForClass.length === 0 && (
+            <div className="text-center py-6">
+              <p className="text-sm mb-1" style={{ color: 'var(--theme-text-muted)' }}>
+                Il libro di magie è vuoto.
+              </p>
+              <p className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
+                Aggiungi incantesimi dalla scheda "Sfoglia" o tramite il level-up.
+              </p>
+            </div>
+          )}
+          {isSpellbook && [...knownForClass].sort((a, b) => {
+            const sa = getSpell(a.spellId)?.name ?? '';
+            const sb = getSpell(b.spellId)?.name ?? '';
+            return sa.localeCompare(sb);
+          }).map(ks => {
+            const spell = getSpell(ks.spellId);
+            if (!spell) return null;
+            return (
+              <div key={ks.spellId} className="pf-panel p-3 flex items-start gap-2">
+                <span
+                  className="text-xs px-1 rounded font-bold shrink-0"
+                  style={{ background: (SCHOOL_COLORS[spell.school] ?? '#9ca3af') + '33', color: SCHOOL_COLORS[spell.school] ?? '#9ca3af' }}
+                >
+                  {ks.spellLevel === 0 ? '0°' : `${ks.spellLevel}°`}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
+                  <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>{spell.castingTime} · {spell.range}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{spell.description}</div>
+                </div>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button
+                    className={`text-xs pf-btn pf-btn-ghost px-2 py-0.5${listPrepAnim === ks.spellId ? ' btn-confirm' : ''}`}
+                    onClick={() => {
+                      prepareSpell(char.id, { spellId: ks.spellId, classId: currentClassId, spellLevel: ks.spellLevel, slot: Date.now(), used: false });
+                      setListPrepAnim(ks.spellId);
+                      setTimeout(() => setListPrepAnim(null), 400);
+                    }}
+                  >
+                    Prepara
+                  </button>
+                  <button
+                    className="text-xs pf-btn pf-btn-ghost px-2 py-0.5"
+                    style={{ color: 'var(--theme-text-faint)' }}
+                    onClick={() => removeKnownSpell(char.id, ks.spellId, currentClassId)}
+                    title="Rimuovi dal libro"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Prepared non-spellbook casters: full list */}
+          {!isSpontaneous && !isSpellbook && (() => {
             const accessibleLevels = slots.map(s => s.level);
             const accessibleSet = new Set(accessibleLevels);
             const lq = listSearch.toLowerCase();
             const listSpells = getSpellsForClass(currentClassId)
               .filter(s => accessibleSet.has(s.levels[currentClassId]))
               .filter(s => listLevel === 'all' || s.levels[currentClassId] === listLevel)
-              .filter(s => !lq || s.name.toLowerCase().includes(lq) || s.description.toLowerCase().includes(lq));
+              .filter(s => !lq || s.name.toLowerCase().includes(lq) || s.description.toLowerCase().includes(lq))
+              .sort((a, b) => a.name.localeCompare(b.name));
             return (
               <>
                 <input
@@ -282,7 +359,11 @@ export function SpellsPanel({ char }: Props) {
           {isSpontaneous && knownForClass.length === 0 && (
             <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>Nessun incantesimo conosciuto.</p>
           )}
-          {isSpontaneous && knownForClass.map(ks => {
+          {isSpontaneous && [...knownForClass].sort((a, b) => {
+            const sa = getSpell(a.spellId)?.name ?? '';
+            const sb = getSpell(b.spellId)?.name ?? '';
+            return sa.localeCompare(sb);
+          }).map(ks => {
             const spell = getSpell(ks.spellId);
             if (!spell) return null;
             return (
@@ -308,6 +389,17 @@ export function SpellsPanel({ char }: Props) {
         </div>
       )}
 
+      {showClearConfirm && (
+        <ConfirmModal
+          title="Svuota incantesimi preparati"
+          message="Vuoi rimuovere tutti gli incantesimi preparati per questa classe?"
+          confirmLabel="Svuota"
+          danger
+          onConfirm={() => { clearPreparedSpells(char.id, currentClassId); setShowClearConfirm(false); }}
+          onCancel={() => setShowClearConfirm(false)}
+        />
+      )}
+
       {/* BROWSE TAB */}
       {tab === 'browse' && (
         <BrowseSpells
@@ -315,6 +407,7 @@ export function SpellsPanel({ char }: Props) {
           char={char}
           slots={slots}
           isSpontaneous={isSpontaneous}
+          isSpellbook={isSpellbook}
           knownForClass={knownForClass}
           onAddKnown={spellId => addKnownSpell(char.id, { spellId, classId: currentClassId, spellLevel: getSpell(spellId)?.levels[currentClassId] ?? 0 })}
           onPrepare={(spellId, lv) => {
@@ -336,11 +429,12 @@ export function SpellsPanel({ char }: Props) {
   );
 }
 
-function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAddKnown, onPrepare }: {
+function BrowseSpells({ classId, char, slots, isSpontaneous, isSpellbook, knownForClass, onAddKnown, onPrepare }: {
   classId: string;
   char: Character;
   slots: { level: number; total: number }[];
   isSpontaneous: boolean;
+  isSpellbook: boolean;
   knownForClass: { spellId: string; spellLevel: number }[];
   onAddKnown: (spellId: string) => void;
   onPrepare: (spellId: string, level: number) => void;
@@ -357,11 +451,13 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
     .filter(s => classId in s.levels && accessibleSet.has(s.levels[classId]));
 
   const q = search.toLowerCase();
-  const filtered = classSpells.filter(s => {
-    if (filterLevel !== 'all' && s.levels[classId] !== filterLevel) return false;
-    if (q && !s.name.toLowerCase().includes(q) && !s.description.toLowerCase().includes(q)) return false;
-    return true;
-  });
+  const filtered = classSpells
+    .filter(s => {
+      if (filterLevel !== 'all' && s.levels[classId] !== filterLevel) return false;
+      if (q && !s.name.toLowerCase().includes(q) && !s.description.toLowerCase().includes(q)) return false;
+      return true;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div>
@@ -428,7 +524,32 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, knownForClass, onAd
                   {isSpontaneous && isKnown && (
                     <span className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>✓</span>
                   )}
-                  {!isSpontaneous && (
+                  {isSpellbook && !isKnown && (
+                    <button
+                      className="pf-btn text-xs px-2 py-0.5"
+                      style={{ background: 'rgba(155,127,212,0.2)', color: '#9b7fd4', border: '1px solid #9b7fd4' }}
+                      onClick={() => onAddKnown(spell.id)}
+                    >
+                      + Libro
+                    </button>
+                  )}
+                  {isSpellbook && isKnown && (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>📖 Nel libro</span>
+                      <button
+                        className={`pf-btn text-xs px-2 py-0.5${prepAnim === spell.id ? ' btn-confirm' : ''}`}
+                        style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)', border: '1px solid var(--theme-border)' }}
+                        onClick={() => {
+                          onPrepare(spell.id, spellLevel);
+                          setPrepAnim(spell.id);
+                          setTimeout(() => setPrepAnim(null), 400);
+                        }}
+                      >
+                        Prepara
+                      </button>
+                    </>
+                  )}
+                  {!isSpontaneous && !isSpellbook && (
                     <button
                       className={`pf-btn text-xs px-2 py-0.5${prepAnim === spell.id ? ' btn-confirm' : ''}`}
                       style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)', border: '1px solid var(--theme-border)' }}
