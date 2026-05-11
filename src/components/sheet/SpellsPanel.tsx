@@ -15,7 +15,7 @@ const SCHOOL_COLORS: Record<string, string> = {
 interface Props { char: Character }
 
 export function SpellsPanel({ char }: Props) {
-  const { addKnownSpell, removeKnownSpell, prepareSpell, unprepareSpell, useSpellSlot, recoverSpellSlot, recoverAllSpellSlots, clearPreparedSpells } = useCharacterStore();
+  const { addKnownSpell, removeKnownSpell, prepareSpell, unprepareSpell, markPreparedSpellUsed, useSpellSlot, recoverSpellSlot, recoverAllSpellSlots, clearPreparedSpells } = useCharacterStore();
   const [activeClassId, setActiveClassId] = useState<string | null>(null);
   const [activeLevel, setActiveLevel] = useState(0);
   const [tab, setTab] = useState<'slots' | 'known' | 'browse'>('slots');
@@ -196,17 +196,27 @@ export function SpellsPanel({ char }: Props) {
                 {preparedForClass.filter(ps => ps.spellLevel === s.level).map(ps => {
                   const spell = getSpell(ps.spellId);
                   return (
-                    <div
+                    <button
                       key={`${ps.slot}-${ps.spellId}`}
-                      className="mt-1 flex items-center gap-2 text-xs rounded px-2 py-1"
-                      style={{ background: isCantrip ? 'rgba(200,164,67,0.06)' : ps.used ? 'var(--theme-bg)' : 'rgba(200,164,67,0.08)', opacity: (!isCantrip && ps.used) ? 0.5 : 1 }}
+                      className="mt-1 w-full flex items-center gap-2 text-xs rounded px-2 py-1 text-left transition-all"
+                      style={{
+                        background: isCantrip ? 'rgba(200,164,67,0.06)' : ps.used ? 'rgba(0,0,0,0.15)' : 'rgba(200,164,67,0.08)',
+                        opacity: (!isCantrip && ps.used) ? 0.55 : 1,
+                        cursor: isCantrip ? 'default' : 'pointer',
+                        border: 'none',
+                      }}
+                      title={isCantrip ? undefined : ps.used ? 'Click per recuperare lo slot' : 'Click per usare lo slot'}
+                      onClick={() => { if (!isCantrip) markPreparedSpellUsed(char.id, ps.slot, ps.classId, ps.spellLevel); }}
                     >
-                      <span style={{ color: (!isCantrip && ps.used) ? 'var(--theme-text-faint)' : 'var(--theme-text)' }}>
+                      <span style={{
+                        color: (!isCantrip && ps.used) ? 'var(--theme-text-faint)' : 'var(--theme-text)',
+                        textDecoration: (!isCantrip && ps.used) ? 'line-through' : 'none',
+                      }}>
                         {spell?.name ?? ps.spellId}
                       </span>
-                      {!isCantrip && ps.used && <span style={{ color: 'var(--theme-text-faint)' }}>(usato)</span>}
-                      {isCantrip && <span className="text-xs" style={{ color: 'var(--theme-hp-high)' }}>∞</span>}
-                    </div>
+                      {!isCantrip && ps.used && <span className="ml-auto shrink-0" style={{ color: 'var(--theme-text-faint)' }}>↩ recupera</span>}
+                      {isCantrip && <span className="text-xs ml-auto" style={{ color: 'var(--theme-hp-high)' }}>∞</span>}
+                    </button>
                   );
                 })}
               </div>

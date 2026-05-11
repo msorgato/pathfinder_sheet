@@ -102,6 +102,7 @@ interface CharacterState {
   removeKnownSpell: (id: string, spellId: string, classId: string) => void;
   prepareSpell: (id: string, spell: PreparedSpell) => void;
   unprepareSpell: (id: string, slot: number, classId: string, spellLevel: number) => void;
+  markPreparedSpellUsed: (id: string, slot: number, classId: string, spellLevel: number) => void;
   useSpellSlot: (id: string, classId: string, spellLevel: number) => void;
   recoverSpellSlot: (id: string, classId: string, spellLevel: number) => void;
   recoverAllSpellSlots: (id: string) => void;
@@ -312,6 +313,36 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     if (updated) syncChar(updated);
   },
 
+  markPreparedSpellUsed: (id, slot, classId, spellLevel) => {
+    set(s => ({
+      characters: s.characters.map(c => {
+        if (c.id !== id) return c;
+        const ps = c.preparedSpells.find(p => p.slot === slot && p.classId === classId && p.spellLevel === spellLevel);
+        if (!ps) return c;
+        const nowUsed = !ps.used;
+        const preparedSpells = c.preparedSpells.map(p =>
+          p.slot === slot && p.classId === classId && p.spellLevel === spellLevel
+            ? { ...p, used: nowUsed }
+            : p,
+        );
+        const existingSlots = c.spellSlots ?? [];
+        const hasSlotEntry = existingSlots.some(ss => ss.classId === classId && ss.spellLevel === spellLevel);
+        const spellSlots = nowUsed
+          ? hasSlotEntry
+            ? existingSlots.map(ss => ss.classId === classId && ss.spellLevel === spellLevel
+                ? { ...ss, used: ss.used + 1 }
+                : ss)
+            : [...existingSlots, { classId, spellLevel, total: 0, used: 1 }]
+          : existingSlots.map(ss => ss.classId === classId && ss.spellLevel === spellLevel
+              ? { ...ss, used: Math.max(0, ss.used - 1) }
+              : ss);
+        return { ...c, preparedSpells, spellSlots };
+      }),
+    }));
+    const updated = get().characters.find(c => c.id === id);
+    if (updated) syncChar(updated);
+  },
+
   useSpellSlot: (id, classId, spellLevel) => {
     set(s => ({
       characters: s.characters.map(c => {
@@ -354,7 +385,11 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c =>
         c.id === id
-          ? { ...c, spellSlots: (c.spellSlots ?? []).map(ss => ({ ...ss, used: 0 })) }
+          ? {
+              ...c,
+              spellSlots: (c.spellSlots ?? []).map(ss => ({ ...ss, used: 0 })),
+              preparedSpells: c.preparedSpells.map(ps => ({ ...ps, used: false })),
+            }
           : c,
       ),
     }));
