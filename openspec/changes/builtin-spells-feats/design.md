@@ -7,7 +7,7 @@ Il `dataStore` persiste su Firestore il solo **delta** rispetto al baseline (pat
 ## Goals / Non-Goals
 
 **Goals:**
-- I file `database/*.json` diventano il baseline built-in caricato dinamicamente (lazy chunk Vite).
+- I file `database/*.json` vengono spostati in `public/data/` e caricati via `fetch()` al bootstrap dell'app.
 - Il caricamento avviene una volta sola al mount dell'app; durante il caricamento viene mostrato uno spinner minimo.
 - Il sistema patch/extra/hidden esistente continua a funzionare invariato.
 - I pulsanti di import JSON nell'AdminPanel vengono rimossi.
@@ -21,14 +21,14 @@ Il `dataStore` persiste su Firestore il solo **delta** rispetto al baseline (pat
 
 ## Decisions
 
-### D1 — Lazy JSON import via Vite dynamic import
+### D1 — Asset statici in `public/data/` caricati via `fetch()`
 
-**Scelta**: Importare i JSON con `import('../../database/incantesimi_import.json')` — Vite li tratta come chunk separati emessi a build time, serviti come asset statici.
+**Scelta**: Spostare i JSON in `public/data/spells.json` e `public/data/feats.json`. Il `dataStore` li carica con `fetch('/data/spells.json')` al bootstrap. Vite li copia as-is nella dist senza elaborazione.
 
-**Alternative considerate**:
-- *Static import inline*: carica tutto nel bundle principale (~2 MB extra). Non accettabile per performance di first load.
-- *fetch da `public/`*: richiede copiare i file in `public/`, dipende da un URL runtime e non funziona in ambienti offline/embedded. Più complesso.
-- *Vite dynamic import* ✓: zero dipendenze aggiuntive, tree-shaking automatico, il chunk è cacheable dal browser, funziona in tutti gli ambienti già supportati dall'app.
+**Perché è la scelta ottimale rispetto alle alternative**:
+- *Static import inline* (`import data from './data.json'`): carica ~2 MB nel bundle principale. Non accettabile.
+- *Vite dynamic `import()`* di JSON: Vite legge il JSON a build time, lo serializza come oggetto letterale JS in un `.js` chunk. Il browser lo esegue come JS, con overhead di parse JS invece del parser JSON nativo. Per file grandi il parser JSON nativo (usato da `fetch`) è misurabilmente più veloce.
+- *`public/` + `fetch()`* ✓: il browser cachea il JSON come static asset con header `Cache-Control` separati dal bundle JS, il JSON parser nativo è più veloce, i file non passano per la pipeline Vite (build più veloce), e si possono aggiornare i dati senza rebuild dell'app.
 
 ### D2 — Punto di caricamento: `App.tsx` / `AuthProvider`
 
@@ -38,11 +38,19 @@ Il `dataStore` persiste su Firestore il solo **delta** rispetto al baseline (pat
 - *Caricamento al primo accesso a SpellsPanel*: ritardo percepibile all'apertura della scheda incantesimi; stato di loading sparso nei componenti.
 - *Bootstrap in `App.tsx`* ✓: caricamento trasparente durante l'auth loading già presente; nessun delay percepibile.
 
-### D3 — Struttura dei file JSON importati
+### D3 — Posizione finale dei file JSON e formato
 
-I file `database/incantesimi_import.json` (formato `{ version, exportedAt, spells: SpellDefinition[] }`) e `database/talenti_import_v2.json` (formato `{ version, exportedAt, feats: FeatDefinition[] }`) vengono importati as-is. I file correnti `src/data/spells.ts` e `src/data/feats.ts` vengono svuotati a `export const SPELLS: SpellDefinition[] = []` e `export const FEATS: FeatDefinition[] = []` come placeholder (mantengono la compatibilità con le import esistenti).
+I file vengono rinominati e spostati:
+- `database/incantesimi_import.json` → `public/data/spells.json`
+- `database/talenti_import_v2.json` → `public/data/feats.json`
 
-Il `dataStore` sovrascrive il baseline con i dati caricati via `loadBuiltinData()`.
+Il formato è già compatibile (`{ version, exportedAt, spells: SpellDefinition[] }` e `{ ..., feats: FeatDefinition[] }`); nessuna trasformazione necessaria.
+
+I file `src/data/spells.ts` e `src/data/feats.ts` vengono svuotati a `export const SPELLS: SpellDefinition[] = []` e `export const FEATS: FeatDefinition[] = []` come stub (mantengono la compatibilità con le import esistenti in `dataStore` e `AdminPanel`).
+
+Il `dataStore` popola il baseline caricato via `fetch()` in `loadBuiltinData()`.
+
+La cartella `database/` a root del progetto viene eliminata (i file sono ora in `public/data/`).
 
 ### D4 — Libreria Condivisa: struttura Firestore
 
@@ -78,7 +86,7 @@ Quando un utente importa dalla libreria condivisa, la voce viene aggiunta a `ext
 
 ## Migration Plan
 
-1. Copiare `database/incantesimi_import.json` → `src/data/incantesimi_import.json` e `database/talenti_import_v2.json` → `src/data/talenti_import_v2.json` (percorso più vicino ai consumer).
+1. Spostare `database/incantesimi_import.json` → `public/data/spells.json` e `database/talenti_import_v2.json` → `public/data/feats.json`; eliminare la cartella `database/`.
 2. Aggiornare `dataStore.ts` con `loadBuiltinData()` e `builtinLoaded` state.
 3. Svuotare `src/data/spells.ts` e `src/data/feats.ts` a array vuoti.
 4. Chiamare `loadBuiltinData()` nel bootstrap dell'app.
@@ -91,5 +99,5 @@ Quando un utente importa dalla libreria condivisa, la voce viene aggiunta a `ext
 
 ## Open Questions
 
-- I file JSON devono rimanere in `database/` (root) o essere spostati in `src/data/`? → Decisione: spostati in `src/data/` per chiarezza e per restare sotto la root di Vite senza configurazione aggiuntiva.
+- I file JSON devono essere in `public/data/` (fetch) o `src/data/` (dynamic import)? → Decisione: `public/data/` per performance (parser JSON nativo, cache separata, nessun overhead build).
 - Le Firestore security rules per `library/` saranno aggiornate in questo PR o in un follow-up? → Follow-up (non bloccante per MVP).

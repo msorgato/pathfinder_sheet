@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore, useMergedFeats, useMergedSpells } from '../store/dataStore';
+import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
-import { FEATS } from '../data/feats';
-import { SPELLS } from '../data/spells';
+import { publishToLibrary, loadLibrary } from '../lib/firestoreSync';
 import type { FeatDefinition, SpellDefinition, SpellSchool } from '../types';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -96,12 +96,13 @@ function Select<T extends string>({ value, onChange, options }: { value: T; onCh
 
 // ── Feat editor ───────────────────────────────────────────────────────────────
 
-function FeatEditor({ feat, isBase, onSave, onDelete, onReset }: {
+function FeatEditor({ feat, isBase, onSave, onDelete, onReset, onPublish }: {
   feat: FeatDefinition;
   isBase: boolean;
   onSave: (f: FeatDefinition) => void;
   onDelete: () => void;
   onReset?: () => void;
+  onPublish?: () => void;
 }) {
   const [draft, setDraft] = useState<FeatDefinition>({ ...feat });
   const set = (k: keyof FeatDefinition, v: unknown) => setDraft(d => ({ ...d, [k]: v }));
@@ -150,6 +151,15 @@ function FeatEditor({ feat, isBase, onSave, onDelete, onReset }: {
             Ripristina
           </button>
         )}
+        {onPublish && (
+          <button
+            className="pf-btn text-xs px-3 py-1.5"
+            style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
+            onClick={onPublish}
+          >
+            ↑ Pubblica
+          </button>
+        )}
         <button
           className="pf-btn pf-btn-red text-xs px-3 py-1.5 ml-auto"
           onClick={onDelete}
@@ -163,12 +173,13 @@ function FeatEditor({ feat, isBase, onSave, onDelete, onReset }: {
 
 // ── Spell editor ──────────────────────────────────────────────────────────────
 
-function SpellEditor({ spell, isBase, onSave, onDelete, onReset }: {
+function SpellEditor({ spell, isBase, onSave, onDelete, onReset, onPublish }: {
   spell: SpellDefinition;
   isBase: boolean;
   onSave: (s: SpellDefinition) => void;
   onDelete: () => void;
   onReset?: () => void;
+  onPublish?: () => void;
 }) {
   const [draft, setDraft] = useState<SpellDefinition>({ ...spell, levels: { ...spell.levels } });
   const set = (k: keyof SpellDefinition, v: unknown) => setDraft(d => ({ ...d, [k]: v }));
@@ -249,6 +260,15 @@ function SpellEditor({ spell, isBase, onSave, onDelete, onReset }: {
             Ripristina
           </button>
         )}
+        {onPublish && (
+          <button
+            className="pf-btn text-xs px-3 py-1.5"
+            style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
+            onClick={onPublish}
+          >
+            ↑ Pubblica
+          </button>
+        )}
         <button
           className="pf-btn pf-btn-red text-xs px-3 py-1.5 ml-auto"
           onClick={onDelete}
@@ -260,29 +280,120 @@ function SpellEditor({ spell, isBase, onSave, onDelete, onReset }: {
   );
 }
 
+// ── Shared Library component ──────────────────────────────────────────────────
+
+function SharedLibrary({ extraFeatIds, extraSpellIds, onImportFeat, onImportSpell }: {
+  extraFeatIds: Set<string>;
+  extraSpellIds: Set<string>;
+  onImportFeat: (feat: FeatDefinition) => void;
+  onImportSpell: (spell: SpellDefinition) => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [feats, setFeats] = useState<FeatDefinition[]>([]);
+  const [spells, setSpells] = useState<SpellDefinition[]>([]);
+
+  useEffect(() => {
+    loadLibrary()
+      .then(data => { setFeats(data.feats); setSpells(data.spells); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="anim-spin text-3xl" style={{ color: 'var(--theme-accent)' }}>✦</div>
+      </div>
+    );
+  }
+
+  if (feats.length === 0 && spells.length === 0) {
+    return (
+      <div className="text-center py-16" style={{ color: 'var(--theme-text-faint)' }}>
+        Nessuna voce condivisa
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {feats.length > 0 && (
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-border-strong)' }}>
+            Talenti ({feats.length})
+          </h3>
+          <div className="space-y-2">
+            {feats.map(feat => {
+              const imported = extraFeatIds.has(feat.id);
+              return (
+                <div key={feat.id} className="pf-panel px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{feat.name}</span>
+                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{feat.type}</span>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--theme-text-faint)' }}>{feat.benefit}</p>
+                  </div>
+                  {imported
+                    ? <span className="text-xs shrink-0" style={{ color: 'var(--theme-hp-high)' }}>✓ Importato</span>
+                    : <button className="pf-btn pf-btn-outline text-xs px-3 py-1 shrink-0" onClick={() => onImportFeat(feat)}>Importa</button>
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {spells.length > 0 && (
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-border-strong)' }}>
+            Incantesimi ({spells.length})
+          </h3>
+          <div className="space-y-2">
+            {spells.map(spell => {
+              const imported = extraSpellIds.has(spell.id);
+              return (
+                <div key={spell.id} className="pf-panel px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</span>
+                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{spell.school}</span>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--theme-text-faint)' }}>{spell.description}</p>
+                  </div>
+                  {imported
+                    ? <span className="text-xs shrink-0" style={{ color: 'var(--theme-hp-high)' }}>✓ Importato</span>
+                    : <button className="pf-btn pf-btn-outline text-xs px-3 py-1 shrink-0" onClick={() => onImportSpell(spell)}>Importa</button>
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = 'feats' | 'spells';
+type Tab = 'feats' | 'spells' | 'library';
 
 export function AdminPanel() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('feats');
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const mergeFeatsRef = useRef<HTMLInputElement>(null);
-  const mergeSpellsRef = useRef<HTMLInputElement>(null);
 
+  const user = useAuthStore(s => s.user);
   const store = useDataStore();
   const mergedFeats = useMergedFeats();
   const mergedSpells = useMergedSpells();
   const theme = useThemeStore(s => s.theme);
   const isCyber = theme === 'cyberpunk';
 
-  const baseFeatIds = new Set(FEATS.map(f => f.id));
-  const baseSpellIds = new Set(SPELLS.map(s => s.id));
+  const baseFeatIds = new Set(store.builtinFeats.map(f => f.id));
+  const baseSpellIds = new Set(store.builtinSpells.map(s => s.id));
+  const extraFeatIds = new Set(store.extraFeats.map(f => f.id));
+  const extraSpellIds = new Set(store.extraSpells.map(s => s.id));
 
-  // useMergedFeats/useMergedSpells already excludes hidden base items
   const visibleFeats = mergedFeats;
   const visibleSpells = mergedSpells;
 
@@ -294,72 +405,8 @@ export function AdminPanel() {
     s.name.toLowerCase().includes(q) || s.school.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
   );
 
-  // ── data import/export ───────────────────────────────────────────────────
-
   const handleExport = () => {
     triggerJsonDownload(store.exportData(), `pathfinder-data-${new Date().toISOString().slice(0, 10)}.json`);
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const parsed = JSON.parse(ev.target?.result as string);
-        store.importData(parsed);
-      } catch {
-        alert('File non valido');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handleMergeFeats = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const parsed = JSON.parse(ev.target?.result as string);
-        const incoming: FeatDefinition[] = Array.isArray(parsed)
-          ? parsed
-          : Array.isArray(parsed.feats)
-          ? parsed.feats
-          : [];
-        if (incoming.length === 0) { alert('Nessun talento trovato nel file.'); return; }
-        store.mergeExtraFeats(incoming);
-        alert(`Importazione completata. Talenti aggiunti (quelli già presenti sono stati ignorati).`);
-      } catch {
-        alert('File non valido');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handleMergeSpells = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const parsed = JSON.parse(ev.target?.result as string);
-        const incoming: SpellDefinition[] = Array.isArray(parsed)
-          ? parsed
-          : Array.isArray(parsed.spells)
-          ? parsed.spells
-          : [];
-        if (incoming.length === 0) { alert('Nessun incantesimo trovato nel file.'); return; }
-        store.mergeExtraSpells(incoming);
-        alert(`Importazione completata. Incantesimi aggiunti (quelli già presenti sono stati ignorati).`);
-      } catch {
-        alert('File non valido');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
   };
 
   // ── feat actions ─────────────────────────────────────────────────────────
@@ -375,11 +422,8 @@ export function AdminPanel() {
   };
 
   const deleteFeat = (id: string) => {
-    if (baseFeatIds.has(id)) {
-      store.hideFeat(id);
-    } else {
-      store.deleteFeat(id);
-    }
+    if (baseFeatIds.has(id)) store.hideFeat(id);
+    else store.deleteFeat(id);
     if (expanded === id) setExpanded(null);
   };
 
@@ -387,6 +431,11 @@ export function AdminPanel() {
     const f = emptyFeat();
     store.addFeat(f);
     setExpanded(f.id);
+  };
+
+  const publishFeat = (feat: FeatDefinition) => {
+    if (!user) return;
+    publishToLibrary('feat', feat, user.uid).catch(console.error);
   };
 
   // ── spell actions ─────────────────────────────────────────────────────────
@@ -402,11 +451,8 @@ export function AdminPanel() {
   };
 
   const deleteSpell = (id: string) => {
-    if (baseSpellIds.has(id)) {
-      store.hideSpell(id);
-    } else {
-      store.deleteSpell(id);
-    }
+    if (baseSpellIds.has(id)) store.hideSpell(id);
+    else store.deleteSpell(id);
     if (expanded === id) setExpanded(null);
   };
 
@@ -416,8 +462,14 @@ export function AdminPanel() {
     setExpanded(s.id);
   };
 
+  const publishSpell = (spell: SpellDefinition) => {
+    if (!user) return;
+    publishToLibrary('spell', spell, user.uid).catch(console.error);
+  };
+
   // ── render ────────────────────────────────────────────────────────────────
 
+  const isListTab = tab === 'feats' || tab === 'spells';
   const items = tab === 'feats' ? filteredFeats : filteredSpells;
 
   return (
@@ -440,139 +492,148 @@ export function AdminPanel() {
           <button onClick={handleExport} className="pf-btn pf-btn-outline text-xs px-3 py-1.5">
             Esporta Dati
           </button>
-          <button onClick={() => fileInputRef.current?.click()} className="pf-btn pf-btn-ghost text-xs px-3 py-1.5">
-            Importa Dati
-          </button>
-          <button onClick={() => mergeFeatsRef.current?.click()} className="pf-btn pf-btn-outline text-xs px-3 py-1.5" title="Aggiunge nuovi talenti senza toccare quelli esistenti">
-            + Importa Talenti
-          </button>
-          <button onClick={() => mergeSpellsRef.current?.click()} className="pf-btn pf-btn-outline text-xs px-3 py-1.5" title="Aggiunge nuovi incantesimi senza toccare quelli esistenti">
-            + Importa Incantesimi
-          </button>
           <button onClick={() => navigate('/')} className="pf-btn pf-btn-ghost text-xs px-3 py-1.5">
             ← Home
           </button>
-          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-          <input ref={mergeFeatsRef} type="file" accept=".json" className="hidden" onChange={handleMergeFeats} />
-          <input ref={mergeSpellsRef} type="file" accept=".json" className="hidden" onChange={handleMergeSpells} />
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Tabs */}
         <div className="flex gap-1 mb-4 p-1 rounded-lg" style={{ background: 'var(--theme-bg-panel)' }}>
-          {(['feats', 'spells'] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => { setTab(t); setExpanded(null); setSearch(''); }}
-              className="flex-1 py-2 rounded text-sm font-semibold transition-all"
-              style={{
-                background: tab === t ? 'var(--theme-accent)' : 'transparent',
-                color: tab === t ? 'var(--theme-bg)' : 'var(--theme-text-muted)',
-              }}
-            >
-              {t === 'feats' ? `Talenti (${visibleFeats.length})` : `Incantesimi (${visibleSpells.length})`}
-            </button>
-          ))}
-        </div>
-
-        {/* Toolbar */}
-        <div className="flex gap-2 mb-4">
-          <input
-            className="pf-input flex-1"
-            placeholder={`Cerca ${tab === 'feats' ? 'talento' : 'incantesimo'}...`}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
           <button
-            className="pf-btn pf-btn-gold text-sm px-4"
-            onClick={tab === 'feats' ? addNewFeat : addNewSpell}
+            onClick={() => { setTab('feats'); setExpanded(null); setSearch(''); }}
+            className="flex-1 py-2 rounded text-sm font-semibold transition-all"
+            style={{ background: tab === 'feats' ? 'var(--theme-accent)' : 'transparent', color: tab === 'feats' ? 'var(--theme-bg)' : 'var(--theme-text-muted)' }}
           >
-            + Aggiungi
+            Talenti ({visibleFeats.length})
+          </button>
+          <button
+            onClick={() => { setTab('spells'); setExpanded(null); setSearch(''); }}
+            className="flex-1 py-2 rounded text-sm font-semibold transition-all"
+            style={{ background: tab === 'spells' ? 'var(--theme-accent)' : 'transparent', color: tab === 'spells' ? 'var(--theme-bg)' : 'var(--theme-text-muted)' }}
+          >
+            Incantesimi ({visibleSpells.length})
+          </button>
+          <button
+            onClick={() => { setTab('library'); setExpanded(null); setSearch(''); }}
+            className="flex-1 py-2 rounded text-sm font-semibold transition-all"
+            style={{ background: tab === 'library' ? 'rgba(99,102,241,0.8)' : 'transparent', color: tab === 'library' ? '#fff' : 'var(--theme-text-muted)' }}
+          >
+            Libreria Condivisa
           </button>
         </div>
 
+        {/* Toolbar — solo per tab feats/spells */}
+        {isListTab && (
+          <div className="flex gap-2 mb-4">
+            <input
+              className="pf-input flex-1"
+              placeholder={`Cerca ${tab === 'feats' ? 'talento' : 'incantesimo'}...`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <button
+              className="pf-btn pf-btn-gold text-sm px-4"
+              onClick={tab === 'feats' ? addNewFeat : addNewSpell}
+            >
+              + Aggiungi
+            </button>
+          </div>
+        )}
+
         {/* List */}
-        <div className="space-y-2">
-          {items.length === 0 && (
-            <div className="text-center py-12" style={{ color: 'var(--theme-text-faint)' }}>
-              Nessun risultato
-            </div>
-          )}
-          {tab === 'feats' && filteredFeats.map(feat => {
-            const isBase = baseFeatIds.has(feat.id);
-            const isModified = !!store.featPatches[feat.id];
-            return (
-              <div key={feat.id}>
-                {/* Row header */}
-                <button
-                  className="w-full text-left pf-panel px-4 py-2.5 flex items-center justify-between transition-all"
-                  style={{ borderColor: expanded === feat.id ? 'var(--theme-accent)' : undefined }}
-                  onClick={() => setExpanded(expanded === feat.id ? null : feat.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{feat.name || <em style={{ color: 'var(--theme-text-faint)' }}>senza nome</em>}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{feat.type}</span>
-                    {!isBase && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)' }}>custom</span>}
-                    {isModified && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(96,165,250,0.15)', color: 'var(--theme-info)' }}>modificato</span>}
-                  </div>
-                  <span style={{ color: 'var(--theme-text-faint)' }}>{expanded === feat.id ? '▲' : '▼'}</span>
-                </button>
-
-                {expanded === feat.id && (
-                  <div className="mt-1">
-                    <FeatEditor
-                      feat={feat}
-                      isBase={isBase}
-                      onSave={saveFeat}
-                      onDelete={() => deleteFeat(feat.id)}
-                      onReset={isBase ? () => store.resetFeat(feat.id) : undefined}
-                    />
-                  </div>
-                )}
+        {isListTab && (
+          <div className="space-y-2">
+            {items.length === 0 && (
+              <div className="text-center py-12" style={{ color: 'var(--theme-text-faint)' }}>
+                Nessun risultato
               </div>
-            );
-          })}
+            )}
+            {tab === 'feats' && filteredFeats.map(feat => {
+              const isBase = baseFeatIds.has(feat.id);
+              const isModified = !!store.featPatches[feat.id];
+              return (
+                <div key={feat.id}>
+                  <button
+                    className="w-full text-left pf-panel px-4 py-2.5 flex items-center justify-between transition-all"
+                    style={{ borderColor: expanded === feat.id ? 'var(--theme-accent)' : undefined }}
+                    onClick={() => setExpanded(expanded === feat.id ? null : feat.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{feat.name || <em style={{ color: 'var(--theme-text-faint)' }}>senza nome</em>}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{feat.type}</span>
+                      {!isBase && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)' }}>custom</span>}
+                      {isModified && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(96,165,250,0.15)', color: 'var(--theme-info)' }}>modificato</span>}
+                    </div>
+                    <span style={{ color: 'var(--theme-text-faint)' }}>{expanded === feat.id ? '▲' : '▼'}</span>
+                  </button>
+                  {expanded === feat.id && (
+                    <div className="mt-1">
+                      <FeatEditor
+                        feat={feat}
+                        isBase={isBase}
+                        onSave={saveFeat}
+                        onDelete={() => deleteFeat(feat.id)}
+                        onReset={isBase ? () => store.resetFeat(feat.id) : undefined}
+                        onPublish={!isBase ? () => publishFeat(feat) : undefined}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
-          {tab === 'spells' && filteredSpells.map(spell => {
-            const isBase = baseSpellIds.has(spell.id);
-            const isModified = !!store.spellPatches[spell.id];
-            return (
-              <div key={spell.id}>
-                <button
-                  className="w-full text-left pf-panel px-4 py-2.5 flex items-center justify-between transition-all"
-                  style={{ borderColor: expanded === spell.id ? 'var(--theme-accent)' : undefined }}
-                  onClick={() => setExpanded(expanded === spell.id ? null : spell.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name || <em style={{ color: 'var(--theme-text-faint)' }}>senza nome</em>}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{spell.school}</span>
-                    {Object.entries(spell.levels).slice(0, 3).map(([cls, lv]) => (
-                      <span key={cls} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg-panel-2)', color: 'var(--theme-text-muted)' }}>
-                        {cls} {lv}
-                      </span>
-                    ))}
-                    {!isBase && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)' }}>custom</span>}
-                    {isModified && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(96,165,250,0.15)', color: 'var(--theme-info)' }}>modificato</span>}
-                  </div>
-                  <span style={{ color: 'var(--theme-text-faint)' }}>{expanded === spell.id ? '▲' : '▼'}</span>
-                </button>
+            {tab === 'spells' && filteredSpells.map(spell => {
+              const isBase = baseSpellIds.has(spell.id);
+              const isModified = !!store.spellPatches[spell.id];
+              return (
+                <div key={spell.id}>
+                  <button
+                    className="w-full text-left pf-panel px-4 py-2.5 flex items-center justify-between transition-all"
+                    style={{ borderColor: expanded === spell.id ? 'var(--theme-accent)' : undefined }}
+                    onClick={() => setExpanded(expanded === spell.id ? null : spell.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name || <em style={{ color: 'var(--theme-text-faint)' }}>senza nome</em>}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-muted)' }}>{spell.school}</span>
+                      {Object.entries(spell.levels).slice(0, 3).map(([cls, lv]) => (
+                        <span key={cls} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--theme-bg-panel-2)', color: 'var(--theme-text-muted)' }}>
+                          {cls} {lv}
+                        </span>
+                      ))}
+                      {!isBase && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(200,164,67,0.15)', color: 'var(--theme-accent)' }}>custom</span>}
+                      {isModified && <span className="text-xs px-1.5 rounded" style={{ background: 'rgba(96,165,250,0.15)', color: 'var(--theme-info)' }}>modificato</span>}
+                    </div>
+                    <span style={{ color: 'var(--theme-text-faint)' }}>{expanded === spell.id ? '▲' : '▼'}</span>
+                  </button>
+                  {expanded === spell.id && (
+                    <div className="mt-1">
+                      <SpellEditor
+                        spell={spell}
+                        isBase={isBase}
+                        onSave={saveSpell}
+                        onDelete={() => deleteSpell(spell.id)}
+                        onReset={isBase ? () => store.resetSpell(spell.id) : undefined}
+                        onPublish={!isBase ? () => publishSpell(spell) : undefined}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-                {expanded === spell.id && (
-                  <div className="mt-1">
-                    <SpellEditor
-                      spell={spell}
-                      isBase={isBase}
-                      onSave={saveSpell}
-                      onDelete={() => deleteSpell(spell.id)}
-                      onReset={isBase ? () => store.resetSpell(spell.id) : undefined}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {/* Libreria Condivisa tab */}
+        {tab === 'library' && (
+          <SharedLibrary
+            extraFeatIds={extraFeatIds}
+            extraSpellIds={extraSpellIds}
+            onImportFeat={feat => store.addFeat(feat)}
+            onImportSpell={spell => store.addSpell(spell)}
+          />
+        )}
       </div>
     </div>
   );

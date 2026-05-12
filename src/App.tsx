@@ -31,7 +31,7 @@ function App() {
   const theme = useThemeStore(s => s.theme);
   const { user, loading: authLoading, init } = useAuthStore();
   const { loadFromFirestore: loadChars, clearStore: clearChars } = useCharacterStore();
-  const { loadFromFirestore: loadData, clearStore: clearData } = useDataStore();
+  const { loadFromFirestore: loadData, loadBuiltinData, clearStore: clearData, builtinLoaded } = useDataStore();
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
@@ -41,6 +41,11 @@ function App() {
   useEffect(() => {
     const unsubscribe = init();
     return unsubscribe;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    loadBuiltinData().catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,7 +63,7 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid, authLoading]);
 
-  if (authLoading || dataLoading) {
+  if (authLoading || dataLoading || !builtinLoaded) {
     return <LoadingScreen />;
   }
 

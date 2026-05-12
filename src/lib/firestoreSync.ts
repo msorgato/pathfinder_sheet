@@ -2,9 +2,10 @@ import {
   doc, collection,
   setDoc, deleteDoc,
   getDocs, getDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Character } from '../types';
+import type { Character, FeatDefinition, SpellDefinition } from '../types';
 
 const charCol    = (uid: string) => collection(db, 'users', uid, 'characters');
 const charDocRef = (uid: string, charId: string) => doc(db, 'users', uid, 'characters', charId);
@@ -36,4 +37,26 @@ export async function saveDataStore(uid: string, data: object): Promise<void> {
 export async function loadDataStore(uid: string): Promise<Record<string, unknown> | null> {
   const snap = await getDoc(dataDocRef(uid));
   return snap.exists() ? (snap.data() as Record<string, unknown>) : null;
+}
+
+const libraryCol = (type: 'feats' | 'spells') => collection(db, 'library', type, 'entries');
+
+export async function publishToLibrary(
+  type: 'feat' | 'spell',
+  entry: FeatDefinition | SpellDefinition,
+  publishedBy: string,
+): Promise<void> {
+  const col = type === 'feat' ? 'feats' : 'spells';
+  await setDoc(doc(db, 'library', col, 'entries', entry.id), clean({ ...entry, publishedBy, publishedAt: serverTimestamp() }));
+}
+
+export async function loadLibrary(): Promise<{ feats: FeatDefinition[]; spells: SpellDefinition[] }> {
+  const [featsSnap, spellsSnap] = await Promise.all([
+    getDocs(libraryCol('feats')),
+    getDocs(libraryCol('spells')),
+  ]);
+  return {
+    feats:  featsSnap.docs.map(d => d.data() as FeatDefinition),
+    spells: spellsSnap.docs.map(d => d.data() as SpellDefinition),
+  };
 }
