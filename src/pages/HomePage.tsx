@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { useThemeStore } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
+import { useLobbyStore } from '../store/lobbyStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, maxHP } from '../utils/calculations';
@@ -23,8 +25,19 @@ export function HomePage() {
   const navigate = useNavigate();
   const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
   const theme = useThemeStore(s => s.theme);
+  const { user } = useAuthStore();
+  const { lobbies, loadUserLobbies } = useLobbyStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<Character | null>(null);
+
+  const uid = user?.uid ?? '';
+
+  useEffect(() => {
+    if (uid) loadUserLobbies(uid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid]);
+
+  const totalUnread = lobbies.reduce((s, l) => s + l.unreadCount, 0);
 
   const exportAll = () => {
     if (characters.length === 0) return;
@@ -137,6 +150,22 @@ export function HomePage() {
           style={{ letterSpacing: isEva || isCyber || isP5 ? '0.12em' : undefined }}
         >
           {isEva ? '[ + NUOVO PILOTA ]' : isCyber ? '> NEW_CHARACTER.INIT' : isP5 ? '♠ RISVEGLIA UN PHANTOM THIEF' : '✨ Crea Nuovo Personaggio'}
+        </button>
+
+        {/* Lobby button */}
+        <button
+          className="pf-btn pf-btn-outline w-full py-3 text-sm mb-3 anim-enter d3 relative"
+          onClick={() => navigate('/lobbies')}
+        >
+          ⚔ Lobby di gioco
+          {totalUnread > 0 && (
+            <span
+              className="absolute -top-1.5 -right-1.5 text-xs font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'var(--theme-accent)', color: 'var(--theme-bg)', minWidth: '1.25rem', textAlign: 'center' }}
+            >
+              {totalUnread}
+            </span>
+          )}
         </button>
 
         {/* Save / Load */}

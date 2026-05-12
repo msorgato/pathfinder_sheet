@@ -5,10 +5,13 @@ import { CharacterWizard } from './pages/CharacterWizard';
 import { CharacterSheet } from './pages/CharacterSheet';
 import { AdminPanel } from './pages/AdminPanel';
 import { LoginPage } from './pages/LoginPage';
+import { LobbiesPage } from './pages/LobbiesPage';
+import { LobbyDetailPage } from './pages/LobbyDetailPage';
 import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/authStore';
 import { useCharacterStore } from './store/characterStore';
 import { useDataStore } from './store/dataStore';
+import { useLobbyStore } from './store/lobbyStore';
 import { isAdminEmail } from './config/admins';
 
 function LoadingScreen() {
@@ -32,6 +35,7 @@ function App() {
   const { user, loading: authLoading, init } = useAuthStore();
   const { loadFromFirestore: loadChars, clearStore: clearChars } = useCharacterStore();
   const { loadFromFirestore: loadData, loadBuiltinData, clearStore: clearData, builtinLoaded } = useDataStore();
+  const { clearStore: clearLobbies } = useLobbyStore();
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
@@ -59,6 +63,7 @@ function App() {
     } else {
       clearChars();
       clearData();
+      clearLobbies();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid, authLoading]);
@@ -75,6 +80,8 @@ function App() {
         <Route path="/create"         element={user ? <CharacterWizard />              : <Navigate to="/login" replace />} />
         <Route path="/character/:id"  element={user ? <CharacterSheet />               : <Navigate to="/login" replace />} />
         <Route path="/admin"          element={user && isAdminEmail(user.email) ? <AdminPanel /> : <Navigate to="/" replace />} />
+        <Route path="/lobbies"        element={user ? <LobbiesPage />           : <Navigate to="/login" replace />} />
+        <Route path="/lobbies/:id"    element={user ? <LobbyDetailPage />       : <Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
