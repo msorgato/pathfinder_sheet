@@ -70,6 +70,7 @@ function makeMemberSnap(uid: string) {
 
 function makeMessageSnap(id: string, overrides: Record<string, unknown> = {}) {
   return {
+    exists: () => true,
     id,
     data: () => ({
       senderId: 'sender-uid', senderName: 'Sender', content: 'Ciao!',
