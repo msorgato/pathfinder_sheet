@@ -1,0 +1,51 @@
+import type { ClassDefinition } from '../../types';
+import { PALADIN_SLOTS } from '../spellSlots';
+
+const PALADIN_SPELLS = ['id_paladin'];
+
+export const PALADIN: ClassDefinition = {
+  id: 'paladin',
+  name: 'Paladino',
+  description: 'Un guerriero sacro che combatte il male con il potere divino della sua divinità.',
+  hitDie: 10,
+  bab: 'full',
+  saves: { fort: 'good', ref: 'poor', will: 'good' },
+  skillsPerLevel: 2,
+  classSkills: ['craft_alchemy','diplomacy','handle_animal','heal','knowledge_nobility','knowledge_religion','profession','ride','sense_motive','spellcraft'],
+  armorProficiencies: ['Leggera', 'Media', 'Pesante', 'Scudi'],
+  weaponProficiencies: 'Semplici e Marziali',
+  spellcasting: {
+    type: 'prepared',
+    ability: 'cha',
+    school: 'divine',
+    slots: Object.fromEntries(PALADIN_SLOTS.map((s, i) => [i + 1, s])),
+    spellList: PALADIN_SPELLS,
+    maxSpellLevel: 4,
+    bonusSpellsFromAbility: true,
+  },
+  features: [
+    { level: 1, name: 'Aura del Bene', description: 'Emana un\'aura di bene di potere pari al livello da paladino.', type: 'Ex' },
+    { level: 1, name: 'Individuare il Male', description: 'Può lanciare Individuazione del Male a volontà come incantesimo della 1a cerchia.', type: 'Sp' },
+    { level: 1, name: 'Colpire il Male (1/giorno)', description: '+2 ai tiri d\'attacco e danno contro creature malvagie. Aumenta con i livelli.', type: 'Su' },
+    { level: 2, name: 'Grazia Divina', description: 'Aggiunge il modificatore CAR ai tiri salvezza.', type: 'Su' },
+    { level: 2, name: 'Imposizione delle Mani', description: 'Guarisce (livello paladino / 2 + mod CAR) d6 PF, usato (½ livello + mod CAR) volte/giorno.', type: 'Su' },
+    { level: 3, name: 'Aura del Coraggio', description: 'Immune alla paura; gli alleati entro 3 m ottengono +4 ai TS contro paura.', type: 'Su' },
+    { level: 3, name: 'Salute Divina', description: 'Immune a tutte le malattie, incluse quelle soprannaturali e magiche.', type: 'Ex' },
+    { level: 3, name: 'Misericordia', description: 'L\'Imposizione delle Mani può anche rimuovere una condizione.', choices: ['Affaticamento','Paura','Nausea','Shock','Intorpidimento','Malattia','Stanchezza','Veleno','Accecamento','Sordità','Paralisi','Pietrificazione','Maledizione','Esaurimento'] },
+    { level: 4, name: 'Canalizzare Energia Positiva', description: 'Può usare l\'Imposizione delle Mani per guarire come il chierico.' },
+    { level: 4, name: 'Destriero Sacro', description: 'Può invocare un destriero sacro, un compagno divino di livello superiore agli animali normali.', type: 'Sp' },
+    { level: 5, name: 'Colpire il Male (2/giorno)', description: 'Usa Colpire il Male due volte al giorno. Bonus aumenta a +4.' },
+    { level: 6, name: 'Misericordia (2a)', description: 'Sceglie una seconda Misericordia.' },
+    { level: 8, name: 'Aura Risolutrice', description: 'Immune agli incantesimi di ammaliamento; gli alleati entro 3 m ottengono +4.', type: 'Su' },
+    { level: 9, name: 'Colpire il Male (3/giorno)', description: 'Tre volte al giorno. Bonus +6.' },
+    { level: 9, name: 'Misericordia (3a)', description: 'Sceglie una terza Misericordia.' },
+    { level: 11, name: 'Scudo del Bene', description: 'Può spendere 2 usi di Colpire il Male per dotare l\'arma dell\'incantamento Sacra.', type: 'Su' },
+    { level: 12, name: 'Misericordia (4a)', description: 'Sceglie una quarta Misericordia.' },
+    { level: 14, name: 'Aura della Fede', description: 'Le sue armi sono sempre trattate come buone per superare la RD.', type: 'Su' },
+    { level: 15, name: 'Colpire il Male (5/giorno)', description: 'Cinque volte al giorno. Bonus +10.' },
+    { level: 15, name: 'Misericordia (5a)', description: 'Sceglie una quinta Misericordia.' },
+    { level: 17, name: 'Aura della Rettitudine', description: 'Immune ai danni da incantesimi malvagi; gli alleati entro 3 m ottengono +4.', type: 'Su' },
+    { level: 18, name: 'Misericordia (6a)', description: 'Sceglie una sesta Misericordia.' },
+    { level: 20, name: 'Campione del Bene', description: 'Può spendere 4 usi Colpire il Male per agire come un ser divino. Emana un\'aura sacra +4.', type: 'Su' },
+  ],
+};
