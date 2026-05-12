@@ -80,12 +80,13 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
                   <button
                     key={i}
                     type="button"
-                    className="rounded px-2 py-1 text-sm font-bold transition-all hover:brightness-125 active:scale-95"
+                    className="attack-roll-button rounded px-2 py-1 text-sm font-bold transition-all hover:brightness-125 active:scale-95"
                     style={{
                       background: 'rgba(200,164,67,0.12)',
                       color: 'var(--theme-accent)',
                       border: '1px solid rgba(200,164,67,0.3)',
                       cursor: onQuickRoll ? 'pointer' : 'default',
+                      margin: 'auto',
                     }}
                     title={onQuickRoll ? `Tira d20 ${modStr(bonus)} — ${label} att. ${i + 1}` : undefined}
                     onClick={() => onQuickRoll?.({ label: `${label} att. ${i + 1}`, numDice: 1, dieType: 20, modifier: bonus })}
