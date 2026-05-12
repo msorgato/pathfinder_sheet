@@ -224,3 +224,35 @@ export type WizardStep =
   | 'feats'
   | 'spells'
   | 'details';
+
+// ── Lobby & Chat ─────────────────────────────────────────────────────────────
+
+export interface Lobby {
+  id: string;
+  code: string;
+  name: string;
+  ownerId: string;
+  ownerName: string;
+  createdAt: number; // Unix ms
+  isActive: boolean;
+}
+
+export interface LobbyMember {
+  userId: string;
+  displayName: string;
+  joinedAt: number; // Unix ms
+  lastSeenAt: number; // Unix ms
+}
+
+export interface LobbyMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  sentAt: number; // Unix ms
+}
+
+export interface LobbyWithUnread extends Lobby {
+  unreadCount: number;
+  memberCount: number;
+}
