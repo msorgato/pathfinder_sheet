@@ -70,6 +70,7 @@ function makeMemberSnap(uid: string) {
 
 function makeMessageSnap(id: string, overrides: Record<string, unknown> = {}) {
   return {
+    exists: () => true,
     id,
     data: () => ({
       senderId: 'sender-uid', senderName: 'Sender', content: 'Ciao!',
@@ -78,9 +79,9 @@ function makeMessageSnap(id: string, overrides: Record<string, unknown> = {}) {
   };
 }
 
-const emptySnap   = () => ({ empty: true, docs: [], size: 0 });
-const querySnap   = (docs: ReturnType<typeof makeLobbySnap | typeof makeMemberSnap>[]) =>
-  ({ empty: docs.length === 0, docs, size: docs.length });
+const emptySnap = () => ({ empty: true, docs: [] as unknown[], size: 0 });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const querySnap = (docs: any[]) => ({ empty: docs.length === 0, docs, size: docs.length });
 
 // ── 6.1: Creazione e partecipazione lobby ─────────────────────────────────────
 
