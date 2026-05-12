@@ -61,6 +61,13 @@ export function totalBAB(classes: CharacterClassEntry[]): number {
   return classes.reduce((sum, e) => sum + classBAB(e.classId, e.level), 0);
 }
 
+export function attackChain(bab: number): number[] {
+  if (bab <= 0) return [0];
+  const chain: number[] = [];
+  for (let b = bab; b > 0 && chain.length < 4; b -= 5) chain.push(b);
+  return chain;
+}
+
 // ── Saving throws ────────────────────────────────────────────────────────────
 function goodSave(level: number): number { return 2 + Math.floor(level / 2); }
 function poorSave(level: number): number { return Math.floor(level / 3); }

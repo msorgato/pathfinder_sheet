@@ -147,6 +147,18 @@ export interface SpellSlotStatus {
   used: number;
 }
 
+export type AttackType = 'melee' | 'ranged';
+
+export interface WeaponAttack {
+  id: string;
+  name: string;
+  damageDiceCount: number;
+  damageDieType: number;
+  abilityKey: 'str' | 'dex';
+  attackType: AttackType;
+  notes?: string;
+}
+
 export interface EquipmentItem {
   id: string;
   name: string;
@@ -193,6 +205,7 @@ export interface Character {
   preparedSpells: PreparedSpell[];
   spellSlots: SpellSlotStatus[];
 
+  weaponAttacks: WeaponAttack[];
   equipment: EquipmentItem[];
   copper: number;
   silver: number;
