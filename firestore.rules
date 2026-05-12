@@ -56,8 +56,10 @@ service cloud.firestore {
       // ── Members ────────────────────────────────────────────────────────────
 
       match /members/{memberId} {
-        // I membri della lobby possono vedere la lista partecipanti.
-        allow read: if isLobbyMember(lobbyId);
+        // Un utente può leggere il proprio documento membro (serve per verificare
+        // se è già iscritto prima del join). I membri vedono tutta la lista.
+        allow read: if isAuthenticated()
+          && (memberId == request.auth.uid || isLobbyMember(lobbyId));
 
         // Un utente autenticato può aggiungere solo sé stesso come membro.
         allow create: if isAuthenticated()
