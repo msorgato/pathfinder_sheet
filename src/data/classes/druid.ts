@@ -1,0 +1,48 @@
+import type { ClassDefinition } from '../../types';
+import { DRUID_SLOTS } from '../spellSlots';
+
+const DRUID_SPELLS = ['id_druid'];
+
+export const DRUID: ClassDefinition = {
+  id: 'druid',
+  name: 'Druido',
+  description: 'Un guardiano della natura che comanda le forze elementali e si trasforma in animali.',
+  hitDie: 8,
+  bab: 'three-quarters',
+  saves: { fort: 'good', ref: 'poor', will: 'good' },
+  skillsPerLevel: 4,
+  classSkills: ['climb','craft_alchemy','fly','handle_animal','heal','knowledge_geography','knowledge_nature','perception','profession','ride','spellcraft','survival','swim'],
+  armorProficiencies: ['Leggera', 'Media', 'Scudi (non metallo)'],
+  weaponProficiencies: 'Bastone ferrato, coltello da caccia, dardo, falce, fionda, giavellotto, lancia, mazza, randello, scimitarra',
+  spellcasting: {
+    type: 'prepared',
+    ability: 'wis',
+    school: 'divine',
+    slots: Object.fromEntries(DRUID_SLOTS.map((s, i) => [i + 1, s])),
+    spellList: DRUID_SPELLS,
+    maxSpellLevel: 9,
+    bonusSpellsFromAbility: true,
+  },
+  features: [
+    { level: 1, name: 'Linguaggio della Natura', description: 'Può parlare con gli animali e le piante.' },
+    { level: 1, name: 'Legame con la Natura', description: 'Sceglie un animale compagno OPPURE un dominio naturale.', choices: ['Animale compagno','Dominio Aria','Dominio Animali','Dominio Terra','Dominio Fuoco','Dominio Piante','Dominio Acqua','Dominio Meteo'] },
+    { level: 2, name: 'Senso della Natura', description: '+2 ai TS contro le capacità soprannaturali dei folletti e dei peresistenti naturali.', type: 'Ex' },
+    { level: 2, name: 'Empatia Selvatica', description: 'Migliora l\'atteggiamento degli animali come Diplomazia con le persone.', type: 'Ex' },
+    { level: 3, name: 'Movimento nel Sottobosco', description: 'Muove attraverso terreno difficile naturale senza penalità di velocità.', type: 'Ex' },
+    { level: 4, name: 'Forma Selvatica (1/giorno)', description: 'Può trasformarsi in animale piccolo o medio per 1 ora/livello. Guadagna le caratteristiche fisiche della forma.', type: 'Su' },
+    { level: 5, name: 'Resistenza dell\'Elementale', description: '+4 ai TS contro i veleni e gli effetti delle piante.', type: 'Ex' },
+    { level: 6, name: 'Forma Selvatica (2/giorno)', description: 'Può usare Forma Selvatica due volte al giorno, anche per animali grandi.', type: 'Su' },
+    { level: 7, name: 'Forma Selvatica (3/giorno)', description: 'Tre volte al giorno. Può assumere la forma di animali minuscoli.', type: 'Su' },
+    { level: 8, name: 'Forma Selvatica (4/giorno)', description: 'Quattro volte al giorno. Può assumere la forma di piante.', type: 'Su' },
+    { level: 9, name: 'Immunità ai Veleni', description: 'Immune ai veleni di ogni tipo.', type: 'Ex' },
+    { level: 9, name: 'Forma Selvatica (Enorme)', description: 'Può assumere la forma di animali enormi.', type: 'Su' },
+    { level: 10, name: 'Forma Selvatica (Elementale 1/giorno)', description: 'Può trasformarsi in un elementale piccolo o medio una volta al giorno.', type: 'Su' },
+    { level: 11, name: 'Forma Selvatica (5/giorno)', description: 'Cinque volte al giorno.', type: 'Su' },
+    { level: 12, name: 'Forma Selvatica (Elementale 2/giorno)', description: 'Due volte al giorno in elementale, anche grande.', type: 'Su' },
+    { level: 13, name: 'Pelle Millenaria', description: 'Immune a ogni effetto di invecchiamento e non invecchia.', type: 'Ex' },
+    { level: 13, name: 'Forma Selvatica (6/giorno)', description: 'Sei volte al giorno.', type: 'Su' },
+    { level: 14, name: 'Forma Selvatica (Elementale 3/giorno)', description: 'Tre volte al giorno, anche enorme.', type: 'Su' },
+    { level: 15, name: 'Forma Selvatica (7/giorno)', description: 'Sette volte al giorno.', type: 'Su' },
+    { level: 20, name: 'Signore dell\'Arcano Selvaggio', description: 'Non invecchia, non necessita di cibo, acqua o aria. Immune a veleni e malattie.', type: 'Ex' },
+  ],
+};
