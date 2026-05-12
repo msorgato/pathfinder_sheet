@@ -72,16 +72,13 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Pro
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-
-      {/* Panel */}
+      {/* Panel — pointer-events:none on the outer shell so clicks pass through to elements behind it */}
       <div
         className="fixed bottom-20 right-4 z-50 w-72 rounded-xl flex flex-col shadow-2xl"
-        style={{ background: 'var(--theme-bg-panel-2)', border: '1px solid var(--theme-border)', maxHeight: 'calc(100vh - 100px)' }}
+        style={{ background: 'var(--theme-bg-panel-2)', border: '1px solid var(--theme-border)', maxHeight: 'calc(100vh - 100px)', pointerEvents: 'none' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ borderColor: 'var(--theme-ghost-border)' }}>
+        <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ borderColor: 'var(--theme-ghost-border)', pointerEvents: 'auto' }}>
           <h2 className="font-bold text-sm" style={{ color: 'var(--theme-accent)', fontFamily: 'Georgia' }}>
             🎲 Lancia i Dadi
           </h2>
@@ -89,7 +86,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Pro
         </div>
 
         {/* Controls */}
-        <div className="p-3 space-y-3 shrink-0">
+        <div className="p-3 space-y-3 shrink-0" style={{ pointerEvents: 'auto' }}>
           {/* Die type */}
           <div className="flex flex-wrap gap-1.5">
             {DICE.map(d => (
@@ -183,7 +180,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Pro
 
         {/* Roll history */}
         {results.length > 1 && (
-          <div className="overflow-y-auto border-t" style={{ borderColor: 'var(--theme-ghost-border)' }}>
+          <div className="overflow-y-auto border-t" style={{ borderColor: 'var(--theme-ghost-border)', pointerEvents: 'auto' }}>
             <div className="px-3 py-1.5 text-xs font-bold uppercase" style={{ color: 'var(--theme-text-faint)' }}>Storico</div>
             {results.slice(1).map(r => {
               const rc = isCrit(r.dice, r.dieType);
