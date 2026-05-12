@@ -68,9 +68,9 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
       {/* Global attack chain */}
       <div className="grid grid-cols-2 gap-3">
         {([
-          { label: 'Mischia', abMod: strMod, abLabel: 'FOR' },
-          { label: 'Distanza', abMod: dexMod, abLabel: 'DES' },
-        ] as const).map(({ label, abMod, abLabel }) => (
+          { label: 'Mischia', abMod: strMod, abLabel: 'FOR', icon: '⚔' },
+          { label: 'Distanza', abMod: dexMod, abLabel: 'DES', icon: '🏹' },
+        ] as const).map(({ label, abMod, abLabel, icon }) => (
           <div key={label} className="stat-box py-3">
             <div className="text-xs uppercase tracking-wider mb-1.5" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
             <div className="flex flex-wrap gap-1.5">
@@ -80,7 +80,7 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
                   <button
                     key={i}
                     type="button"
-                    className="rounded px-2 py-1 text-sm font-bold transition-colors"
+                    className="rounded px-2 py-1 text-sm font-bold transition-all hover:brightness-125 active:scale-95"
                     style={{
                       background: 'rgba(200,164,67,0.12)',
                       color: 'var(--theme-accent)',
@@ -90,7 +90,7 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
                     title={onQuickRoll ? `Tira d20 ${modStr(bonus)} — ${label} att. ${i + 1}` : undefined}
                     onClick={() => onQuickRoll?.({ label: `${label} att. ${i + 1}`, numDice: 1, dieType: 20, modifier: bonus })}
                   >
-                    {modStr(bonus)}
+                    {icon} {modStr(bonus)}
                   </button>
                 );
               })}
@@ -290,11 +290,12 @@ function WeaponRow({
       <div className="flex flex-wrap gap-2 items-center">
         {chain.map((b, i) => {
           const toHit = b + abMod;
+          const icon = weapon.attackType === 'melee' ? '⚔' : '🏹';
           return (
             <button
               key={i}
               type="button"
-              className="rounded px-2 py-1 text-xs font-bold transition-colors"
+              className="rounded px-2 py-1 text-xs font-bold transition-all hover:brightness-125 active:scale-95"
               style={{
                 background: 'rgba(200,164,67,0.12)',
                 color: 'var(--theme-accent)',
@@ -304,7 +305,7 @@ function WeaponRow({
               title={onQuickRoll ? `Tira d20 ${modStr(toHit)} — ${weapon.name} attacco ${i + 1}` : undefined}
               onClick={() => onQuickRoll?.({ label: `${weapon.name} att. ${i + 1}`, numDice: 1, dieType: 20, modifier: toHit })}
             >
-              {modStr(toHit)}
+              {icon} {modStr(toHit)}
             </button>
           );
         })}
