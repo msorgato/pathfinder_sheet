@@ -6,7 +6,7 @@ import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firest
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 import type {
   Character, CharacterClassEntry, SkillRank,
-  KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment,
+  KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment, WeaponAttack,
 } from '../types';
 
 function newId(): string {
@@ -52,6 +52,7 @@ export function emptyCharacter(id?: string): Character {
     knownSpells: [],
     preparedSpells: [],
     spellSlots: [],
+    weaponAttacks: [],
     equipment: [],
     copper: 0,
     silver: 0,
@@ -112,6 +113,9 @@ interface CharacterState {
   heal: (id: string, amount: number) => void;
   setTempHp: (id: string, amount: number) => void;
   fullRest: (id: string) => void;
+
+  addWeaponAttack: (charId: string, weapon: WeaponAttack) => void;
+  removeWeaponAttack: (charId: string, weaponId: string) => void;
 
   addEquipment: (id: string, item: EquipmentItem) => void;
   removeEquipment: (id: string, itemId: string) => void;
@@ -449,6 +453,30 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
       }),
     }));
     const updated = get().characters.find(c => c.id === id);
+    if (updated) syncChar(updated);
+  },
+
+  addWeaponAttack: (charId, weapon) => {
+    set(s => ({
+      characters: s.characters.map(c =>
+        c.id === charId
+          ? { ...c, weaponAttacks: [...(c.weaponAttacks ?? []), weapon] }
+          : c,
+      ),
+    }));
+    const updated = get().characters.find(c => c.id === charId);
+    if (updated) syncChar(updated);
+  },
+
+  removeWeaponAttack: (charId, weaponId) => {
+    set(s => ({
+      characters: s.characters.map(c =>
+        c.id === charId
+          ? { ...c, weaponAttacks: (c.weaponAttacks ?? []).filter(w => w.id !== weaponId) }
+          : c,
+      ),
+    }));
+    const updated = get().characters.find(c => c.id === charId);
     if (updated) syncChar(updated);
   },
 

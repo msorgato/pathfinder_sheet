@@ -11,6 +11,7 @@ import { CombatStats } from '../components/sheet/CombatStats';
 import { SkillsPanel } from '../components/sheet/SkillsPanel';
 import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
+import { AttacksPanel } from '../components/sheet/AttacksPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import type { RollRequest } from '../components/sheet/DiceRoller';
@@ -189,6 +190,7 @@ export function CharacterSheet() {
           <div className="space-y-4">
             <AbilityPanel char={char} onQuickRoll={handleQuickRoll} />
             <CombatStats char={char} onQuickRoll={handleQuickRoll} />
+            <AttacksPanel char={char} onQuickRoll={handleQuickRoll} />
           </div>
         )}
         {tab === 'skills' && <SkillsPanel char={char} onQuickRoll={handleQuickRoll} />}
