@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
-import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { useLobbyStore } from '../store/lobbyStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
-import { effectiveAbilityScores, maxHP } from '../utils/calculations';
+import { effectiveAbilityScores, maxHP, abilityMod, totalBAB, modStr } from '../utils/calculations';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { FrameCorners } from '../components/ui/FrameCorners';
 import type { Character } from '../types';
 
 function triggerJsonDownload(data: object, filename: string) {
@@ -24,7 +24,6 @@ function triggerJsonDownload(data: object, filename: string) {
 export function HomePage() {
   const navigate = useNavigate();
   const { characters, deleteCharacter, setActive, importCharacters } = useCharacterStore();
-  const theme = useThemeStore(s => s.theme);
   const { user } = useAuthStore();
   const { lobbies, loadUserLobbies } = useLobbyStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,257 +85,167 @@ export function HomePage() {
     navigate(`/character/${id}`);
   };
 
-  const isEva = theme === 'eva01';
-  const isCyber = theme === 'cyberpunk';
-  const isP5 = theme === 'persona5';
-
   return (
-    <div
-      className="min-h-screen theme-root"
-      style={{ background: 'var(--theme-bg)' }}
-    >
-      {/* Hero header */}
-      <div className="pf-header px-6 py-8 text-center">
-        {/* User preferences top-right */}
-        <div className="absolute top-3 right-4 z-10">
+    <div className="min-h-screen" style={{ background: 'var(--bg-deep)' }}>
+      {/* Top bar */}
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '20px 40px',
+        borderBottom: '1px solid var(--line-soft)',
+        position: 'relative',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ color: 'var(--gold)', fontSize: 28, lineHeight: 1 }}>✦</div>
+          <div>
+            <div style={{ fontFamily: 'var(--font-rune)', fontSize: 16, letterSpacing: '0.15em', color: 'var(--ink)' }}>
+              Pathfinder
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 13, color: 'var(--ink-mute)' }}>
+              scriptorium di compagnia
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            className="btn btn-ghost"
+            onClick={() => navigate('/lobbies')}
+            style={{ position: 'relative' }}
+          >
+            Tavolo
+            {totalUnread > 0 && (
+              <span style={{
+                position: 'absolute', top: -6, right: -6,
+                background: 'var(--blood)', color: 'var(--ink)',
+                borderRadius: '50%', width: 18, height: 18,
+                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                {totalUnread}
+              </span>
+            )}
+          </button>
           <UserPreferencesPanel />
         </div>
+      </header>
 
-        {/* Decorative spinning rune */}
-        <div
-          className="anim-spin mx-auto mb-3 select-none"
-          style={{
-            width: 48,
-            height: 48,
-            fontSize: 36,
-            color: 'var(--theme-accent)',
-            filter: 'drop-shadow(0 0 8px var(--theme-accent-glow))',
-          }}
-        >
-          {isEva ? '⬡' : isCyber ? '◈' : isP5 ? '♠' : '✦'}
-        </div>
-
-        <h1
-          className={`text-4xl font-bold mb-2 anim-enter ${isEva ? 'eva-title' : ''} ${isCyber ? 'cyber-title' : ''} ${isP5 ? 'p5-title' : ''}`}
-          style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)', letterSpacing: isCyber || isP5 ? '0.08em' : undefined }}
-        >
-          {isEva ? '[ NERV ] PATHFINDER' : isCyber ? '// PATHFINDER.EXE' : isP5 ? '// PERSONA PATHFINDER //' : '⚔️ Pathfinder'}
-        </h1>
-        <h2
-          className={`text-xl anim-enter d1 ${isCyber || isP5 ? 'neon-text' : ''}`}
-          style={{ color: 'var(--theme-accent)' }}
-        >
-          {isEva ? 'GESTIONE SCHEDE — SISTEMA ATTIVO' : isCyber ? 'CHARACTER MANAGEMENT SYSTEM v1.0' : isP5 ? 'STEAL YOUR DESTINY · PHANTOM THIEVES' : 'Gestione Schede Personaggio'}
-        </h2>
-        <p
-          className="text-sm mt-2 anim-enter d2"
-          style={{ color: 'var(--theme-text-muted)', letterSpacing: isCyber || isP5 ? '0.05em' : undefined }}
-        >
-          {isEva
-            ? 'PF1e · MULTICLASSE · LEVEL UP LV.20 · SINCRONIZZAZIONE 100%'
-            : isCyber
-            ? 'PF1e · MULTICLASS · LEVEL CAP 20 · UPLINK ACTIVE'
-            : isP5
-            ? 'PF1e · MULTICLASSE · LEVEL CAP 20 · RISVEGLIO IN CORSO'
-            : 'Crea e gestisci i tuoi personaggi PF1e · Multiclasse · Level up fino al 20°'}
-        </p>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Create button */}
-        <button
-          className="pf-btn pf-btn-gold w-full py-4 text-lg mb-3 anim-enter d3"
-          onClick={() => navigate('/create')}
-          style={{ letterSpacing: isEva || isCyber || isP5 ? '0.12em' : undefined }}
-        >
-          {isEva ? '[ + NUOVO PILOTA ]' : isCyber ? '> NEW_CHARACTER.INIT' : isP5 ? '♠ RISVEGLIA UN PHANTOM THIEF' : '✨ Crea Nuovo Personaggio'}
-        </button>
-
-        {/* Lobby button */}
-        <button
-          className="pf-btn pf-btn-outline w-full py-3 text-sm mb-3 anim-enter d3 relative"
-          onClick={() => navigate('/lobbies')}
-        >
-          ⚔ Lobby di gioco
-          {totalUnread > 0 && (
-            <span
-              className="absolute -top-1.5 -right-1.5 text-xs font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'var(--theme-accent)', color: 'var(--theme-bg)', minWidth: '1.25rem', textAlign: 'center' }}
-            >
-              {totalUnread}
-            </span>
-          )}
-        </button>
-
-        {/* Save / Load */}
-        <div className="flex gap-2 mb-8 anim-enter d4">
-          <button
-            className="pf-btn pf-btn-outline flex-1 py-2 text-sm"
-            onClick={exportAll}
-            disabled={characters.length === 0}
-            title="Esporta tutti i personaggi in un file JSON"
-          >
-            💾 Esporta tutto
-          </button>
-          <button
-            className="pf-btn pf-btn-outline flex-1 py-2 text-sm"
-            onClick={() => fileInputRef.current?.click()}
-            title="Importa personaggi da un file JSON"
-          >
-            📂 Importa
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json"
-            className="hidden"
-            onChange={handleImportFile}
-          />
-        </div>
-
-        {/* Character list */}
-        {characters.length === 0 ? (
-          <div className="pf-panel p-10 text-center anim-scale-in d5">
-            <div className="text-5xl mb-4 anim-float">
-              {isEva ? '🤖' : isCyber ? '💀' : isP5 ? '🃏' : '🧙'}
-            </div>
-            <p className="text-lg mb-2" style={{ color: 'var(--theme-text-muted)' }}>
-              {isEva ? 'Nessun pilota registrato.' : isCyber ? 'NO_DATA_FOUND.' : isP5 ? 'NESSUN PHANTOM THIEF.' : 'Nessun personaggio.'}
-            </p>
-            <p className="text-sm" style={{ color: 'var(--theme-text-faint)' }}>
-              {isEva
-                ? 'Crea un nuovo pilota per iniziare la missione.'
-                : isCyber
-                ? 'Run NEW_CHARACTER.INIT to bootstrap a new agent.'
-                : isP5
-                ? 'Risveglia il tuo Persona e unisciti ai Phantom Thieves.'
-                : 'Clicca su "Crea Nuovo Personaggio" per iniziare la tua avventura.'}
+      {/* Hero */}
+      <div style={{ padding: '48px 40px 32px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+          <div>
+            <div className="label-rune-soft" style={{ marginBottom: 8 }}>Cronache di una Compagnia</div>
+            <h1 className="display-xl" style={{ margin: 0, color: 'var(--ink)' }}>I tuoi personaggi</h1>
+            <p style={{
+              color: 'var(--ink-mute)',
+              fontFamily: 'var(--font-display)',
+              fontStyle: 'italic',
+              fontSize: 17,
+              marginTop: 8,
+              marginBottom: 0,
+            }}>
+              Quale anima guiderai stanotte?
             </p>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <h3
-              className="text-sm font-bold uppercase tracking-wider mb-3 anim-enter d5"
-              style={{ color: 'var(--theme-border-strong)' }}
-            >
-              {isEva ? '// PILOTI REGISTRATI' : isCyber ? '> AGENTS_ONLINE' : isP5 ? '♠ PHANTOM THIEVES' : 'I tuoi personaggi'}
-            </h3>
-            {characters.map((char, i) => {
-              const race = getRace(char.race);
-              const scores = effectiveAbilityScores(char);
-              const hp = maxHP(char, scores.con);
-              const hpPct = Math.max(0, Math.min(100, (char.currentHp / hp) * 100));
-              const hpColor = hpPct > 50
-                ? 'var(--theme-hp-high)'
-                : hpPct > 25
-                ? 'var(--theme-hp-mid)'
-                : 'var(--theme-hp-low)';
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+            <button className="btn btn-ghost" onClick={exportAll} disabled={characters.length === 0} title="Esporta tutto">
+              Esporta
+            </button>
+            <button className="btn btn-ghost" onClick={() => fileInputRef.current?.click()} title="Importa">
+              Importa
+            </button>
+            <button className="btn btn-primary" onClick={() => navigate('/create')}>
+              Forgia personaggio
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </div>
+        </div>
 
-              // delay class by index (capped at d8)
-              const delayClass = `d${Math.min(i + 1, 8)}`;
+        {/* Character grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: 24,
+        }}>
+          {characters.map((char, i) => (
+            <CharacterCard
+              key={char.id}
+              char={char}
+              onOpen={() => openChar(char.id)}
+              onExport={e => exportChar(char, e)}
+              onDelete={e => { e.stopPropagation(); setPendingDelete(char); }}
+              delay={i}
+            />
+          ))}
 
-              return (
-                <div
-                  key={char.id}
-                  className={`pf-panel p-4 cursor-pointer anim-enter ${delayClass}`}
-                  style={{ transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.15s' }}
-                  onClick={() => openChar(char.id)}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--theme-accent)';
-                    (e.currentTarget as HTMLDivElement).style.transform = 'translateX(3px)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '';
-                    (e.currentTarget as HTMLDivElement).style.transform = '';
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className="text-lg font-bold truncate"
-                        style={{ color: 'var(--theme-accent)' }}
-                      >
-                        {char.name || 'Senza nome'}
-                      </h3>
-                      <div
-                        className="flex flex-wrap gap-x-3 text-sm mt-0.5"
-                        style={{ color: 'var(--theme-text-muted)' }}
-                      >
-                        <span>{race?.name ?? char.race}</span>
-                        <span>
-                          {char.classes.map(e => {
-                            const cls = getClass(e.classId);
-                            return `${cls?.name ?? e.classId} ${e.level}`;
-                          }).join(' / ')}
-                        </span>
-                        <span style={{ color: 'var(--theme-accent)', fontWeight: 700 }}>
-                          LV {char.totalLevel}
-                        </span>
-                      </div>
-                      {/* HP bar */}
-                      <div className="flex items-center gap-2 mt-2">
-                        <div
-                          className="flex-1 h-1.5 rounded-full overflow-hidden"
-                          style={{
-                            background: 'var(--theme-bg)',
-                            border: '1px solid var(--theme-ghost-border)',
-                          }}
-                        >
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{ width: `${hpPct}%`, background: hpColor }}
-                          />
-                        </div>
-                        <span
-                          className="text-xs shrink-0"
-                          style={{ color: 'var(--theme-text-faint)' }}
-                        >
-                          {char.currentHp}/{hp} PF
-                        </span>
-                      </div>
-                    </div>
+          {/* New character slot */}
+          <div
+            className="frame-corners-4 anim-scale-in"
+            onClick={() => navigate('/create')}
+            style={{
+              background: 'var(--surface-1)',
+              border: '1px dashed var(--line-mid)',
+              padding: 32,
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 14,
+              minHeight: 220,
+              transition: 'border-color 0.2s, background 0.2s',
+              color: 'var(--ink-mute)',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-strong)';
+              (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-2)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-mid)';
+              (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-1)';
+            }}
+          >
+            <FrameCorners />
+            <div style={{ color: 'var(--gold)', fontSize: 48, lineHeight: 1, opacity: 0.6 }}>✦</div>
+            <div className="label-rune">Nuovo personaggio</div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontStyle: 'italic',
+              fontSize: 14,
+              maxWidth: 200,
+              textAlign: 'center',
+              color: 'var(--ink-faint)',
+            }}>
+              Traccia un nuovo nome nel libro della compagnia.
+            </div>
+          </div>
+        </div>
 
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <button
-                        className="pf-btn pf-btn-outline text-xs px-3 py-1"
-                        onClick={e => { e.stopPropagation(); openChar(char.id); }}
-                      >
-                        Apri
-                      </button>
-                      <button
-                        className="pf-btn pf-btn-ghost text-xs px-3 py-1"
-                        onClick={e => exportChar(char, e)}
-                        title="Esporta personaggio"
-                      >
-                        💾
-                      </button>
-                      <button
-                        className="pf-btn pf-btn-ghost text-xs px-3 py-1"
-                        onClick={e => {
-                          e.stopPropagation();
-                          setPendingDelete(char);
-                        }}
-                      >
-                        🗑
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        {characters.length === 0 && (
+          <div style={{ textAlign: 'center', marginTop: 40, color: 'var(--ink-mute)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18 }}>
+              Nessun personaggio. Forgia il tuo primo eroe.
+            </div>
           </div>
         )}
 
         {/* Footer */}
-        <div
-          className="mt-8 text-center text-xs anim-fade-in"
-          style={{ color: 'var(--theme-ghost-border)', animationDelay: '0.6s' }}
-        >
-          {isEva
-            ? '[ NERV HQ · SISTEMA PATHFINDER 1e · TUTTI I DATI CLASSIFICATI ]'
-            : isP5
-            ? '[ METAVERSO ATTIVO · PATHFINDER 1e · CUORI RUBATI CON STILE ]'
-            : 'Pathfinder 1° Edizione · Dati sincronizzati su Cloud · Esporta/Importa per backup su file'}
+        <div style={{
+          marginTop: 48,
+          textAlign: 'center',
+          fontFamily: 'var(--font-rune)',
+          fontSize: 10,
+          letterSpacing: '0.2em',
+          color: 'var(--ink-faint)',
+          textTransform: 'uppercase',
+        }}>
+          Pathfinder 1° Edizione · Cloud Sync · Esporta/Importa per backup
         </div>
       </div>
 
@@ -350,6 +259,189 @@ export function HomePage() {
           onCancel={() => setPendingDelete(null)}
         />
       )}
+    </div>
+  );
+}
+
+function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
+  char: Character;
+  onOpen: () => void;
+  onExport: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
+  delay: number;
+}) {
+  const race = getRace(char.race);
+  const scores = effectiveAbilityScores(char);
+  const hp = maxHP(char, scores.con);
+  const hpPct = Math.max(0, Math.min(100, (char.currentHp / hp) * 100));
+  const bab = totalBAB(char.classes);
+  const ac = 10 + abilityMod(scores.dex);
+  const init = abilityMod(scores.dex);
+  const delayClass = `d${Math.min(delay + 1, 8)}`;
+
+  const classLabel = char.classes.map(e => {
+    const cls = getClass(e.classId);
+    return `${cls?.name ?? e.classId} ${e.level}`;
+  }).join(' / ');
+
+  return (
+    <div
+      className={`frame-corners-4 anim-enter ${delayClass}`}
+      onClick={onOpen}
+      style={{
+        background: 'linear-gradient(160deg, var(--surface-1), var(--bg-elev))',
+        border: '1px solid var(--line-soft)',
+        cursor: 'pointer',
+        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.15s',
+        overflow: 'hidden',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-mid)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--card-shadow)';
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-soft)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+        (e.currentTarget as HTMLDivElement).style.transform = 'none';
+      }}
+    >
+      <FrameCorners />
+
+      {/* Portrait area */}
+      <div style={{
+        height: 100,
+        background: `linear-gradient(180deg, var(--surface-2), var(--bg-base))`,
+        borderBottom: '1px solid var(--line-soft)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 52,
+          fontStyle: 'italic',
+          color: 'var(--gold)',
+          opacity: 0.25,
+          lineHeight: 1,
+          userSelect: 'none',
+        }}>
+          {char.name?.[0] ?? '?'}
+        </div>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'grid',
+          placeItems: 'center',
+          color: 'var(--gold)',
+          opacity: 0.08,
+        }}>
+          <svg viewBox="0 0 100 100" width="90" height="90" fill="none" stroke="currentColor" strokeWidth="0.8">
+            <circle cx="50" cy="50" r="48" />
+            <circle cx="50" cy="50" r="35" />
+            {[0, 60, 120, 180, 240, 300].map(a => {
+              const r1 = 35, r2 = 48;
+              const x1 = 50 + r1 * Math.cos(a * Math.PI / 180);
+              const y1 = 50 + r1 * Math.sin(a * Math.PI / 180);
+              const x2 = 50 + r2 * Math.cos(a * Math.PI / 180);
+              const y2 = 50 + r2 * Math.sin(a * Math.PI / 180);
+              return <line key={a} x1={x1} y1={y1} x2={x2} y2={y2} />;
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div style={{ padding: '16px 18px 18px' }}>
+        <h3 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 22,
+          fontWeight: 500,
+          color: 'var(--ink)',
+          margin: '0 0 6px',
+          lineHeight: 1.1,
+        }}>
+          {char.name || 'Senza nome'}
+        </h3>
+
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '4px 10px',
+          marginBottom: 12,
+          fontFamily: 'var(--font-rune)',
+          fontSize: 10,
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+          color: 'var(--ink-mute)',
+        }}>
+          <span>{race?.name ?? char.race}</span>
+          <span style={{ color: 'var(--line-mid)' }}>·</span>
+          <span>{classLabel}</span>
+          <span style={{ color: 'var(--line-mid)' }}>·</span>
+          <span style={{ color: 'var(--gold)' }}>LV {char.totalLevel}</span>
+        </div>
+
+        {/* HP bar */}
+        <div className="vital-row" style={{ marginBottom: 8 }}>
+          <div className="vital-label">
+            <span className="name">Punti Ferita</span>
+            <span className="val">{char.currentHp}<em>/{hp}</em></span>
+          </div>
+          <div className="vital-bar">
+            <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
+          </div>
+        </div>
+
+        {/* Stat chips */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+          {[
+            { label: 'CA', value: String(ac) },
+            { label: 'BAB', value: modStr(bab) },
+            { label: 'INIT', value: modStr(init) },
+          ].map(({ label, value }) => (
+            <div key={label} style={{
+              flex: 1,
+              textAlign: 'center',
+              background: 'var(--bg-base)',
+              border: '1px solid var(--line-soft)',
+              padding: '5px 4px',
+            }}>
+              <div className="numeral" style={{ fontSize: 16, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
+              <div className="label-rune-soft" style={{ fontSize: 9, marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Action row */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+          <button
+            className="pf-btn pf-btn-ghost"
+            style={{ flex: 1, fontSize: 10, padding: '4px 6px' }}
+            onClick={e => { e.stopPropagation(); onOpen(); }}
+          >
+            Apri
+          </button>
+          <button
+            className="pf-btn pf-btn-ghost"
+            style={{ fontSize: 10, padding: '4px 8px' }}
+            onClick={onExport}
+            title="Esporta"
+          >
+            💾
+          </button>
+          <button
+            className="pf-btn pf-btn-ghost"
+            style={{ fontSize: 10, padding: '4px 8px' }}
+            onClick={onDelete}
+            title="Elimina"
+          >
+            🗑
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

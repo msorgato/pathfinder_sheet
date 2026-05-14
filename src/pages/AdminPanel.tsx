@@ -387,7 +387,7 @@ export function AdminPanel() {
   const mergedFeats = useMergedFeats();
   const mergedSpells = useMergedSpells();
   const theme = useThemeStore(s => s.theme);
-  const isCyber = theme === 'cyberpunk';
+  const isCyber = false; // cyberpunk theme removed in design 2.0
 
   const baseFeatIds = new Set(store.builtinFeats.map(f => f.id));
   const baseSpellIds = new Set(store.builtinSpells.map(s => s.id));

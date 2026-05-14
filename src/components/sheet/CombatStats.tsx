@@ -26,41 +26,41 @@ export function CombatStats({ char, onQuickRoll }: Props) {
   const cmd = 10 + bab + abilityMod(scores.str) + abilityMod(scores.dex);
   const init = abilityMod(scores.dex);
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
-  const hpColor = hpPct > 50 ? 'var(--theme-hp-high)' : hpPct > 25 ? 'var(--theme-hp-mid)' : 'var(--theme-hp-low)';
 
   return (
     <div className="space-y-4">
       {/* HP */}
       <div className="pf-panel p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Punti Ferita</h3>
+          <div className="label-rune">Punti Ferita</div>
           <button
             className="pf-btn pf-btn-outline text-xs px-3 py-1"
             onClick={() => fullRest(char.id)}
-          >Riposo Completo</button>
+          >
+            Riposo Completo
+          </button>
         </div>
-        {/* HP bar */}
-        <div className="h-4 rounded-full mb-3 overflow-hidden" style={{ background: 'var(--theme-bg)', border: '1px solid var(--theme-ghost-border)' }}>
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${hpPct}%`, background: hpColor }}
-          />
+
+        <div className="vital-row" style={{ marginBottom: 12 }}>
+          <div className="vital-label" style={{ marginBottom: 4 }}>
+            <span className="val" style={{ fontSize: 28 }}>{char.currentHp}</span>
+            <span style={{ fontFamily: 'var(--font-display)', color: 'var(--ink-mute)', fontSize: 14 }}>
+              / {maxHp}
+              {char.tempHp > 0 && <span style={{ color: 'var(--amethyst-bright)', marginLeft: 8 }}>+{char.tempHp} temp</span>}
+            </span>
+          </div>
+          <div className="vital-bar" style={{ height: 8 }}>
+            <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <span style={{ color: 'var(--theme-text-muted)' }}>Attuali:</span>
-          <span className="text-2xl font-bold" style={{ color: hpColor }}>{char.currentHp}</span>
-          <span style={{ color: 'var(--theme-text-faint)' }}>/ {maxHp}</span>
-          {char.tempHp > 0 && (
-            <span className="text-sm" style={{ color: 'var(--theme-info)' }}>+{char.tempHp} temp</span>
-          )}
-        </div>
-        <div className="flex gap-2 mt-3">
-          <HpButton label="Danno" color="var(--theme-hp-low)" onSubmit={v => takeDamage(char.id, v)} />
-          <HpButton label="Cura" color="var(--theme-hp-high)" onSubmit={v => heal(char.id, v)} />
-          <HpButton label="Temp HP" color="var(--theme-info)" onSubmit={v => setTempHp(char.id, v)} />
+
+        <div className="flex gap-2">
+          <HpButton label="Danno" color="var(--blood)" onSubmit={v => takeDamage(char.id, v)} />
+          <HpButton label="Cura" color="var(--vital)" onSubmit={v => heal(char.id, v)} />
+          <HpButton label="Temp HP" color="var(--amethyst-bright)" onSubmit={v => setTempHp(char.id, v)} />
         </div>
         {char.nonLethalDamage > 0 && (
-          <div className="mt-2 text-xs" style={{ color: 'var(--theme-hp-mid)' }}>
+          <div className="mt-2 text-xs" style={{ color: 'var(--ember)' }}>
             Danno non letale: {char.nonLethalDamage}
           </div>
         )}
@@ -69,14 +69,14 @@ export function CombatStats({ char, onQuickRoll }: Props) {
       {/* Core combat grid */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'CA', value: modStr(ac - 10 + 10), detail: `DES ${modStr(abilityMod(scores.dex))}` },
-          { label: 'Contatto', value: String(10 + abilityMod(scores.dex)), detail: 'Senza armatura' },
+          { label: 'CA',             value: modStr(ac - 10 + 10), detail: `DES ${modStr(abilityMod(scores.dex))}` },
+          { label: 'Contatto',       value: String(10 + abilityMod(scores.dex)), detail: 'Senza armatura' },
           { label: 'Preso Sorpresa', value: String(10), detail: 'Senza DES' },
         ].map(({ label, value, detail }) => (
-          <div key={label} className="stat-box py-3">
-            <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
-            <div className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>{value}</div>
-            <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>{detail}</div>
+          <div key={label} className="stat-tile py-3">
+            <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
+            <div className="numeral" style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>{detail}</div>
           </div>
         ))}
       </div>
@@ -88,7 +88,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           value={modStr(bab)}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab }) : undefined}
           extra={bab >= 6 ? (
-            <div className="text-xs" style={{ color: 'var(--theme-text-neutral)' }}>
+            <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
               {modStr(bab)}/{modStr(bab - 5)}
               {bab >= 11 ? `/${modStr(bab - 10)}` : ''}
               {bab >= 16 ? `/${modStr(bab - 15)}` : ''}
@@ -102,18 +102,19 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         />
       </div>
 
+      {/* Saves */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Tempra', value: fort, detail: `base + COS ${modStr(abilityMod(scores.con))}` },
+          { label: 'Tempra',   value: fort, detail: `base + COS ${modStr(abilityMod(scores.con))}` },
           { label: 'Riflessi', value: ref,  detail: `base + DES ${modStr(abilityMod(scores.dex))}` },
-          { label: 'Volontà', value: will, detail: `base + SAG ${modStr(abilityMod(scores.wis))}` },
+          { label: 'Volontà',  value: will, detail: `base + SAG ${modStr(abilityMod(scores.wis))}` },
         ].map(({ label, value, detail }) => (
           <RollableStat
             key={label}
             label={label}
             value={modStr(value)}
             detail={detail}
-            valueColor={value >= 0 ? 'var(--theme-hp-high)' : 'var(--theme-hp-low)'}
+            valueColor={value >= 0 ? 'var(--vital)' : 'var(--blood)'}
             onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: value }) : undefined}
           />
         ))}
@@ -126,9 +127,9 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           value={modStr(cmb)}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: cmb }) : undefined}
         />
-        <div className="stat-box py-3">
-          <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>CMD</div>
-          <div className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>{cmd}</div>
+        <div className="stat-tile py-3">
+          <div className="label-rune-soft" style={{ marginBottom: 4 }}>CMD</div>
+          <div className="numeral" style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{cmd}</div>
         </div>
       </div>
     </div>
@@ -147,17 +148,21 @@ function RollableStat({
 }) {
   return (
     <div
-      className="stat-box py-3 transition-colors"
+      className="stat-tile py-3"
       style={{ cursor: onRoll ? 'pointer' : 'default' }}
       onClick={onRoll}
       title={onRoll ? `Tira 1d20 ${value} (${label})` : undefined}
     >
-      <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
-      <div className="text-2xl font-bold" style={{ color: valueColor ?? 'var(--theme-accent)' }}>{value}</div>
-      {detail && <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>{detail}</div>}
+      <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
+      <div className="numeral" style={{ fontSize: 24, color: valueColor ?? 'var(--gold)', lineHeight: 1 }}>{value}</div>
+      {detail && (
+        <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>
+          {detail}
+        </div>
+      )}
       {extra}
       {onRoll && (
-        <div className="text-xs mt-0.5 opacity-50" style={{ color: 'var(--theme-accent)' }}>🎲</div>
+        <div style={{ fontSize: 10, marginTop: 3, opacity: 0.5, color: 'var(--gold)' }}>🎲</div>
       )}
     </div>
   );
@@ -175,8 +180,8 @@ function HpButton({ label, color, onSubmit }: { label: string; color: string; on
   if (!open) {
     return (
       <button
-        className="pf-btn text-xs flex-1"
-        style={{ background: color + '22', border: `1px solid ${color}`, color }}
+        className="pf-btn flex-1"
+        style={{ background: color + '22', border: `1px solid ${color}55`, color, fontSize: 10, padding: '6px 8px' }}
         onClick={() => setOpen(true)}
       >
         {label}
@@ -187,17 +192,16 @@ function HpButton({ label, color, onSubmit }: { label: string; color: string; on
   return (
     <div className="flex gap-1 flex-1">
       <input
-        className="pf-input text-center text-sm"
+        className="pf-input text-center"
         type="number"
         value={val}
         onChange={e => setVal(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && submit()}
         autoFocus
-        style={{ maxWidth: '60px' }}
+        style={{ maxWidth: '60px', fontSize: 13 }}
       />
-      <button className="pf-btn text-xs px-2" style={{ background: color + '33', color }} onClick={submit}>✓</button>
-      <button className="pf-btn pf-btn-ghost text-xs px-2" onClick={() => setOpen(false)}>✕</button>
+      <button className="pf-btn" style={{ background: color + '33', color, fontSize: 11, padding: '4px 8px' }} onClick={submit}>✓</button>
+      <button className="pf-btn pf-btn-ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setOpen(false)}>✕</button>
     </div>
   );
 }
-
