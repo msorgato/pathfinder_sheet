@@ -6,7 +6,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
-import { effectiveAbilityScores, totalBAB, totalSave, abilityMod, modStr, maxHP } from '../utils/calculations';
+import { effectiveAbilityScores, abilityMod, maxHP } from '../utils/calculations';
 import { AbilityPanel } from '../components/sheet/AbilityPanel';
 import { CombatStats } from '../components/sheet/CombatStats';
 import { SkillsPanel } from '../components/sheet/SkillsPanel';
@@ -52,10 +52,6 @@ export function CharacterSheet() {
   const classes = char.classes.map(e => ({ entry: e, cls: getClass(e.classId) }));
   const maxHp = maxHP(char, scores.con);
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
-  const bab = totalBAB(char.classes);
-  const fort = totalSave('fort', char.classes) + abilityMod(scores.con);
-  const ref  = totalSave('ref',  char.classes) + abilityMod(scores.dex);
-  const will = totalSave('will', char.classes) + abilityMod(scores.wis);
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'overview',  label: 'Combattimento' },
@@ -202,7 +198,7 @@ export function CharacterSheet() {
             </div>
 
             {/* HP vital bar */}
-            <div className="vital-row" style={{ maxWidth: 340, marginBottom: 6 }}>
+            <div className="vital-row" style={{ maxWidth: 480, marginBottom: 6 }}>
               <div className="vital-label">
                 <span className="name">Punti Ferita</span>
                 <span className="val">{char.currentHp}<em>/{maxHp}</em></span>
@@ -213,28 +209,6 @@ export function CharacterSheet() {
             </div>
           </div>
 
-          {/* Quick combat stats */}
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', maxWidth: 200 }}>
-            {[
-              { label: 'CA',   value: String(10 + abilityMod(scores.dex)) },
-              { label: 'BAB',  value: modStr(bab) },
-              { label: 'INIT', value: modStr(abilityMod(scores.dex)) },
-              { label: 'TEM',  value: modStr(fort) },
-              { label: 'RIF',  value: modStr(ref) },
-              { label: 'VOL',  value: modStr(will) },
-            ].map(({ label, value }) => (
-              <div key={label} style={{
-                textAlign: 'center',
-                background: 'var(--bg-base)',
-                border: '1px solid var(--line-soft)',
-                padding: '5px 8px',
-                minWidth: 44,
-              }}>
-                <div className="numeral" style={{ fontSize: 15, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
-                <div className="label-rune-soft" style={{ fontSize: 8, marginTop: 2 }}>{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

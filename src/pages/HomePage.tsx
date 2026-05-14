@@ -86,13 +86,13 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-deep)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-deep)', overflowX: 'hidden' }}>
       {/* Top bar */}
       <header style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '20px 40px',
+        padding: '16px 24px',
         borderBottom: '1px solid var(--line-soft)',
         position: 'relative',
       }}>
@@ -131,9 +131,9 @@ export function HomePage() {
       </header>
 
       {/* Hero */}
-      <div style={{ padding: '48px 40px 32px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
-          <div>
+      <div style={{ padding: '48px 24px 32px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ minWidth: 0 }}>
             <div className="label-rune-soft" style={{ marginBottom: 8 }}>Cronache di una Compagnia</div>
             <h1 className="display-xl" style={{ margin: 0, color: 'var(--ink)' }}>I tuoi personaggi</h1>
             <p style={{
@@ -147,15 +147,31 @@ export function HomePage() {
               Quale anima guiderai stanotte?
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-            <button className="btn btn-ghost" onClick={exportAll} disabled={characters.length === 0} title="Esporta tutto">
-              Esporta
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <button
+              className="btn btn-ghost"
+              onClick={exportAll}
+              disabled={characters.length === 0}
+              title="Esporta tutto"
+              style={{ padding: '8px 10px', lineHeight: 1 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
             </button>
-            <button className="btn btn-ghost" onClick={() => fileInputRef.current?.click()} title="Importa">
-              Importa
-            </button>
-            <button className="btn btn-primary" onClick={() => navigate('/create')}>
-              Forgia personaggio
+            <button
+              className="btn btn-ghost"
+              onClick={() => fileInputRef.current?.click()}
+              title="Importa"
+              style={{ padding: '8px 10px', lineHeight: 1 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
             </button>
             <input
               ref={fileInputRef}
@@ -170,7 +186,7 @@ export function HomePage() {
         {/* Character grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
           gap: 24,
         }}>
           {characters.map((char, i) => (
@@ -184,51 +200,16 @@ export function HomePage() {
             />
           ))}
 
-          {/* New character slot */}
-          <div
-            className="frame-corners-4 anim-scale-in"
-            onClick={() => navigate('/create')}
-            style={{
-              background: 'var(--surface-1)',
-              border: '1px dashed var(--line-mid)',
-              padding: 32,
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 14,
-              minHeight: 220,
-              transition: 'border-color 0.2s, background 0.2s',
-              color: 'var(--ink-mute)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-strong)';
-              (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-2)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--line-mid)';
-              (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-1)';
-            }}
-          >
-            <FrameCorners />
-            <div style={{ color: 'var(--gold)', fontSize: 48, lineHeight: 1, opacity: 0.6 }}>✦</div>
-            <div className="label-rune">Nuovo personaggio</div>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontStyle: 'italic',
-              fontSize: 14,
-              maxWidth: 200,
-              textAlign: 'center',
-              color: 'var(--ink-faint)',
-            }}>
-              Traccia un nuovo nome nel libro della compagnia.
-            </div>
-          </div>
+        </div>
+
+        <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
+          <button className="btn btn-primary" onClick={() => navigate('/create')}>
+            Forgia personaggio
+          </button>
         </div>
 
         {characters.length === 0 && (
-          <div style={{ textAlign: 'center', marginTop: 40, color: 'var(--ink-mute)' }}>
+          <div style={{ textAlign: 'center', marginTop: 16, color: 'var(--ink-mute)' }}>
             <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18 }}>
               Nessun personaggio. Forgia il tuo primo eroe.
             </div>
