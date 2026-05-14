@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { effectiveAbilityScores, totalBAB, totalSave, abilityMod, modStr, maxHP } from '../utils/calculations';
@@ -17,12 +18,6 @@ import { DiceRoller } from '../components/sheet/DiceRoller';
 import type { RollRequest } from '../components/sheet/DiceRoller';
 
 type Tab = 'overview' | 'skills' | 'spells' | 'features' | 'notes';
-
-const ALIGNMENT_COLORS: Record<string, string> = {
-  LG: 'var(--theme-hp-high)', NG: '#86efac', CG: '#6ee7b7',
-  LN: '#93c5fd', TN: '#d1d5db', CN: '#c4b5fd',
-  LE: '#fca5a5', NE: '#f87171', CE: 'var(--theme-hp-low)',
-};
 
 export function CharacterSheet() {
   const { id } = useParams<{ id: string }>();
@@ -43,10 +38,10 @@ export function CharacterSheet() {
   const char = characters.find(c => c.id === id);
   if (!char) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--theme-bg)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-deep)' }}>
         <div className="text-center">
-          <p className="text-xl mb-4" style={{ color: 'var(--theme-text-muted)' }}>Personaggio non trovato.</p>
-          <button className="pf-btn pf-btn-gold" onClick={() => navigate('/')}>← Home</button>
+          <p className="text-xl mb-4" style={{ color: 'var(--ink-mute)' }}>Personaggio non trovato.</p>
+          <button className="btn btn-ghost" onClick={() => navigate('/')}>← Home</button>
         </div>
       </div>
     );
@@ -56,127 +51,217 @@ export function CharacterSheet() {
   const race = getRace(char.race);
   const classes = char.classes.map(e => ({ entry: e, cls: getClass(e.classId) }));
   const maxHp = maxHP(char, scores.con);
+  const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
+  const bab = totalBAB(char.classes);
+  const fort = totalSave('fort', char.classes) + abilityMod(scores.con);
+  const ref  = totalSave('ref',  char.classes) + abilityMod(scores.dex);
+  const will = totalSave('will', char.classes) + abilityMod(scores.wis);
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'overview', label: '⚔ Combattimento' },
-    { id: 'skills', label: '🎯 Abilità' },
-    { id: 'spells', label: '✨ Incantesimi' },
-    { id: 'features', label: '📖 Capacità' },
-    { id: 'notes', label: '📝 Note' },
+    { id: 'overview',  label: 'Combattimento' },
+    { id: 'skills',    label: 'Abilità' },
+    { id: 'spells',    label: 'Incantesimi' },
+    { id: 'features',  label: 'Capacità' },
+    { id: 'notes',     label: 'Note' },
   ];
 
-  const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
-
   return (
-    <div className="min-h-screen flex flex-col theme-root" style={{ background: 'var(--theme-bg)' }}>
-      {/* Top header */}
-      <div className="pf-header px-4 py-3 flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-deep)' }}>
+      {/* Identity header */}
+      <div
+        className="frame-corners-4"
+        style={{
+          background: 'linear-gradient(180deg, var(--surface-2), var(--bg-base))',
+          borderBottom: '1px solid var(--line-soft)',
+          position: 'relative',
+        }}
+      >
+        <FrameCorners />
+
+        {/* Top action row */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 24px 0',
+        }}>
           <button
+            className="btn btn-ghost"
+            style={{ fontSize: 11, padding: '6px 14px' }}
             onClick={() => navigate('/')}
-            className="mt-1 text-sm px-2 py-1 rounded"
-            style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--theme-accent)' }}
           >
-            ←
+            ← Compagnia
           </button>
-          <div>
-            <h1 className="text-xl font-bold leading-tight" style={{ color: 'var(--theme-text)', fontFamily: 'var(--theme-font)' }}>
-              {char.name}
-            </h1>
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs mt-1" style={{ color: 'var(--theme-accent)' }}>
-              <span>{race?.name ?? char.race}</span>
-              <span>
-                {classes.map(({ entry, cls }) =>
-                  `${cls?.name ?? entry.classId} ${entry.level}`
-                ).join(' / ')}
-              </span>
-              <span>LV {char.totalLevel}</span>
-              <span style={{ color: ALIGNMENT_COLORS[char.alignment] ?? 'var(--theme-text-muted)' }}>
-                {char.alignment}
-              </span>
-              {char.deity && <span>{char.deity}</span>}
-            </div>
-            {/* Mini HP bar */}
-            <div className="flex items-center gap-2 mt-1.5">
-              <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--theme-bg)' }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${hpPct}%`,
-                    background: hpPct > 50 ? 'var(--theme-hp-high)' : hpPct > 25 ? 'var(--theme-hp-mid)' : 'var(--theme-hp-low)',
-                  }}
-                />
-              </div>
-              <span className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
-                {char.currentHp}/{maxHp} PF
-              </span>
-            </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <UserPreferencesPanel />
+            {char.totalLevel < 20 && (
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: 11, padding: '6px 16px' }}
+                onClick={() => setShowLevelUp(true)}
+              >
+                ↑ Level Up
+              </button>
+            )}
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 11, padding: '6px 10px' }}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              🗑
+            </button>
           </div>
         </div>
-        <div className="flex flex-col gap-1 items-end">
-          <UserPreferencesPanel />
-          {char.totalLevel < 20 && (
-            <button
-              className="pf-btn pf-btn-gold text-xs px-3 py-1.5 whitespace-nowrap"
-              onClick={() => setShowLevelUp(true)}
-            >
-              ⬆ Level Up
-            </button>
-          )}
-          <button
-            className="pf-btn pf-btn-ghost text-xs px-3 py-1"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            🗑 Elimina
-          </button>
-        </div>
-      </div>
 
-      {/* Quick stats strip */}
-      <div
-        className="flex overflow-x-auto gap-3 px-4 py-2"
-        style={{ background: 'var(--theme-bg-panel)', borderBottom: '1px solid var(--theme-ghost-border)' }}
-      >
-        {(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map(k => {
-          const labels: Record<string, string> = { str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR' };
-          const mod = abilityMod(scores[k]);
-          return (
-            <div key={k} className="text-center shrink-0">
-              <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>{labels[k]}</div>
-              <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{scores[k]}</div>
-              <div className="text-xs" style={{ color: mod >= 0 ? 'var(--theme-accent)' : 'var(--theme-hp-low)' }}>{modStr(mod)}</div>
+        {/* Character identity */}
+        <div style={{ padding: '16px 24px 20px', display: 'flex', alignItems: 'flex-start', gap: 20 }}>
+          {/* Portrait with spinning sigil */}
+          <div style={{
+            width: 72,
+            height: 72,
+            background: 'var(--bg-elev)',
+            border: '1px solid var(--line-soft)',
+            flexShrink: 0,
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 36,
+              fontStyle: 'italic',
+              color: 'var(--gold)',
+              opacity: 0.6,
+              userSelect: 'none',
+            }}>
+              {char.name?.[0] ?? '?'}
             </div>
-          );
-        })}
-        <div className="w-px shrink-0" style={{ background: 'var(--theme-ghost-border)' }} />
-        <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>CA</div>
-          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{10 + abilityMod(scores.dex)}</div>
-        </div>
-        <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>BAB</div>
-          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{modStr(totalBAB(char.classes))}</div>
-        </div>
-        <div className="text-center shrink-0">
-          <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>INIT</div>
-          <div className="text-sm font-bold" style={{ color: 'var(--theme-text)' }}>{modStr(abilityMod(scores.dex))}</div>
+            {/* Rotating sigil overlay */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--gold)',
+              opacity: 0.15,
+              animation: 'ringSpin 60s linear infinite',
+            }}>
+              <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="0.6">
+                <circle cx="32" cy="32" r="30" />
+                <circle cx="32" cy="32" r="22" />
+                {[0, 60, 120, 180, 240, 300].map(a => {
+                  const r1 = 22, r2 = 30;
+                  const x1 = 32 + r1 * Math.cos(a * Math.PI / 180);
+                  const y1 = 32 + r1 * Math.sin(a * Math.PI / 180);
+                  const x2 = 32 + r2 * Math.cos(a * Math.PI / 180);
+                  const y2 = 32 + r2 * Math.sin(a * Math.PI / 180);
+                  return <line key={a} x1={x1} y1={y1} x2={x2} y2={y2} />;
+                })}
+              </svg>
+            </div>
+          </div>
+
+          {/* Name + meta + bars */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 28,
+              fontWeight: 500,
+              color: 'var(--ink)',
+              margin: '0 0 4px',
+              lineHeight: 1.1,
+            }}>
+              {char.name}
+            </h1>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '3px 10px',
+              fontFamily: 'var(--font-rune)',
+              fontSize: 10,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--ink-mute)',
+              marginBottom: 12,
+            }}>
+              <span>{race?.name ?? char.race}</span>
+              <span style={{ color: 'var(--line-mid)' }}>·</span>
+              <span>
+                {classes.map(({ entry, cls }) => `${cls?.name ?? entry.classId} ${entry.level}`).join(' / ')}
+              </span>
+              <span style={{ color: 'var(--line-mid)' }}>·</span>
+              <span style={{ color: 'var(--gold-bright)' }}>LV {char.totalLevel}</span>
+              {char.alignment && (
+                <>
+                  <span style={{ color: 'var(--line-mid)' }}>·</span>
+                  <span>{char.alignment}</span>
+                </>
+              )}
+            </div>
+
+            {/* HP vital bar */}
+            <div className="vital-row" style={{ maxWidth: 340, marginBottom: 6 }}>
+              <div className="vital-label">
+                <span className="name">Punti Ferita</span>
+                <span className="val">{char.currentHp}<em>/{maxHp}</em></span>
+              </div>
+              <div className="vital-bar">
+                <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick combat stats */}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', maxWidth: 200 }}>
+            {[
+              { label: 'CA',   value: String(10 + abilityMod(scores.dex)) },
+              { label: 'BAB',  value: modStr(bab) },
+              { label: 'INIT', value: modStr(abilityMod(scores.dex)) },
+              { label: 'TEM',  value: modStr(fort) },
+              { label: 'RIF',  value: modStr(ref) },
+              { label: 'VOL',  value: modStr(will) },
+            ].map(({ label, value }) => (
+              <div key={label} style={{
+                textAlign: 'center',
+                background: 'var(--bg-base)',
+                border: '1px solid var(--line-soft)',
+                padding: '5px 8px',
+                minWidth: 44,
+              }}>
+                <div className="numeral" style={{ fontSize: 15, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
+                <div className="label-rune-soft" style={{ fontSize: 8, marginTop: 2 }}>{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Tab bar */}
-      <div
-        className="flex border-b overflow-x-auto"
-        style={{ background: 'var(--theme-bg-panel-2)', borderColor: 'var(--theme-ghost-border)' }}
-      >
+      <div style={{
+        display: 'flex',
+        borderBottom: '1px solid var(--line-soft)',
+        background: 'var(--bg-elev)',
+        overflowX: 'auto',
+      }}>
         {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-all"
             style={{
-              borderColor: tab === t.id ? 'var(--theme-accent)' : 'transparent',
-              color: tab === t.id ? 'var(--theme-accent)' : 'var(--theme-text-neutral)',
+              fontFamily: 'var(--font-rune)',
+              fontSize: 10,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              padding: '12px 20px',
+              border: 'none',
+              borderBottom: `2px solid ${tab === t.id ? 'var(--gold)' : 'transparent'}`,
               background: 'transparent',
+              color: tab === t.id ? 'var(--gold)' : 'var(--ink-mute)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'color 0.15s, border-color 0.15s',
             }}
           >
             {t.label}
@@ -200,7 +285,7 @@ export function CharacterSheet() {
           <div className="space-y-4">
             <div className="pf-panel p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Note</h3>
+                <div className="label-rune">Note</div>
                 <button
                   className="pf-btn pf-btn-outline text-xs px-3 py-1"
                   onClick={() => setEditingNotes(e => !e)}
@@ -216,7 +301,7 @@ export function CharacterSheet() {
                   onChange={e => updateCharacter(char.id, { notes: e.target.value })}
                 />
               ) : (
-                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--theme-text-muted)' }}>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--ink-soft)' }}>
                   {char.notes || 'Nessuna nota.'}
                 </p>
               )}
@@ -237,17 +322,16 @@ export function CharacterSheet() {
                 ['Occhi', char.eyes ?? '—'],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <span className="font-semibold" style={{ color: 'var(--theme-border-strong)' }}>{label}: </span>
-                  <span style={{ color: 'var(--theme-text-muted)' }}>{value}</span>
+                  <span className="label-rune-soft" style={{ display: 'inline', marginRight: 6 }}>{label}</span>
+                  <span style={{ color: 'var(--ink-soft)' }}>{value}</span>
                 </div>
               ))}
             </div>
 
-            {/* Background */}
             {char.background && (
               <div className="pf-panel p-4">
-                <h3 className="text-sm font-bold mb-2" style={{ color: 'var(--theme-accent)' }}>Background</h3>
-                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--theme-text-muted)' }}>{char.background}</p>
+                <div className="label-rune" style={{ marginBottom: 8 }}>Background</div>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--ink-soft)' }}>{char.background}</p>
               </div>
             )}
           </div>
@@ -272,11 +356,12 @@ export function CharacterSheet() {
       {/* Floating dice button */}
       <button
         onClick={() => setDiceOpen(o => !o)}
-        className="fixed bottom-4 right-4 z-30 w-12 h-12 rounded-full text-xl font-bold shadow-lg transition-transform active:scale-90"
+        className="fixed bottom-4 right-4 z-30 w-12 h-12 text-xl font-bold shadow-lg transition-transform active:scale-90"
         style={{
-          background: diceOpen ? 'var(--theme-accent)' : 'var(--theme-bg-panel)',
-          color: diceOpen ? 'var(--theme-bg)' : 'var(--theme-accent)',
-          border: '2px solid var(--theme-accent)',
+          background: diceOpen ? 'var(--gold)' : 'var(--surface-1)',
+          color: diceOpen ? 'var(--bg-deep)' : 'var(--gold)',
+          border: '1px solid var(--line-mid)',
+          borderRadius: 0,
         }}
         title="Lancia i dadi"
       >

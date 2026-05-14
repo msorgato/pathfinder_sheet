@@ -1,4 +1,4 @@
-export type ThemeId = 'fantasy' | 'eva01' | 'cyberpunk' | 'persona5';
+export type ThemeId = 'sigil' | 'astral' | 'blood';
 
 export interface ThemeDef {
   id: ThemeId;
@@ -8,8 +8,19 @@ export interface ThemeDef {
 }
 
 export const THEMES: ThemeDef[] = [
-  { id: 'fantasy',   label: 'Fantasy',   swatch1: '#6b4226', swatch2: '#c8a443' },
-  { id: 'eva01',     label: 'EVA-01',    swatch1: '#3d0080', swatch2: '#39ff14' },
-  { id: 'cyberpunk', label: 'Cyberpunk', swatch1: '#0a2040', swatch2: '#00ffff' },
-  { id: 'persona5',  label: 'Persona 5', swatch1: '#1a0000', swatch2: '#e8001a' },
+  { id: 'sigil',  label: 'Sigillo', swatch1: '#1a1535', swatch2: '#d4a574' },
+  { id: 'astral', label: 'Astrale', swatch1: '#181336', swatch2: '#c4b5fd' },
+  { id: 'blood',  label: 'Sangue',  swatch1: '#2a1212', swatch2: '#e8c87a' },
 ];
+
+const LEGACY_THEME_MAP: Record<string, ThemeId> = {
+  fantasy:  'sigil',
+  eva01:    'sigil',
+  cyberpunk:'sigil',
+  persona5: 'sigil',
+};
+
+export function migrateThemeId(raw: string): ThemeId {
+  if (raw === 'sigil' || raw === 'astral' || raw === 'blood') return raw;
+  return LEGACY_THEME_MAP[raw] ?? 'sigil';
+}
