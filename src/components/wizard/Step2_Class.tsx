@@ -42,8 +42,8 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
               boxShadow: classId === c.id ? '0 0 8px rgba(200,164,67,0.25)' : 'none',
             }}
           >
-            <div className="font-bold text-sm" style={{ color: 'var(--theme-accent)' }}>{c.name}</div>
-            <div className="text-xs mt-1 flex gap-2" style={{ color: 'var(--theme-text-neutral)' }}>
+            <div className="font-bold" style={{ fontSize: 15, color: 'var(--theme-accent)' }}>{c.name}</div>
+            <div className="mt-1 flex gap-2" style={{ fontSize: 13, color: 'var(--theme-text-neutral)' }}>
               <span>d{c.hitDie}</span>
               <span>BAB {BAB_LABEL[c.bab]}</span>
               {c.spellcasting && <span style={{ color: '#9b7fd4' }}>✨</span>}
