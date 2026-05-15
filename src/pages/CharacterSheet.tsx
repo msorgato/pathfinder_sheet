@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
+import { CHARACTER_PALETTES } from '../themes';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
@@ -29,6 +30,18 @@ export function CharacterSheet() {
   const [diceOpen, setDiceOpen] = useState(false);
   const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showColorPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (colorPickerRef.current?.contains(e.target as Node)) return;
+      setShowColorPicker(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showColorPicker]);
 
   const handleQuickRoll = (req: RollRequest) => {
     setDiceOpen(true);
@@ -62,7 +75,7 @@ export function CharacterSheet() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-deep)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-deep)', '--char-accent': char.accentColor ?? 'var(--gold)' } as React.CSSProperties}>
       {/* Identity header */}
       <div
         className="frame-corners-4"
@@ -90,6 +103,79 @@ export function CharacterSheet() {
           </button>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <UserPreferencesPanel />
+
+            {/* Character accent colour picker */}
+            <div ref={colorPickerRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowColorPicker(p => !p)}
+                title="Colore personaggio"
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  background: char.accentColor ?? 'var(--gold)',
+                  border: showColorPicker ? '2px solid white' : '2px solid var(--line-mid)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  flexShrink: 0,
+                  transition: 'border-color 0.15s, transform 0.15s',
+                  transform: showColorPicker ? 'scale(1.15)' : 'scale(1)',
+                }}
+              />
+              {showColorPicker && (
+                <div
+                  className="pf-panel"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    right: 0,
+                    padding: '12px 14px',
+                    zIndex: 9999,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.55)',
+                    minWidth: 190,
+                  }}
+                >
+                  <div className="label-rune-soft" style={{ marginBottom: 10 }}>Colore Personaggio</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {CHARACTER_PALETTES.map(p => (
+                      <button
+                        key={p.id}
+                        title={p.name}
+                        onClick={() => { updateCharacter(char.id, { accentColor: p.hex }); setShowColorPicker(false); }}
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: '50%',
+                          background: p.hex,
+                          border: char.accentColor === p.hex ? '2px solid white' : '2px solid transparent',
+                          cursor: 'pointer',
+                          padding: 0,
+                          outline: 'none',
+                          flexShrink: 0,
+                          boxShadow: char.accentColor === p.hex ? `0 0 0 1px rgba(255,255,255,0.5), 0 0 6px ${p.hex}` : 'none',
+                          transition: 'transform 0.1s',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {char.accentColor && (
+                    <div style={{ marginTop: 10, borderTop: '1px solid var(--line-soft)', paddingTop: 8 }}>
+                      <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginBottom: 4 }}>
+                        {CHARACTER_PALETTES.find(p => p.hex === char.accentColor)?.name ?? ''}
+                      </div>
+                      <button
+                        className="pf-btn pf-btn-ghost"
+                        style={{ fontSize: 10, padding: '3px 8px' }}
+                        onClick={() => { updateCharacter(char.id, { accentColor: undefined }); setShowColorPicker(false); }}
+                      >
+                        Ripristina oro
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {char.totalLevel < 20 && (
               <button
                 className="btn btn-primary"
@@ -111,10 +197,8 @@ export function CharacterSheet() {
 
         {/* Character identity */}
         <div style={{ padding: '16px 24px 20px', display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-          {/* Portrait with spinning sigil */}
-          <div style={{
-            width: 72,
-            height: 72,
+          {/* Portrait with multi-ring ouroboros sigil */}
+          <div className="char-portrait" style={{
             background: 'var(--bg-elev)',
             border: '1px solid var(--line-soft)',
             flexShrink: 0,
@@ -124,38 +208,56 @@ export function CharacterSheet() {
             justifyContent: 'center',
             overflow: 'hidden',
           }}>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 36,
-              fontStyle: 'italic',
-              color: 'var(--gold)',
-              opacity: 0.6,
-              userSelect: 'none',
-            }}>
-              {char.name?.[0] ?? '?'}
-            </div>
-            {/* Rotating sigil overlay */}
+            {/* Ouroboros sigil layer (clockwise) */}
             <div style={{
               position: 'absolute',
               inset: 0,
               display: 'grid',
               placeItems: 'center',
-              color: 'var(--gold)',
+              color: 'var(--char-accent, var(--gold))',
               opacity: 0.15,
               animation: 'ringSpin 60s linear infinite',
             }}>
-              <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="0.6">
+              <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="0.6">
                 <circle cx="32" cy="32" r="30" />
                 <circle cx="32" cy="32" r="22" />
+                <circle cx="32" cy="32" r="14" />
+                <circle cx="32" cy="32" r="26" strokeDasharray="2 4" />
                 {[0, 60, 120, 180, 240, 300].map(a => {
-                  const r1 = 22, r2 = 30;
-                  const x1 = 32 + r1 * Math.cos(a * Math.PI / 180);
-                  const y1 = 32 + r1 * Math.sin(a * Math.PI / 180);
-                  const x2 = 32 + r2 * Math.cos(a * Math.PI / 180);
-                  const y2 = 32 + r2 * Math.sin(a * Math.PI / 180);
-                  return <line key={a} x1={x1} y1={y1} x2={x2} y2={y2} />;
+                  const rad = a * Math.PI / 180;
+                  const cx = 32 + 22 * Math.cos(rad);
+                  const cy = 32 + 22 * Math.sin(rad);
+                  return <circle key={a} cx={cx} cy={cy} r="1.5" fill="currentColor" stroke="none" />;
                 })}
               </svg>
+            </div>
+
+            {/* Hexagon counter-rotating layer */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--char-accent, var(--gold))',
+              opacity: 0.12,
+              animation: 'ringSpinReverse 90s linear infinite',
+            }}>
+              <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="0.5">
+                <polygon points="60,32 46,56.25 18,56.25 4,32 18,7.75 46,7.75" />
+              </svg>
+            </div>
+
+            {/* Character initial — above sigil layers */}
+            <div className="char-portrait-initial" style={{
+              position: 'relative',
+              zIndex: 1,
+              fontFamily: 'var(--font-display)',
+              fontStyle: 'italic',
+              color: 'var(--char-accent, var(--gold))',
+              opacity: 0.6,
+              userSelect: 'none',
+            }}>
+              {char.name?.[0] ?? '?'}
             </div>
           </div>
 
@@ -198,15 +300,16 @@ export function CharacterSheet() {
             </div>
 
             {/* HP vital bar */}
-            <div className="vital-row" style={{ maxWidth: 480, marginBottom: 6 }}>
+            <div className="vital-row" style={{ maxWidth: 480, marginBottom: 8 }}>
               <div className="vital-label">
                 <span className="name">Punti Ferita</span>
                 <span className="val">{char.currentHp}<em>/{maxHp}</em></span>
               </div>
               <div className="vital-bar">
-                <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
+                <div className="vital-bar-fill" style={{ width: `${hpPct}%`, background: 'var(--char-accent, var(--gold))' }} />
               </div>
             </div>
+
           </div>
 
         </div>
@@ -329,17 +432,38 @@ export function CharacterSheet() {
 
       {/* Floating dice button */}
       <button
+        className="dice-fab"
         onClick={() => setDiceOpen(o => !o)}
-        className="fixed bottom-4 right-4 z-30 w-12 h-12 text-xl font-bold shadow-lg transition-transform active:scale-90"
-        style={{
-          background: diceOpen ? 'var(--gold)' : 'var(--surface-1)',
-          color: diceOpen ? 'var(--bg-deep)' : 'var(--gold)',
-          border: '1px solid var(--line-mid)',
-          borderRadius: 0,
-        }}
         title="Lancia i dadi"
       >
-        🎲
+        <svg width="32" height="32" viewBox="0 0 240 240" fill="none" stroke="currentColor" strokeLinejoin="round" strokeLinecap="round">
+          {/* Outer hexagonal silhouette */}
+          <polygon points="120,20 207,70 207,170 120,220 33,170 33,70" strokeWidth="8"/>
+          {/* Front center triangle */}
+          <polygon points="120,58 173,151 67,151" strokeWidth="7"/>
+          {/* Edges from lower-left inner vertex */}
+          <line x1="67" y1="151" x2="120" y2="220" strokeWidth="5"/>
+          <line x1="67" y1="151" x2="33" y2="70" strokeWidth="5"/>
+          <line x1="67" y1="151" x2="33" y2="170" strokeWidth="5"/>
+          {/* Edges from top inner vertex */}
+          <line x1="120" y1="58" x2="120" y2="20" strokeWidth="5"/>
+          <line x1="120" y1="58" x2="33" y2="70" strokeWidth="5"/>
+          <line x1="120" y1="58" x2="207" y2="70" strokeWidth="5"/>
+          {/* Edges from lower-right inner vertex */}
+          <line x1="173" y1="151" x2="120" y2="220" strokeWidth="5"/>
+          <line x1="173" y1="151" x2="207" y2="170" strokeWidth="5"/>
+          <line x1="173" y1="151" x2="207" y2="70" strokeWidth="5"/>
+          {/* Vertex accent dots */}
+          <circle cx="120" cy="20" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="207" cy="70" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="207" cy="170" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="120" cy="220" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="33" cy="170" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="33" cy="70" r="7" fill="currentColor" stroke="none"/>
+          <circle cx="120" cy="58" r="5.5" fill="currentColor" stroke="none"/>
+          <circle cx="67" cy="151" r="5.5" fill="currentColor" stroke="none"/>
+          <circle cx="173" cy="151" r="5.5" fill="currentColor" stroke="none"/>
+        </svg>
       </button>
 
       <DiceRoller

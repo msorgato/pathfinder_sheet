@@ -214,6 +214,7 @@ export interface Character {
 
   experience: number;
   notes: string;
+  accentColor?: string;
 }
 
 export type WizardStep =

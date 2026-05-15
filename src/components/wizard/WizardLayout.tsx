@@ -19,10 +19,10 @@ export function WizardLayout({
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--theme-bg)' }}>
       {/* Header */}
       <div className="pf-header px-6 py-4">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-text)', fontFamily: 'Georgia, serif' }}>
+        <h1 className="font-bold" style={{ fontSize: 26, color: 'var(--theme-text)', fontFamily: 'Georgia, serif' }}>
           ⚔️ Creazione Personaggio
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--theme-accent)' }}>{title}</p>
+        <p style={{ fontSize: 15, marginTop: 4, color: 'var(--theme-accent)' }}>{title}</p>
       </div>
 
       {/* Progress bar */}
@@ -42,9 +42,10 @@ export function WizardLayout({
           {STEPS.map((s, i) => (
             <span
               key={s}
-              className="text-xs whitespace-nowrap"
+              className="whitespace-nowrap"
               style={{
-                color: i === step - 1 ? 'var(--theme-accent)' : i < step ? 'var(--theme-text-faint)' : 'var(--theme-ghost-border)',
+                fontSize: 13,
+                color: i === step - 1 ? 'var(--theme-accent)' : i < step ? 'var(--theme-text-faint)' : 'var(--ink-mute)',
                 fontWeight: i === step - 1 ? 700 : 400,
               }}
             >

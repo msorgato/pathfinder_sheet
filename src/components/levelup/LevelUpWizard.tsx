@@ -190,7 +190,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
               <div
                 key={s}
                 className="flex-1 h-1 rounded-full"
-                style={{ background: i <= stepIdx ? 'var(--theme-accent)' : 'var(--theme-ghost-border)' }}
+                style={{ background: i <= stepIdx ? 'var(--theme-accent)' : 'var(--line-mid)' }}
               />
             ))}
           </div>
@@ -202,7 +202,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: CLASS */}
           {step === 'class' && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
+              <h3 className="font-bold mb-3" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
                 Scegli la classe da aumentare
               </h3>
               <div className="space-y-2">
@@ -258,7 +258,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: HP */}
           {step === 'hp' && selectedCls && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
+              <h3 className="font-bold mb-3" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
                 Tira i Punti Ferita (d{maxHpRoll})
               </h3>
               <div className="flex gap-3 mb-4">
@@ -307,7 +307,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {step === 'skills' && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold" style={{ color: 'var(--theme-accent)' }}>Gradi di Abilità</h3>
+                <h3 className="font-bold" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>Gradi di Abilità</h3>
                 <span
                   className="text-xl font-bold"
                   style={{ color: deltaLeft === 0 ? 'var(--theme-hp-high)' : deltaLeft < 0 ? 'var(--theme-hp-low)' : 'var(--theme-accent)' }}
@@ -366,7 +366,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: FEAT */}
           {step === 'feat' && needsFeat && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
+              <h3 className="font-bold mb-3" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
                 Scegli un Talento (livello {nextLevel})
               </h3>
               <input
@@ -387,19 +387,19 @@ export function LevelUpWizard({ char, onClose }: Props) {
                     style={{ borderColor: selectedFeat === f.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}
                   >
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: selectedFeat === f.id ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
+                      <span className="font-semibold" style={{ fontSize: 15, color: selectedFeat === f.id ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
                         {f.name}
                       </span>
                       {f.repeatable && (
-                        <span className="text-xs px-1 rounded" style={{ background: 'var(--theme-bg)', color: 'var(--theme-text-faint)' }}>
+                        <span className="px-1 rounded" style={{ fontSize: 11, background: 'var(--theme-bg)', color: 'var(--theme-text-faint)' }}>
                           ripetibile
                         </span>
                       )}
                     </div>
                     {f.prerequisites && (
-                      <div className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
+                      <div style={{ fontSize: 13, color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
                     )}
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
+                    <div style={{ fontSize: 13, marginTop: 2, color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
                   </button>
                 ))}
               </div>
@@ -409,7 +409,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: ABILITY */}
           {step === 'ability' && needsAbility && (
             <div>
-              <h3 className="text-base font-bold mb-3" style={{ color: 'var(--theme-accent)' }}>
+              <h3 className="font-bold mb-3" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
                 Aumento Caratteristica (livello {nextLevel})
               </h3>
               <p className="text-sm mb-4" style={{ color: 'var(--theme-text-muted)' }}>
@@ -440,7 +440,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {step === 'spells' && isSpellbookCaster && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-base font-bold" style={{ color: 'var(--theme-accent)' }}>
+                <h3 className="font-bold" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
                   Nuovi Incantesimi nel Libro
                 </h3>
                 <span
@@ -512,12 +512,12 @@ export function LevelUpWizard({ char, onClose }: Props) {
                           >
                             {spellLevel === 0 ? 'Trucch.' : `${spellLevel}°`}
                           </span>
-                          <span className="font-semibold text-sm" style={{ color: isSelected ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
+                          <span className="font-semibold" style={{ fontSize: 15, color: isSelected ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
                             {spell.name}
                           </span>
-                          {isSelected && <span className="ml-auto text-xs" style={{ color: 'var(--theme-hp-high)' }}>✓ selezionato</span>}
+                          {isSelected && <span className="ml-auto" style={{ fontSize: 12, color: 'var(--theme-hp-high)' }}>✓ selezionato</span>}
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: 'var(--theme-text-neutral)' }}>{spell.description}</div>
+                        <div style={{ fontSize: 13, marginTop: 2, color: 'var(--theme-text-neutral)' }}>{spell.description}</div>
                       </button>
                     );
                   })}
@@ -532,7 +532,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
           {/* STEP: CONFIRM */}
           {step === 'confirm' && (
             <div className="space-y-3">
-              <h3 className="text-base font-bold" style={{ color: 'var(--theme-accent)' }}>Conferma Level Up</h3>
+              <h3 className="font-bold" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>Conferma Level Up</h3>
               <div className="pf-panel p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--theme-text-muted)' }}>Classe:</span>
