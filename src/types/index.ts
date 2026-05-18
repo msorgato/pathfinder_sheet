@@ -242,6 +242,18 @@ export interface LobbyMember {
   displayName: string;
   joinedAt: number; // Unix ms
   lastSeenAt: number; // Unix ms
+  characterId?: string;
+}
+
+export interface RollResultData {
+  characterName: string;
+  label: string;
+  formula: string;
+  rolls: number[];
+  modifier: number;
+  total: number;
+  isCrit?: boolean;
+  isFumble?: boolean;
 }
 
 export interface LobbyMessage {
@@ -250,6 +262,8 @@ export interface LobbyMessage {
   senderName: string;
   content: string;
   sentAt: number; // Unix ms
+  type?: 'text' | 'roll';
+  rollData?: RollResultData;
 }
 
 export interface LobbyWithUnread extends Lobby {

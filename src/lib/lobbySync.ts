@@ -5,6 +5,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   getDoc,
   getDocs,
   query,
@@ -18,7 +19,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Lobby, LobbyMember, LobbyMessage, LobbyWithUnread } from '../types';
+import type { Lobby, LobbyMember, LobbyMessage, LobbyWithUnread, RollResultData } from '../types';
 
 // ── Collection refs ───────────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ function docToMember(d: { id: string; data(): any }): LobbyMember {
     displayName: data.displayName,
     joinedAt:    tsToMs(data.joinedAt),
     lastSeenAt:  tsToMs(data.lastSeenAt),
+    ...(data.characterId ? { characterId: data.characterId } : {}),
   };
 }
 
@@ -94,6 +96,8 @@ function docToMessage(d: { id: string; data(): any }): LobbyMessage {
     senderName: data.senderName,
     content:    data.content,
     sentAt:     tsToMs(data.sentAt),
+    type:       data.type ?? 'text',
+    ...(data.rollData ? { rollData: data.rollData as RollResultData } : {}),
   };
 }
 
@@ -179,7 +183,13 @@ export async function getLobbyMembers(uid: string, lobbyId: string): Promise<Lob
 
 // ── Messages ──────────────────────────────────────────────────────────────────
 
-export async function sendMessage(uid: string, displayName: string, lobbyId: string, content: string): Promise<void> {
+export async function sendMessage(
+  uid: string,
+  displayName: string,
+  lobbyId: string,
+  content: string,
+  rollData?: RollResultData,
+): Promise<void> {
   const trimmed = content.trim();
   if (!trimmed) throw new Error('Il messaggio non può essere vuoto.');
 
@@ -191,11 +201,28 @@ export async function sendMessage(uid: string, displayName: string, lobbyId: str
   if (!docToLobby(lobbySnap).isActive) throw new Error('La lobby non è attiva.');
   if (!mSnap.exists()) throw new Error('Non sei membro di questa lobby.');
 
-  await addDoc(messagesCol(lobbyId), {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payload: Record<string, any> = {
     senderId:   uid,
     senderName: displayName,
     content:    trimmed,
     sentAt:     serverTimestamp(),
+    type:       rollData ? 'roll' : 'text',
+  };
+  if (rollData) payload.rollData = rollData;
+
+  await addDoc(messagesCol(lobbyId), payload);
+}
+
+export async function getMemberCharacterId(uid: string, lobbyId: string): Promise<string | null> {
+  const snap = await getDoc(memberDoc(lobbyId, uid));
+  if (!snap.exists()) return null;
+  return snap.data().characterId ?? null;
+}
+
+export async function setActiveCharacter(uid: string, lobbyId: string, charId: string | null): Promise<void> {
+  await updateDoc(memberDoc(lobbyId, uid), {
+    characterId: charId ?? deleteField(),
   });
 }
 

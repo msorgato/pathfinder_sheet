@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Unsubscribe } from 'firebase/firestore';
-import type { LobbyWithUnread, LobbyMember, LobbyMessage, Lobby } from '../types';
+import type { LobbyWithUnread, LobbyMember, LobbyMessage, Lobby, RollResultData } from '../types';
 import {
   createLobby as fsCreateLobby,
   joinLobbyByCode as fsJoin,
@@ -9,6 +9,8 @@ import {
   sendMessage as fsSend,
   updateLastSeen as fsUpdateLastSeen,
   getUserLobbies as fsGetUserLobbies,
+  getMemberCharacterId as fsGetMemberCharacterId,
+  setActiveCharacter as fsSetActiveCharacter,
   subscribeToMessages,
   subscribeToMembers,
 } from '../lib/lobbySync';
@@ -18,6 +20,7 @@ interface LobbyState {
   activeLobby: Lobby | null;
   members: LobbyMember[];
   messages: LobbyMessage[];
+  activeCharacterId: string | null;
   loading: boolean;
   error: string | null;
 
@@ -27,6 +30,8 @@ interface LobbyState {
   leaveLobby: (uid: string, lobbyId: string) => Promise<void>;
   closeLobby: (uid: string, lobbyId: string) => Promise<void>;
   sendMessage: (uid: string, displayName: string, lobbyId: string, content: string) => Promise<void>;
+  sendRollMessage: (uid: string, displayName: string, lobbyId: string, rollData: RollResultData) => Promise<void>;
+  setActiveCharacter: (uid: string, charId: string | null) => Promise<void>;
   openLobby: (uid: string, lobby: Lobby) => void;
   closeLobbyView: () => void;
   clearError: () => void;
@@ -44,12 +49,13 @@ function stopSubscriptions() {
 }
 
 export const useLobbyStore = create<LobbyState>((set, get) => ({
-  lobbies:     [],
-  activeLobby: null,
-  members:     [],
-  messages:    [],
-  loading:     false,
-  error:       null,
+  lobbies:           [],
+  activeLobby:       null,
+  members:           [],
+  messages:          [],
+  activeCharacterId: null,
+  loading:           false,
+  error:             null,
 
   loadUserLobbies: async (uid) => {
     set({ loading: true, error: null });
@@ -96,7 +102,7 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
     try {
       await fsLeave(uid, lobbyId);
       stopSubscriptions();
-      set({ activeLobby: null, members: [], messages: [] });
+      set({ activeLobby: null, members: [], messages: [], activeCharacterId: null });
       await get().loadUserLobbies(uid);
     } catch (e) {
       set({ error: (e as Error).message });
@@ -111,7 +117,7 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
     try {
       await fsClose(uid, lobbyId);
       stopSubscriptions();
-      set({ activeLobby: null, members: [], messages: [] });
+      set({ activeLobby: null, members: [], messages: [], activeCharacterId: null });
       await get().loadUserLobbies(uid);
     } catch (e) {
       set({ error: (e as Error).message });
@@ -130,9 +136,42 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
     }
   },
 
+  sendRollMessage: async (uid, displayName, lobbyId, rollData) => {
+    const content = `${rollData.label}: ${rollData.formula} = ${rollData.total}`;
+    // Optimistic local update before Firestore confirms
+    const optimistic: LobbyMessage = {
+      id:         `opt-${Date.now()}`,
+      senderId:   uid,
+      senderName: displayName,
+      content,
+      sentAt:     Date.now(),
+      type:       'roll',
+      rollData,
+    };
+    set(s => ({ messages: [...s.messages, optimistic] }));
+    try {
+      await fsSend(uid, displayName, lobbyId, content, rollData);
+    } catch (e) {
+      set(s => ({ messages: s.messages.filter(m => m.id !== optimistic.id), error: (e as Error).message }));
+      throw e;
+    }
+  },
+
+  setActiveCharacter: async (uid, charId) => {
+    const { activeLobby } = get();
+    if (!activeLobby) return;
+    set({ activeCharacterId: charId });
+    await fsSetActiveCharacter(uid, activeLobby.id, charId);
+  },
+
   openLobby: (uid, lobby) => {
     stopSubscriptions();
-    set({ activeLobby: lobby, messages: [], members: [] });
+    set({ activeLobby: lobby, messages: [], members: [], activeCharacterId: null });
+
+    // Load initial characterId from Firestore
+    fsGetMemberCharacterId(uid, lobby.id)
+      .then(charId => set({ activeCharacterId: charId }))
+      .catch(console.error);
 
     unsubMessages = subscribeToMessages(lobby.id, (msgs) => {
       set({ messages: msgs });
@@ -146,13 +185,13 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
 
   closeLobbyView: () => {
     stopSubscriptions();
-    set({ activeLobby: null, messages: [], members: [] });
+    set({ activeLobby: null, messages: [], members: [], activeCharacterId: null });
   },
 
   clearError: () => set({ error: null }),
 
   clearStore: () => {
     stopSubscriptions();
-    set({ lobbies: [], activeLobby: null, members: [], messages: [], loading: false, error: null });
+    set({ lobbies: [], activeLobby: null, members: [], messages: [], activeCharacterId: null, loading: false, error: null });
   },
 }));
