@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { LobbyMessage } from '../../types';
+import { RollMessage } from './RollMessage';
 
 interface Props {
   messages: LobbyMessage[];
@@ -61,6 +62,9 @@ export function ChatPanel({ messages, currentUserId, isActive, onSend }: Props) 
         )}
         {messages.map(msg => {
           const isMine = msg.senderId === currentUserId;
+          if (msg.type === 'roll' && msg.rollData) {
+            return <RollMessage key={msg.id} msg={msg} isMine={isMine} />;
+          }
           return (
             <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
               <div

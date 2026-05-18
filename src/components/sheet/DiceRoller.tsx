@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { RollResultData } from '../../types';
 
 export interface RollRequest {
   label: string;
@@ -21,6 +22,8 @@ interface Props {
   onClose: () => void;
   pendingRoll?: RollRequest;
   onPendingHandled: () => void;
+  characterName?: string;
+  onRollResult?: (result: RollResultData) => void;
 }
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -37,12 +40,16 @@ function isFumble(dice: number[], dieType: number): boolean {
   return dieType === 20 && dice.length === 1 && dice[0] === 1;
 }
 
-export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Props) {
+export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, characterName = '', onRollResult }: Props) {
   const [numDice, setNumDice] = useState(1);
   const [dieType, setDieType] = useState(20);
   const [modifier, setModifier] = useState(0);
   const [results, setResults] = useState<RollResult[]>([]);
   const [animKey, setAnimKey] = useState(0);
+  const onRollResultRef = useRef(onRollResult);
+  onRollResultRef.current = onRollResult;
+
+  const modStr = (v: number) => v === 0 ? '' : v > 0 ? `+${v}` : `${v}`;
 
   const performRoll = (label: string, n: number, d: number, mod: number) => {
     const dice = Array.from({ length: n }, () => rollDie(d));
@@ -50,6 +57,16 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Pro
     const id = Date.now().toString();
     setResults(prev => [{ id, label, dice, dieType: d, modifier: mod, total }, ...prev].slice(0, 30));
     setAnimKey(k => k + 1);
+    onRollResultRef.current?.({
+      characterName,
+      label,
+      formula: `${n}d${d}${modStr(mod)}`,
+      rolls: dice,
+      modifier: mod,
+      total,
+      isCrit:   isCrit(dice, d),
+      isFumble: isFumble(dice, d),
+    });
   };
 
   useEffect(() => {
@@ -68,7 +85,6 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled }: Pro
   const latest = results[0];
   const crit = latest && isCrit(latest.dice, latest.dieType);
   const fumble = latest && isFumble(latest.dice, latest.dieType);
-  const modStr = (v: number) => v === 0 ? '' : v > 0 ? `+${v}` : `${v}`;
 
   return (
     <>
