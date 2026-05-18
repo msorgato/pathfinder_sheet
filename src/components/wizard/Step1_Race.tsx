@@ -53,9 +53,9 @@ export function Step1_Race({ selectedRaceId, selectableBonus, onSelect, onNext }
               boxShadow: raceId === r.id ? '0 0 10px rgba(200,164,67,0.3)' : 'none',
             }}
           >
-            <div className="font-bold mb-1" style={{ color: 'var(--theme-accent)' }}>{r.name}</div>
-            <div className="text-xs mb-2" style={{ color: 'var(--theme-text-neutral)' }}>{r.size} · {r.speed} m</div>
-            <div className="text-xs space-y-0.5" style={{ color: 'var(--theme-text)' }}>
+            <div className="font-bold mb-1" style={{ fontSize: 15, color: 'var(--theme-accent)' }}>{r.name}</div>
+            <div className="mb-2" style={{ fontSize: 13, color: 'var(--theme-text-neutral)' }}>{r.size} · {r.speed} m</div>
+            <div className="space-y-0.5" style={{ fontSize: 13, color: 'var(--theme-text)' }}>
               {Object.entries(r.abilityModifiers).map(([k, v]) => (
                 <span key={k} className="mr-2">
                   {ABILITY_LABELS[k as AbilityKey]} {(v ?? 0) >= 0 ? '+' : ''}{v}
