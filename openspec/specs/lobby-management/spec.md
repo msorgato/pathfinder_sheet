@@ -1,9 +1,9 @@
 ### Requirement: Creazione lobby
-Un utente autenticato SHALL poter creare una nuova lobby specificando un nome. Il sistema genera automaticamente un codice univoco di 6 caratteri alfanumerici. L'utente diventa owner della lobby.
+Un utente autenticato SHALL poter creare una nuova lobby specificando un nome. Il sistema genera automaticamente un codice univoco di 6 caratteri alfanumerici. L'utente diventa owner della lobby e viene automaticamente assegnato come GM (`gmUid = creatorUid`).
 
 #### Scenario: Creazione avvenuta con successo
 - **WHEN** un utente autenticato invia una richiesta di creazione lobby con un nome valido
-- **THEN** il sistema crea la lobby, genera un codice univoco, associa l'utente come owner e restituisce i dati della lobby incluso il codice
+- **THEN** il sistema crea la lobby, genera un codice univoco, associa l'utente come owner, imposta `gmUid = creatorUid` e restituisce i dati della lobby incluso il codice
 
 #### Scenario: Nome lobby assente
 - **WHEN** un utente tenta di creare una lobby senza specificare il nome
@@ -25,14 +25,18 @@ Un utente autenticato SHALL poter unirsi a una lobby esistente e attiva tramite 
 - **THEN** il sistema restituisce un errore "già membro di questa lobby"
 
 ### Requirement: Abbandono lobby
-Un membro non-owner SHALL poter abbandonare una lobby in qualsiasi momento. L'owner non può abbandonare la lobby finché non la chiude o trasferisce la proprietà.
+Un membro non-GM SHALL poter abbandonare una lobby in qualsiasi momento. Il GM non può abbandonare la lobby finché non trasferisce il proprio ruolo GM a un altro membro.
 
-#### Scenario: Membro lascia la lobby
-- **WHEN** un membro non-owner invia una richiesta di abbandono
+#### Scenario: Membro player lascia la lobby
+- **WHEN** un membro con ruolo `player` invia una richiesta di abbandono
 - **THEN** il sistema rimuove l'utente dalla lista dei membri della lobby
 
-#### Scenario: Owner tenta di abbandonare senza chiudere
-- **WHEN** l'owner di una lobby tenta di abbandonarla senza averla prima chiusa
+#### Scenario: GM tenta di abbandonare senza trasferire il ruolo
+- **WHEN** il GM di una lobby tenta di abbandonarla senza aver prima trasferito il ruolo GM
+- **THEN** il sistema restituisce un errore che indica che deve prima trasferire il ruolo GM a un altro membro
+
+#### Scenario: Owner non-GM tenta di abbandonare senza chiudere
+- **WHEN** l'owner di una lobby (che non è più GM) tenta di abbandonarla senza averla prima chiusa
 - **THEN** il sistema restituisce un errore che indica che deve prima chiudere la lobby
 
 ### Requirement: Chiusura lobby
@@ -47,11 +51,11 @@ L'owner di una lobby SHALL poter disattivarla. Una lobby disattivata non accetta
 - **THEN** il sistema restituisce un errore di autorizzazione
 
 ### Requirement: Visualizzazione partecipanti
-Un membro di una lobby SHALL poter visualizzare la lista dei partecipanti attuali, il loro stato (owner / membro) e il personaggio attivo associato (se presente).
+Un membro di una lobby SHALL poter visualizzare la lista dei partecipanti attuali, il loro ruolo (`gm` o `player`), e il personaggio attivo associato (se presente). Il ruolo è derivato confrontando `userId` con `gmUid` della lobby.
 
 #### Scenario: Lista partecipanti restituita
 - **WHEN** un membro della lobby richiede la lista dei partecipanti
-- **THEN** il sistema restituisce la lista degli utenti con il loro ruolo (owner o membro) e, se disponibile, il `characterId` del personaggio attivo
+- **THEN** il sistema restituisce la lista degli utenti con il loro ruolo (`gm` per chi corrisponde a `gmUid`, `player` per tutti gli altri) e, se disponibile, il `characterId` del personaggio attivo
 
 #### Scenario: Accesso da non-membro
 - **WHEN** un utente non membro richiede la lista dei partecipanti di una lobby
@@ -71,3 +75,14 @@ Un membro SHALL poter associare un proprio personaggio alla sessione di lobby sc
 #### Scenario: Lobby senza personaggio associato
 - **WHEN** un membro partecipa a una lobby senza selezionare alcun personaggio
 - **THEN** `characterId` non è presente nel documento `LobbyMember` e tutte le funzionalità di chat testuale funzionano normalmente senza degradi
+
+### Requirement: Modello dati lobby con gmUid
+Il documento `lobbies/{id}` su Firestore SHALL includere il campo `gmUid: string` che identifica l'uid del GM corrente. Il campo SHALL essere impostato al momento della creazione e aggiornabile solo dall'utente il cui uid corrisponde al `gmUid` corrente.
+
+#### Scenario: Campo gmUid presente alla creazione
+- **WHEN** una nuova lobby viene creata
+- **THEN** il documento Firestore contiene `gmUid` valorizzato con l'uid del creatore
+
+#### Scenario: Firestore rule blocca modifica gmUid da non-GM
+- **WHEN** un utente il cui uid non corrisponde a `gmUid` tenta di aggiornare il campo `gmUid`
+- **THEN** la security rule nega l'operazione con errore di autorizzazione

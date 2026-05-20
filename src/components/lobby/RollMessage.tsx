@@ -58,6 +58,12 @@ export function RollMessage({ msg, isMine }: Props) {
         </div>
         {crit   && <div className="text-xs font-bold mt-1" style={{ color: 'var(--theme-hp-high)' }}>CRITICO!</div>}
         {fumble && <div className="text-xs font-bold mt-1" style={{ color: 'var(--theme-hp-low)' }}>FUMBLE!</div>}
+        {isMine && msg.hidden && (
+          <div className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--theme-text-faint)' }}>
+            <span>👁‍🗨</span>
+            <span>Nascosto</span>
+          </div>
+        )}
       </div>
       <span className="text-xs mt-0.5 px-1" style={{ color: 'var(--theme-text-faint)' }}>
         {formatTime(msg.sentAt)}

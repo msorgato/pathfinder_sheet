@@ -11,6 +11,7 @@ import {
   getUserLobbies as fsGetUserLobbies,
   getMemberCharacterId as fsGetMemberCharacterId,
   setActiveCharacter as fsSetActiveCharacter,
+  transferGMRole as fsTransferGMRole,
   subscribeToMessages,
   subscribeToMembers,
 } from '../lib/lobbySync';
@@ -21,6 +22,7 @@ interface LobbyState {
   members: LobbyMember[];
   messages: LobbyMessage[];
   activeCharacterId: string | null;
+  isHiddenRollEnabled: boolean;
   loading: boolean;
   error: string | null;
 
@@ -30,8 +32,10 @@ interface LobbyState {
   leaveLobby: (uid: string, lobbyId: string) => Promise<void>;
   closeLobby: (uid: string, lobbyId: string) => Promise<void>;
   sendMessage: (uid: string, displayName: string, lobbyId: string, content: string) => Promise<void>;
-  sendRollMessage: (uid: string, displayName: string, lobbyId: string, rollData: RollResultData) => Promise<void>;
+  sendRollMessage: (uid: string, displayName: string, lobbyId: string, rollData: RollResultData, hidden?: boolean) => Promise<void>;
   setActiveCharacter: (uid: string, charId: string | null) => Promise<void>;
+  toggleHiddenRoll: () => void;
+  transferGMRole: (uid: string, lobbyId: string, targetUid: string) => Promise<void>;
   openLobby: (uid: string, lobby: Lobby) => void;
   closeLobbyView: () => void;
   clearError: () => void;
@@ -49,13 +53,14 @@ function stopSubscriptions() {
 }
 
 export const useLobbyStore = create<LobbyState>((set, get) => ({
-  lobbies:           [],
-  activeLobby:       null,
-  members:           [],
-  messages:          [],
-  activeCharacterId: null,
-  loading:           false,
-  error:             null,
+  lobbies:              [],
+  activeLobby:          null,
+  members:              [],
+  messages:             [],
+  activeCharacterId:    null,
+  isHiddenRollEnabled:  false,
+  loading:              false,
+  error:                null,
 
   loadUserLobbies: async (uid) => {
     set({ loading: true, error: null });
@@ -136,7 +141,7 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
     }
   },
 
-  sendRollMessage: async (uid, displayName, lobbyId, rollData) => {
+  sendRollMessage: async (uid, displayName, lobbyId, rollData, hidden) => {
     const content = `${rollData.label}: ${rollData.formula} = ${rollData.total}`;
     // Optimistic local update before Firestore confirms
     const optimistic: LobbyMessage = {
@@ -147,13 +152,33 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
       sentAt:     Date.now(),
       type:       'roll',
       rollData,
+      ...(hidden ? { hidden: true } : {}),
     };
     set(s => ({ messages: [...s.messages, optimistic] }));
     try {
-      await fsSend(uid, displayName, lobbyId, content, rollData);
+      await fsSend(uid, displayName, lobbyId, content, rollData, hidden);
     } catch (e) {
       set(s => ({ messages: s.messages.filter(m => m.id !== optimistic.id), error: (e as Error).message }));
       throw e;
+    }
+  },
+
+  toggleHiddenRoll: () => {
+    set(s => ({ isHiddenRollEnabled: !s.isHiddenRollEnabled }));
+  },
+
+  transferGMRole: async (uid, lobbyId, targetUid) => {
+    set({ loading: true, error: null });
+    try {
+      await fsTransferGMRole(uid, lobbyId, targetUid);
+      set(s => ({
+        activeLobby: s.activeLobby ? { ...s.activeLobby, gmUid: targetUid } : null,
+      }));
+    } catch (e) {
+      set({ error: (e as Error).message });
+      throw e;
+    } finally {
+      set({ loading: false });
     }
   },
 
@@ -174,7 +199,8 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
       .catch(console.error);
 
     unsubMessages = subscribeToMessages(lobby.id, (msgs) => {
-      set({ messages: msgs });
+      // Filter out hidden messages that were not sent by the current user (non-GM view)
+      set({ messages: msgs.filter(m => !m.hidden || m.senderId === uid) });
     });
     unsubMembers = subscribeToMembers(lobby.id, (members) => {
       set({ members });
@@ -185,13 +211,13 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
 
   closeLobbyView: () => {
     stopSubscriptions();
-    set({ activeLobby: null, messages: [], members: [], activeCharacterId: null });
+    set({ activeLobby: null, messages: [], members: [], activeCharacterId: null, isHiddenRollEnabled: false });
   },
 
   clearError: () => set({ error: null }),
 
   clearStore: () => {
     stopSubscriptions();
-    set({ lobbies: [], activeLobby: null, members: [], messages: [], activeCharacterId: null, loading: false, error: null });
+    set({ lobbies: [], activeLobby: null, members: [], messages: [], activeCharacterId: null, isHiddenRollEnabled: false, loading: false, error: null });
   },
 }));

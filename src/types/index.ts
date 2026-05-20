@@ -236,6 +236,7 @@ export interface Lobby {
   ownerName: string;
   createdAt: number; // Unix ms
   isActive: boolean;
+  gmUid?: string;
 }
 
 export interface LobbyMember {
@@ -265,6 +266,7 @@ export interface LobbyMessage {
   sentAt: number; // Unix ms
   type?: 'text' | 'roll';
   rollData?: RollResultData;
+  hidden?: boolean;
 }
 
 export interface LobbyWithUnread extends Lobby {
