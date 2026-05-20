@@ -72,6 +72,7 @@ function docToLobby(d: { id: string; data(): any }): Lobby {
     ownerName: data.ownerName,
     createdAt: tsToMs(data.createdAt),
     isActive:  data.isActive,
+    ...(data.gmUid ? { gmUid: data.gmUid } : {}),
   };
 }
 
@@ -98,6 +99,7 @@ function docToMessage(d: { id: string; data(): any }): LobbyMessage {
     sentAt:     tsToMs(data.sentAt),
     type:       data.type ?? 'text',
     ...(data.rollData ? { rollData: data.rollData as RollResultData } : {}),
+    ...(data.hidden === true ? { hidden: true } : {}),
   };
 }
 
@@ -110,6 +112,7 @@ export async function createLobby(uid: string, displayName: string, name: string
     name:      name.trim(),
     ownerId:   uid,
     ownerName: displayName,
+    gmUid:     uid,
     createdAt: serverTimestamp(),
     isActive:  true,
   });
@@ -160,6 +163,8 @@ export async function leaveLobby(uid: string, lobbyId: string): Promise<void> {
   if (!snap.exists()) throw new Error('Lobby non trovata.');
   const lobby = docToLobby(snap);
   if (lobby.ownerId === uid) throw new Error('Sei il proprietario della lobby. Chiudila prima di abbandonarla.');
+  const effectiveGmUid = lobby.gmUid ?? lobby.ownerId;
+  if (effectiveGmUid === uid) throw new Error('Sei il GM della lobby. Trasferisci il ruolo GM a un altro membro prima di abbandonarla.');
   await Promise.all([
     deleteDoc(memberDoc(lobbyId, uid)),
     deleteDoc(membershipDoc(uid, lobbyId)),
@@ -189,6 +194,7 @@ export async function sendMessage(
   lobbyId: string,
   content: string,
   rollData?: RollResultData,
+  hidden?: boolean,
 ): Promise<void> {
   const trimmed = content.trim();
   if (!trimmed) throw new Error('Il messaggio non può essere vuoto.');
@@ -210,8 +216,23 @@ export async function sendMessage(
     type:       rollData ? 'roll' : 'text',
   };
   if (rollData) payload.rollData = rollData;
+  if (hidden) payload.hidden = true;
 
   await addDoc(messagesCol(lobbyId), payload);
+}
+
+export async function transferGMRole(uid: string, lobbyId: string, targetUid: string): Promise<void> {
+  if (uid === targetUid) throw new Error('Sei già il GM di questa lobby.');
+  const [lobbySnap, targetMemberSnap] = await Promise.all([
+    getDoc(lobbyDoc(lobbyId)),
+    getDoc(memberDoc(lobbyId, targetUid)),
+  ]);
+  if (!lobbySnap.exists()) throw new Error('Lobby non trovata.');
+  const lobby = docToLobby(lobbySnap);
+  const effectiveGmUid = lobby.gmUid ?? lobby.ownerId;
+  if (effectiveGmUid !== uid) throw new Error('Non sei il GM di questa lobby.');
+  if (!targetMemberSnap.exists()) throw new Error('Il membro selezionato non è nella lobby.');
+  await updateDoc(lobbyDoc(lobbyId), { gmUid: targetUid });
 }
 
 export async function getMemberCharacterId(uid: string, lobbyId: string): Promise<string | null> {
@@ -258,28 +279,35 @@ export async function getUserLobbies(uid: string): Promise<LobbyWithUnread[]> {
 
   const lobbyIds = membershipSnap.docs.map(d => d.id);
 
-  // 2. Fetch each lobby + member doc + unread count in parallel
+  // 2. Fetch each lobby: first confirm membership, then read members/messages
   const results = await Promise.all(
     lobbyIds.map(async (lobbyId) => {
-      const [lobbySnap, mSnap, allMembersSnap] = await Promise.all([
-        getDoc(lobbyDoc(lobbyId)),
-        getDoc(memberDoc(lobbyId, uid)),
-        getDocs(membersCol(lobbyId)),
-      ]);
-      if (!lobbySnap.exists() || !mSnap.exists()) return null;
+      try {
+        // Phase 1: confirm the lobby and membership still exist
+        const [lobbySnap, mSnap] = await Promise.all([
+          getDoc(lobbyDoc(lobbyId)),
+          getDoc(memberDoc(lobbyId, uid)),
+        ]);
+        if (!lobbySnap.exists() || !mSnap.exists()) return null;
 
-      const lobby = docToLobby(lobbySnap);
-      const member = docToMember(mSnap);
-      const memberCount = allMembersSnap.size;
+        const lobby = docToLobby(lobbySnap);
+        const member = docToMember(mSnap);
 
-      let unreadCount = 0;
-      if (member.lastSeenAt) {
-        const unreadSnap = await getDocs(
-          query(messagesCol(lobbyId), where('sentAt', '>', Timestamp.fromMillis(member.lastSeenAt))),
-        );
-        unreadCount = unreadSnap.size;
+        // Phase 2: safe to read members list (isLobbyMember is now confirmed true)
+        const allMembersSnap = await getDocs(membersCol(lobbyId));
+        const memberCount = allMembersSnap.size;
+
+        let unreadCount = 0;
+        if (member.lastSeenAt) {
+          const unreadSnap = await getDocs(
+            query(messagesCol(lobbyId), where('sentAt', '>', Timestamp.fromMillis(member.lastSeenAt))),
+          );
+          unreadCount = unreadSnap.size;
+        }
+        return { ...lobby, unreadCount, memberCount };
+      } catch {
+        return null;
       }
-      return { ...lobby, unreadCount, memberCount };
     }),
   );
 

@@ -44,6 +44,7 @@ import {
   closeLobby,
   getLobbyMembers,
   sendMessage,
+  transferGMRole,
   getMessagesAfter,
   updateLastSeen,
 } from '../lib/lobbySync';
@@ -92,11 +93,13 @@ describe('6.1 — createLobby', () => {
     mockGetDocs.mockResolvedValue(emptySnap()); // nessuna collisione codice
     mockAddDoc.mockResolvedValue({ id: 'lobby-1' });
     mockSetDoc.mockResolvedValue(undefined);
-    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1'));
+    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { gmUid: 'owner-uid' }));
 
     const lobby = await createLobby('owner-uid', 'Owner', 'Avventura del Drago');
 
     expect(mockAddDoc).toHaveBeenCalledOnce();
+    const payload = mockAddDoc.mock.calls[0][1] as Record<string, unknown>;
+    expect(payload.gmUid).toBe('owner-uid');
     expect(mockSetDoc).toHaveBeenCalledTimes(2); // member + membership
     expect(lobby.id).toBe('lobby-1');
     expect(lobby.name).toBe('Test Lobby');
@@ -166,6 +169,19 @@ describe('6.2 — sendMessage', () => {
       .rejects.toThrow('non è attiva');
     expect(mockAddDoc).not.toHaveBeenCalled();
   });
+
+  it('include il flag hidden: true nel payload quando specificato', async () => {
+    mockGetDoc
+      .mockResolvedValueOnce(makeLobbySnap('lobby-1'))
+      .mockResolvedValueOnce(makeMemberSnap('gm-uid'));
+    mockAddDoc.mockResolvedValue({ id: 'msg-2' });
+
+    const rollData = { characterName: 'Erion', label: 'ATT', formula: '1d20', rolls: [15], modifier: 3, total: 18 };
+    await sendMessage('gm-uid', 'GM', 'lobby-1', 'ATT: 1d20 = 18', rollData, true);
+
+    const payload = mockAddDoc.mock.calls[0][1] as Record<string, unknown>;
+    expect(payload.hidden).toBe(true);
+  });
 });
 
 describe('6.2 — getMessagesAfter', () => {
@@ -221,8 +237,8 @@ describe('6.2 — updateLastSeen', () => {
 describe('6.3 — leaveLobby', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
-  it('rimuove il membro non-owner', async () => {
-    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { ownerId: 'owner-uid' }));
+  it('rimuove il membro non-owner non-GM', async () => {
+    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'owner-uid' }));
     mockDeleteDoc.mockResolvedValue(undefined);
 
     await leaveLobby('other-uid', 'lobby-1');
@@ -231,11 +247,62 @@ describe('6.3 — leaveLobby', () => {
   });
 
   it('blocca l\'owner che tenta di abbandonare senza chiudere', async () => {
-    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { ownerId: 'owner-uid' }));
+    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'owner-uid' }));
 
     await expect(leaveLobby('owner-uid', 'lobby-1'))
       .rejects.toThrow('proprietario');
     expect(mockDeleteDoc).not.toHaveBeenCalled();
+  });
+
+  it('blocca il GM non-owner che tenta di abbandonare senza trasferire il ruolo', async () => {
+    mockGetDoc.mockResolvedValue(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'gm-uid' }));
+
+    await expect(leaveLobby('gm-uid', 'lobby-1'))
+      .rejects.toThrow('GM');
+    expect(mockDeleteDoc).not.toHaveBeenCalled();
+  });
+});
+
+describe('6.3 — transferGMRole', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('trasferisce il ruolo GM al membro target', async () => {
+    mockGetDoc
+      .mockResolvedValueOnce(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'gm-uid' }))
+      .mockResolvedValueOnce(makeMemberSnap('target-uid'));
+    mockUpdateDoc.mockResolvedValue(undefined);
+
+    await transferGMRole('gm-uid', 'lobby-1', 'target-uid');
+
+    expect(mockUpdateDoc).toHaveBeenCalledOnce();
+    const updateArg = mockUpdateDoc.mock.calls[0][1] as Record<string, unknown>;
+    expect(updateArg.gmUid).toBe('target-uid');
+  });
+
+  it('lancia errore se si tenta di trasferire a se stessi', async () => {
+    await expect(transferGMRole('gm-uid', 'lobby-1', 'gm-uid'))
+      .rejects.toThrow('già il GM');
+    expect(mockUpdateDoc).not.toHaveBeenCalled();
+  });
+
+  it('lancia errore se il chiamante non è il GM', async () => {
+    mockGetDoc
+      .mockResolvedValueOnce(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'gm-uid' }))
+      .mockResolvedValueOnce(makeMemberSnap('target-uid'));
+
+    await expect(transferGMRole('other-uid', 'lobby-1', 'target-uid'))
+      .rejects.toThrow('Non sei il GM');
+    expect(mockUpdateDoc).not.toHaveBeenCalled();
+  });
+
+  it('lancia errore se il target non è membro della lobby', async () => {
+    mockGetDoc
+      .mockResolvedValueOnce(makeLobbySnap('lobby-1', { ownerId: 'owner-uid', gmUid: 'gm-uid' }))
+      .mockResolvedValueOnce({ exists: () => false });
+
+    await expect(transferGMRole('gm-uid', 'lobby-1', 'nonmember-uid'))
+      .rejects.toThrow('non è nella lobby');
+    expect(mockUpdateDoc).not.toHaveBeenCalled();
   });
 });
 

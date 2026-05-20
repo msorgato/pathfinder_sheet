@@ -22,6 +22,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.ownerId == request.auth.uid;
     }
 
+    function isLobbyGM(lobbyId) {
+      return isAuthenticated()
+        && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.get('gmUid', '') == request.auth.uid;
+    }
+
     // ── User data (personaggi, impostazioni) ─────────────────────────────────
     // Ogni utente può leggere e scrivere solo i propri dati.
 
@@ -47,8 +52,9 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && request.resource.data.ownerId == request.auth.uid;
 
-      // Solo l'owner può modificare la lobby (es. chiuderla).
-      allow update: if isLobbyOwner(lobbyId);
+      // L'owner può modificare la lobby (es. chiuderla); il GM può aggiornare solo gmUid (trasferimento).
+      allow update: if isLobbyOwner(lobbyId)
+        || (isLobbyGM(lobbyId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['gmUid']));
 
       // Nessuno può eliminare documenti di lobby.
       allow delete: if false;
@@ -82,9 +88,13 @@ service cloud.firestore {
 
         // Solo i membri possono inviare messaggi in lobby attive,
         // e devono firmare il messaggio con il proprio uid.
+        // I messaggi con hidden: true sono consentiti solo al GM corrente.
         allow create: if isLobbyMember(lobbyId)
           && request.resource.data.senderId == request.auth.uid
-          && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.isActive == true;
+          && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.isActive == true
+          && (!('hidden' in request.resource.data)
+              || request.resource.data.hidden == false
+              || isLobbyGM(lobbyId));
 
         // I messaggi non si modificano né si eliminano.
         allow update, delete: if false;

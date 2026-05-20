@@ -22,6 +22,7 @@ export function LobbyDetailPage() {
     members,
     messages,
     activeCharacterId,
+    isHiddenRollEnabled,
     loading,
     error,
     openLobby,
@@ -31,18 +32,24 @@ export function LobbyDetailPage() {
     sendMessage,
     sendRollMessage,
     setActiveCharacter,
+    toggleHiddenRoll,
+    transferGMRole,
     clearError,
   } = useLobbyStore();
+  const uid = user?.uid ?? '';
+  const displayName = user?.displayName ?? user?.email ?? 'Utente';
+  const isGM = useLobbyStore(s => {
+    if (!s.activeLobby) return false;
+    return (s.activeLobby.gmUid ?? s.activeLobby.ownerId) === uid;
+  });
   const { characters, loadFromFirestore } = useCharacterStore();
 
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmTransferGM, setConfirmTransferGM] = useState<{ uid: string; name: string } | null>(null);
   const [loadingLobby, setLoadingLobby] = useState(false);
   const [charLoading, setCharLoading] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
-
-  const uid = user?.uid ?? '';
-  const displayName = user?.displayName ?? user?.email ?? 'Utente';
 
   // If navigated here directly (refresh), load the lobby from Firestore
   useEffect(() => {
@@ -105,14 +112,29 @@ export function LobbyDetailPage() {
   // Called when a roll is completed in LobbySheetPanel; auto-switches tab on mobile
   const handleRollResult = useCallback(async (rollData: RollResultData) => {
     try {
-      await sendRollMessage(uid, displayName, lobbyId!, rollData);
+      await sendRollMessage(uid, displayName, lobbyId!, rollData, isHiddenRollEnabled ? true : undefined);
       if (window.innerWidth < 1024) {
         setTimeout(() => setMobileTab('chat'), 1500);
       }
     } catch {
       // error already in store
     }
-  }, [uid, displayName, lobbyId, sendRollMessage]);
+  }, [uid, displayName, lobbyId, sendRollMessage, isHiddenRollEnabled]);
+
+  const handleTransferGM = (targetUid: string, targetName: string) => {
+    setConfirmTransferGM({ uid: targetUid, name: targetName });
+  };
+
+  const handleConfirmTransferGM = async () => {
+    if (!confirmTransferGM) return;
+    try {
+      await transferGMRole(uid, lobbyId!, confirmTransferGM.uid);
+    } catch {
+      // error already in store
+    } finally {
+      setConfirmTransferGM(null);
+    }
+  };
 
   const handleSelectCharacter = async (charId: string | null) => {
     await setActiveCharacter(uid, charId);
@@ -203,7 +225,13 @@ export function LobbyDetailPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--theme-border-strong)' }}>
             Partecipanti
           </h2>
-          <MembersList members={members} ownerId={activeLobby.ownerId} />
+          <MembersList
+            members={members}
+            ownerId={activeLobby.ownerId}
+            gmUid={activeLobby.gmUid}
+            currentUserId={uid}
+            onTransferGM={handleTransferGM}
+          />
         </aside>
 
         {/* Chat ~60% */}
@@ -225,6 +253,28 @@ export function LobbyDetailPage() {
               onSelect={handleSelectCharacter}
             />
           </div>
+          {isGM && (
+            <div className="px-3 py-1 shrink-0 flex items-center gap-2 border-b" style={{ borderColor: 'var(--theme-ghost-border)' }}>
+              <button
+                className="flex items-center gap-2 text-xs font-semibold"
+                style={{ color: isHiddenRollEnabled ? 'var(--theme-accent)' : 'var(--theme-text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={toggleHiddenRoll}
+                title={isHiddenRollEnabled ? 'Tiro nascosto attivo — clicca per disattivare' : 'Clicca per attivare il tiro nascosto'}
+              >
+                <span>{isHiddenRollEnabled ? '👁‍🗨' : '👁'}</span>
+                <span>Tiro nascosto</span>
+                <span
+                  className="ml-1 px-1.5 py-0.5 rounded text-xs"
+                  style={{
+                    background: isHiddenRollEnabled ? 'rgba(200,164,67,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${isHiddenRollEnabled ? 'var(--theme-accent)' : 'var(--theme-ghost-border)'}`,
+                  }}
+                >
+                  {isHiddenRollEnabled ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            </div>
+          )}
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
             <LobbySheetPanel
               character={activeCharacter}
@@ -256,6 +306,27 @@ export function LobbyDetailPage() {
                   onSelect={handleSelectCharacter}
                 />
               </div>
+              {isGM && (
+                <div className="px-3 py-1 shrink-0 flex items-center gap-2 border-b" style={{ borderColor: 'var(--theme-ghost-border)' }}>
+                  <button
+                    className="flex items-center gap-2 text-xs font-semibold"
+                    style={{ color: isHiddenRollEnabled ? 'var(--theme-accent)' : 'var(--theme-text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    onClick={toggleHiddenRoll}
+                  >
+                    <span>{isHiddenRollEnabled ? '👁‍🗨' : '👁'}</span>
+                    <span>Tiro nascosto</span>
+                    <span
+                      className="ml-1 px-1.5 py-0.5 rounded text-xs"
+                      style={{
+                        background: isHiddenRollEnabled ? 'rgba(200,164,67,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${isHiddenRollEnabled ? 'var(--theme-accent)' : 'var(--theme-ghost-border)'}`,
+                      }}
+                    >
+                      {isHiddenRollEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                </div>
+              )}
               <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                 <LobbySheetPanel
                   character={activeCharacter}
@@ -309,6 +380,16 @@ export function LobbyDetailPage() {
           danger
           onConfirm={handleClose}
           onCancel={() => setConfirmClose(false)}
+        />
+      )}
+      {confirmTransferGM && (
+        <ConfirmModal
+          title="Trasferisci ruolo GM"
+          message={`Vuoi trasferire il ruolo GM a "${confirmTransferGM.name}"? Perderai immediatamente tutti i privilegi GM.`}
+          confirmLabel="Trasferisci"
+          danger
+          onConfirm={handleConfirmTransferGM}
+          onCancel={() => setConfirmTransferGM(null)}
         />
       )}
     </div>
