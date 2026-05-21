@@ -21,6 +21,12 @@ export interface ClassFeature {
   description: string;
   type?: 'Ex' | 'Su' | 'Sp';
   choices?: string[];
+  choiceType?: 'combat_feat' | 'class_list';
+}
+
+export interface ClassFeatureChoice {
+  featureName: string;
+  choice: string;
 }
 
 export interface SpellSlotTable {
@@ -215,6 +221,7 @@ export interface Character {
   experience: number;
   notes: string;
   accentColor?: string;
+  classFeatureChoices?: ClassFeatureChoice[];
 }
 
 export type WizardStep =

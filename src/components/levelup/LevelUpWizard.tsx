@@ -8,7 +8,7 @@ import {
   effectiveAbilityScores, abilityMod, featLevels, abilityIncreaseLevels, computeSpellSlots,
 } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
-import type { Character, AbilityKey, KnownSpell } from '../../types';
+import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice } from '../../types';
 
 const ABILITY_LABELS: Record<AbilityKey, string> = {
   str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR',
@@ -32,7 +32,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const nextLevel = char.totalLevel + 1;
   const scores = effectiveAbilityScores(char);
 
-  const [step, setStep] = useState<'class' | 'hp' | 'skills' | 'feat' | 'ability' | 'spells' | 'confirm'>('class');
+  const [step, setStep] = useState<'class' | 'hp' | 'skills' | 'classfeature' | 'feat' | 'ability' | 'spells' | 'confirm'>('class');
   const [selectedClassId, setSelectedClassId] = useState(char.classes[0]?.classId ?? '');
   const [hpRoll, setHpRoll] = useState<number | null>(null);
   const [useMax, setUseMax] = useState(false);
@@ -43,6 +43,8 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const [newSpellIds, setNewSpellIds] = useState<string[]>([]);
   const [spellSearch, setSpellSearch] = useState('');
   const [spellFilterLevel, setSpellFilterLevel] = useState<number | 'all'>('all');
+  const [classFeatureChoices, setClassFeatureChoices] = useState<Record<string, string>>({});
+  const [cfSearch, setCfSearch] = useState('');
 
   const needsFeat = featLevels().includes(nextLevel);
   const needsAbility = abilityIncreaseLevels().includes(nextLevel);
@@ -70,6 +72,9 @@ export function LevelUpWizard({ char, onClose }: Props) {
     const newClassLevel = (entry?.level ?? 0) + 1;
     return f.level === newClassLevel;
   }) ?? [];
+
+  const newFeaturesNeedingChoices = newFeatures.filter(f => !!f.choiceType);
+  const needsClassFeatureChoice = newFeaturesNeedingChoices.length > 0;
 
   // Spells available to learn at this level-up
   const newClassLevel = (char.classes.find(e => e.classId === selectedClassId)?.level ?? 0) + 1;
@@ -102,6 +107,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
 
   const steps = [
     'class', 'hp', 'skills',
+    needsClassFeatureChoice ? 'classfeature' : null,
     needsFeat ? 'feat' : null,
     needsAbility ? 'ability' : null,
     isSpellbookCaster ? 'spells' : null,
@@ -123,6 +129,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
     if (step === 'class') return !!selectedClassId;
     if (step === 'hp') return hpRoll !== null;
     if (step === 'skills') return deltaLeft === 0;
+    if (step === 'classfeature') return newFeaturesNeedingChoices.every(f => !!classFeatureChoices[f.name]);
     if (step === 'feat') return !!selectedFeat;
     if (step === 'ability') return !!abilityIncrease;
     if (step === 'spells') return newSpellIds.length === maxToLearn;
@@ -141,6 +148,19 @@ export function LevelUpWizard({ char, onClose }: Props) {
       classId: selectedClassId,
       spellLevel: mergedSpells.find(s => s.id === spellId)?.levels[selectedClassId] ?? 0,
     }));
+
+    const bonusFeats: string[] = [];
+    const featureChoicesToStore: ClassFeatureChoice[] = [];
+    newFeaturesNeedingChoices.forEach(feature => {
+      const choice = classFeatureChoices[feature.name];
+      if (!choice) return;
+      if (feature.choiceType === 'combat_feat') {
+        bonusFeats.push(choice);
+      } else {
+        featureChoicesToStore.push({ featureName: feature.name, choice });
+      }
+    });
+
     levelUp(
       char.id,
       selectedClassId,
@@ -149,6 +169,8 @@ export function LevelUpWizard({ char, onClose }: Props) {
       selectedFeat || undefined,
       abilityIncrease ?? undefined,
       spellsToAdd.length > 0 ? spellsToAdd : undefined,
+      featureChoicesToStore.length > 0 ? featureChoicesToStore : undefined,
+      bonusFeats.length > 0 ? bonusFeats : undefined,
     );
     onClose();
   };
@@ -363,6 +385,68 @@ export function LevelUpWizard({ char, onClose }: Props) {
             </div>
           )}
 
+          {/* STEP: CLASS FEATURE CHOICES */}
+          {step === 'classfeature' && (
+            <div className="space-y-6">
+              <h3 className="font-bold" style={{ fontSize: 17, color: 'var(--theme-accent)' }}>
+                Scelte Capacità di Classe
+              </h3>
+              {newFeaturesNeedingChoices.map(feature => (
+                <div key={feature.name}>
+                  <p className="font-semibold mb-1" style={{ color: 'var(--theme-text)' }}>{feature.name}</p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--theme-text-muted)' }}>{feature.description}</p>
+
+                  {feature.choiceType === 'combat_feat' && (
+                    <div>
+                      <input
+                        className="pf-input mb-3"
+                        placeholder="Cerca talento da combattimento..."
+                        value={cfSearch}
+                        onChange={e => setCfSearch(e.target.value)}
+                      />
+                      <div className="space-y-2 max-h-56 overflow-y-auto">
+                        {FEATS.filter(f =>
+                          f.type === 'Combat' &&
+                          f.name.toLowerCase().includes(cfSearch.toLowerCase()),
+                        ).sort((a, b) => a.name.localeCompare(b.name)).map(f => (
+                          <button
+                            key={f.id}
+                            onClick={() => setClassFeatureChoices(prev => ({ ...prev, [feature.name]: f.id }))}
+                            className="w-full text-left pf-panel p-3 transition-all"
+                            style={{ borderColor: classFeatureChoices[feature.name] === f.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}
+                          >
+                            <div className="font-semibold" style={{ fontSize: 14, color: classFeatureChoices[feature.name] === f.id ? 'var(--theme-accent)' : 'var(--theme-text)' }}>
+                              {f.name}
+                            </div>
+                            {f.prerequisites && (
+                              <div style={{ fontSize: 12, color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
+                            )}
+                            <div style={{ fontSize: 12, color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {feature.choiceType === 'class_list' && feature.choices && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {feature.choices.map(option => (
+                        <button
+                          key={option}
+                          onClick={() => setClassFeatureChoices(prev => ({ ...prev, [feature.name]: option }))}
+                          className="pf-panel p-2 text-left text-sm transition-all"
+                          style={{ borderColor: classFeatureChoices[feature.name] === option ? 'var(--theme-accent)' : 'var(--theme-border)', color: classFeatureChoices[feature.name] === option ? 'var(--theme-accent)' : 'var(--theme-text-neutral)' }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* STEP: FEAT */}
           {step === 'feat' && needsFeat && (
             <div>
@@ -549,6 +633,19 @@ export function LevelUpWizard({ char, onClose }: Props) {
                     = +{((useMax ? maxHpRoll : hpRoll) ?? 0) + abilityMod(scores.con)}
                   </span>
                 </div>
+                {newFeaturesNeedingChoices.map(feature => {
+                  const choice = classFeatureChoices[feature.name];
+                  if (!choice) return null;
+                  const label = feature.choiceType === 'combat_feat'
+                    ? FEATS.find(f => f.id === choice)?.name ?? choice
+                    : choice;
+                  return (
+                    <div key={feature.name} className="flex justify-between">
+                      <span style={{ color: 'var(--theme-text-muted)' }}>{feature.name}:</span>
+                      <span style={{ color: '#9b7fd4' }}>{label}</span>
+                    </div>
+                  );
+                })}
                 {selectedFeat && (
                   <div className="flex justify-between">
                     <span style={{ color: 'var(--theme-text-muted)' }}>Talento:</span>
