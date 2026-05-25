@@ -39,10 +39,12 @@ export const DRUID: ClassDefinition = {
     { level: 10, name: 'Forma Selvatica (Elementale 1/giorno)', description: 'Può trasformarsi in un elementale piccolo o medio una volta al giorno.', type: 'Su' },
     { level: 11, name: 'Forma Selvatica (5/giorno)', description: 'Cinque volte al giorno.', type: 'Su' },
     { level: 12, name: 'Forma Selvatica (Elementale 2/giorno)', description: 'Due volte al giorno in elementale, anche grande.', type: 'Su' },
-    { level: 13, name: 'Pelle Millenaria', description: 'Immune a ogni effetto di invecchiamento e non invecchia.', type: 'Ex' },
     { level: 13, name: 'Forma Selvatica (6/giorno)', description: 'Sei volte al giorno.', type: 'Su' },
     { level: 14, name: 'Forma Selvatica (Elementale 3/giorno)', description: 'Tre volte al giorno, anche enorme.', type: 'Su' },
     { level: 15, name: 'Forma Selvatica (7/giorno)', description: 'Sette volte al giorno.', type: 'Su' },
+    { level: 15, name: 'Corpo Senza Tempo', description: 'Non subisce penalità alle caratteristiche per l\'invecchiamento e non invecchia più.', type: 'Ex' },
+    { level: 16, name: 'Forma Selvatica (Bestia Magica)', description: 'Può assumere la forma di una bestia magica piccola o media (come Beast Shape III). 6/giorno.', type: 'Su' },
+    { level: 18, name: 'Forma Selvatica (Bestia Magica Grande)', description: 'Può assumere la forma di una bestia magica grande (come Beast Shape IV). 7/giorno totali.', type: 'Su' },
     { level: 20, name: 'Signore dell\'Arcano Selvaggio', description: 'Non invecchia, non necessita di cibo, acqua o aria. Immune a veleni e malattie.', type: 'Ex' },
   ],
 };

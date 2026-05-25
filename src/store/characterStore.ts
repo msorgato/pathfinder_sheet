@@ -6,7 +6,7 @@ import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firest
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 import type {
   Character, CharacterClassEntry, SkillRank,
-  KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment, WeaponAttack,
+  KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment, WeaponAttack, ClassFeatureChoice,
 } from '../types';
 
 function newId(): string {
@@ -91,7 +91,7 @@ interface CharacterState {
   addClass: (id: string, classId: string) => void;
   setClasses: (id: string, classes: CharacterClassEntry[]) => void;
 
-  levelUp: (charId: string, classId: string, hpRoll: number, skillRanks: Record<string, number>, newFeat?: string, abilityIncrease?: AbilityKey, newSpells?: KnownSpell[]) => void;
+  levelUp: (charId: string, classId: string, hpRoll: number, skillRanks: Record<string, number>, newFeat?: string, abilityIncrease?: AbilityKey, newSpells?: KnownSpell[], classFeatureChoices?: ClassFeatureChoice[], bonusFeats?: string[]) => void;
 
   setSkillRanks: (id: string, skillId: string, ranks: number) => void;
   setSkillMisc: (id: string, skillId: string, misc: number) => void;
@@ -212,7 +212,7 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     if (updated) syncChar(updated);
   },
 
-  levelUp: (charId, classId, hpRoll, skillRanks, newFeat, abilityIncrease, newSpells) => {
+  levelUp: (charId, classId, hpRoll, skillRanks, newFeat, abilityIncrease, newSpells, classFeatureChoices, bonusFeats) => {
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== charId) return c;
@@ -230,9 +230,16 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
         const abilityIncreases = abilityIncrease
           ? [...c.abilityIncreases, { [abilityIncrease]: 1 }]
           : c.abilityIncreases;
-        const feats = newFeat ? [...c.feats, newFeat] : c.feats;
+        const feats = [
+          ...c.feats,
+          ...(newFeat ? [newFeat] : []),
+          ...(bonusFeats ?? []),
+        ];
         const knownSpells = newSpells ? [...c.knownSpells, ...newSpells] : c.knownSpells;
-        return { ...c, classes, totalLevel, hitPointsRolled: [...c.hitPointsRolled, hpRoll], skills, feats, abilityIncreases, knownSpells };
+        const allClassFeatureChoices = classFeatureChoices
+          ? [...(c.classFeatureChoices ?? []), ...classFeatureChoices]
+          : c.classFeatureChoices;
+        return { ...c, classes, totalLevel, hitPointsRolled: [...c.hitPointsRolled, hpRoll], skills, feats, abilityIncreases, knownSpells, classFeatureChoices: allClassFeatureChoices };
       }),
     }));
     const updated = get().characters.find(c => c.id === charId);

@@ -1,5 +1,17 @@
 import type { ClassDefinition } from '../../types';
 
+const ROGUE_TALENTS = [
+  'Inganno da combattimento', 'Distrazione', 'Volo acrobatico', 'Seguire le tracce',
+  'Acrobazia', 'Colpo smorzato', 'Finzione', 'Lettura del pericolo', 'Movimento silenzioso',
+  'Velocità furtiva', 'Talento bonus', 'Trucchi magici minori',
+];
+
+const ADVANCED_ROGUE_TALENTS = [
+  'Abilità magica', 'Canale ladro', 'Elusione Migliorata', 'Sfruttamento',
+  'Colpo ombra', 'Sensi acuiti', 'Cecchino', 'Colpo invalidante migliorato',
+  'Maestria del critico', 'Riflessi fulminei',
+];
+
 export const ROGUE: ClassDefinition = {
   id: 'rogue',
   name: 'Ladro',
@@ -14,33 +26,35 @@ export const ROGUE: ClassDefinition = {
   features: [
     { level: 1, name: 'Attacco Furtivo +1d6', description: '+1d6 danno quando l\'avversario è privo di DES alla CA o è fiancheggiato. Aumenta di 1d6 ogni 2 livelli.', type: 'Ex' },
     { level: 1, name: 'Trovare le Trappole', description: 'Può usare Percezione e Disattivare Congegni per trovare e disattivare trappole magiche.', type: 'Ex' },
-    { level: 2, name: 'Schivata dell\'Evasore', description: 'Non viene colto di sorpresa; può sempre agire nel primo round di combattimento.', type: 'Ex' },
-    { level: 2, name: 'Talento Ladro (1)', description: 'Sceglie un talento speciale dalla lista del ladro.', choices: ['Inganno da combattimento','Distrazione','Volo acrobatico','Seguire le tracce','Acrobazia','Colpo smorzato','Finzione'] },
+    { level: 2, name: 'Elusione', description: 'Se supera un tiro salvezza su Riflessi contro un effetto che normalmente causa metà danno, non subisce alcun danno.', type: 'Ex' },
+    { level: 2, name: 'Talento Ladro (1)', description: 'Sceglie un talento speciale dalla lista del ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
+    { level: 3, name: 'Attacco Furtivo +2d6', description: 'Il danno da attacco furtivo aumenta a +2d6.' },
     { level: 3, name: 'Senso delle Trappole +1', description: '+1 ai TS contro trappole e +1 alla CA contro gli attacchi delle trappole.', type: 'Ex' },
-    { level: 4, name: 'Talento Ladro (2)', description: 'Sceglie un secondo talento ladro.' },
+    { level: 4, name: 'Talento Ladro (2)', description: 'Sceglie un secondo talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
+    { level: 4, name: 'Riflessi Incondizionati', description: 'Non può essere colto di sorpresa; mantiene il bonus di Destrezza alla CA anche se l\'avversario è invisibile.', type: 'Ex' },
     { level: 4, name: 'Colpo Invalidante', description: 'Può usare l\'attacco furtivo per invalidare temporaneamente una creatura (TS COS CD 10+½ livello+DES mod).', type: 'Ex' },
     { level: 5, name: 'Attacco Furtivo +3d6', description: 'Il danno da attacco furtivo aumenta a +3d6.' },
-    { level: 6, name: 'Talento Ladro (3)', description: 'Sceglie un terzo talento ladro.' },
+    { level: 6, name: 'Talento Ladro (3)', description: 'Sceglie un terzo talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 6, name: 'Senso delle Trappole +2', description: '+2 ai TS contro trappole.' },
     { level: 7, name: 'Attacco Furtivo +4d6', description: 'Il danno da attacco furtivo aumenta a +4d6.' },
-    { level: 8, name: 'Talento Ladro (4)', description: 'Sceglie un quarto talento ladro.' },
+    { level: 8, name: 'Talento Ladro (4)', description: 'Sceglie un quarto talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 9, name: 'Scavare Trappole', description: 'Può costruire trappole come un trapmaker.', type: 'Ex' },
     { level: 9, name: 'Attacco Furtivo +5d6', description: 'Il danno da attacco furtivo aumenta a +5d6.' },
     { level: 9, name: 'Senso delle Trappole +3', description: '+3 ai TS contro trappole.' },
-    { level: 10, name: 'Talento Ladro Avanzato (1)', description: 'Sceglie un talento ladro avanzato.', choices: ['Abilità magica','Canale ladro','Sfruttamento','Colpo ombra','Sensi acuiti'] },
+    { level: 10, name: 'Talento Ladro Avanzato (1)', description: 'Sceglie un talento ladro avanzato.', choices: ADVANCED_ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 11, name: 'Attacco Furtivo +6d6', description: '+6d6 danno furtivo.' },
-    { level: 12, name: 'Talento Ladro (5)', description: 'Sceglie un quinto talento ladro.' },
+    { level: 12, name: 'Talento Ladro (5)', description: 'Sceglie un quinto talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 12, name: 'Senso delle Trappole +4', description: '+4 ai TS contro trappole.' },
     { level: 13, name: 'Attacco Furtivo +7d6', description: '+7d6 danno furtivo.' },
-    { level: 14, name: 'Talento Ladro Avanzato (2)', description: 'Sceglie un secondo talento ladro avanzato.' },
+    { level: 14, name: 'Talento Ladro Avanzato (2)', description: 'Sceglie un secondo talento ladro avanzato.', choices: ADVANCED_ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 15, name: 'Attacco Furtivo +8d6', description: '+8d6 danno furtivo.' },
     { level: 15, name: 'Senso delle Trappole +5', description: '+5 ai TS contro trappole.' },
-    { level: 16, name: 'Talento Ladro (6)', description: 'Sceglie un sesto talento ladro.' },
+    { level: 16, name: 'Talento Ladro (6)', description: 'Sceglie un sesto talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 17, name: 'Attacco Furtivo +9d6', description: '+9d6 danno furtivo.' },
-    { level: 18, name: 'Talento Ladro Avanzato (3)', description: 'Sceglie un terzo talento ladro avanzato.' },
+    { level: 18, name: 'Talento Ladro Avanzato (3)', description: 'Sceglie un terzo talento ladro avanzato.', choices: ADVANCED_ROGUE_TALENTS, choiceType: 'class_list' },
     { level: 18, name: 'Senso delle Trappole +6', description: '+6 ai TS contro trappole.' },
     { level: 19, name: 'Attacco Furtivo +10d6', description: '+10d6 danno furtivo.' },
     { level: 20, name: 'Colpo Maestro', description: 'Una volta per round può uccidere un avversario ferito (meno di ½ PF) con un attacco furtivo (TS COS o muore).', type: 'Ex' },
-    { level: 20, name: 'Talento Ladro (7)', description: 'Sceglie un settimo talento ladro.' },
+    { level: 20, name: 'Talento Ladro (7)', description: 'Sceglie un settimo talento ladro.', choices: ROGUE_TALENTS, choiceType: 'class_list' },
   ],
 };
