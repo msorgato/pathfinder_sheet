@@ -3462,7 +3462,7 @@
       "id": "colpo_critico_impattante",
       "name": "Colpo Critico Impattante",
       "description": "Si può Spingere con un colpo critico.",
-      "prerequisites": "Destrezza 13, Tiro Ravvicinato , Bonus di Attacco Base 9",
+      "prerequisites": "Destrezza 13, Tiro Ravvicinato , Bonus di Attacco Base +9",
       "benefit": "Si può Spingere con un colpo critico.",
       "type": "Combat"
     },
@@ -3478,7 +3478,7 @@
       "id": "critico_focalizzato",
       "name": "Critico Focalizzato",
       "description": "Bonus +4 per confermare i critici.",
-      "prerequisites": "Bonus di Attacco Base 9",
+      "prerequisites": "Bonus di Attacco Base +9",
       "benefit": "Bonus +4 per confermare i critici.",
       "type": "Combat"
     },
@@ -3486,7 +3486,7 @@
       "id": "critico_accecante",
       "name": "Critico Accecante",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Accecato .",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 15",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +15",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Accecato .",
       "type": "Combat"
     },
@@ -3494,7 +3494,7 @@
       "id": "critico_affaticante",
       "name": "Critico Affaticante",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Affaticato .",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 13",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +13",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Affaticato .",
       "type": "Combat"
     },
@@ -3502,7 +3502,7 @@
       "id": "critico_inesorabile",
       "name": "Critico Inesorabile",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Esausto .",
-      "prerequisites": "Critico Affaticante , Bonus di Attacco Base 15",
+      "prerequisites": "Critico Affaticante , Bonus di Attacco Base +15",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Esausto .",
       "type": "Combat"
     },
@@ -3518,7 +3518,7 @@
       "id": "critico_assordante",
       "name": "Critico Assordante",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Assordato .",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 13",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +13",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Assordato .",
       "type": "Combat"
     },
@@ -3526,7 +3526,7 @@
       "id": "critico_debilitante",
       "name": "Critico Debilitante",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Infermo .",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 11",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +11",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Infermo .",
       "type": "Combat"
     },
@@ -3550,7 +3550,7 @@
       "id": "critico_incapacitante",
       "name": "Critico Incapacitante",
       "description": "Ogni volta che si effettua un critico, il bersaglio è Barcollante .",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 13",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +13",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio è Barcollante .",
       "type": "Combat"
     },
@@ -3590,7 +3590,7 @@
       "id": "critico_sanguinante",
       "name": "Critico Sanguinante",
       "description": "Ogni volta che si effettua un critico, il bersaglio subisce Danni da Sanguinamento per 2d6.",
-      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base 11",
+      "prerequisites": "Critico Focalizzato , Bonus di Attacco Base +11",
       "benefit": "Ogni volta che si effettua un critico, il bersaglio subisce Danni da Sanguinamento per 2d6.",
       "type": "Combat"
     },
@@ -4438,7 +4438,7 @@
       "id": "colpo_preciso",
       "name": "Colpo Preciso",
       "description": "Aggiunge 1d6 ai danni come bonus di precisione.",
-      "prerequisites": "Destrezza 13, Bonus di Attacco Base 1.",
+      "prerequisites": "Destrezza 13, Bonus di Attacco Base +1",
       "benefit": "Aggiunge 1d6 ai danni come bonus di precisione.",
       "type": "Teamwork"
     },
@@ -4462,7 +4462,7 @@
       "id": "grande_fiancheggiatore",
       "name": "Grande Fiancheggiatore",
       "description": "Bonus +4 ai tiri per colpire quando si fiancheggia.",
-      "prerequisites": "Bonus di Attacco Base 4.",
+      "prerequisites": "Bonus di Attacco Base +4",
       "benefit": "Bonus +4 ai tiri per colpire quando si fiancheggia.",
       "type": "Teamwork"
     },

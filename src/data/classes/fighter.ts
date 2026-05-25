@@ -35,8 +35,7 @@ export const FIGHTER: ClassDefinition = {
     { level: 17, name: 'Addestramento alle Armi IV', description: '+4 primo gruppo, +3 secondo, +2 terzo, +1 quarto.', type: 'Ex' },
     { level: 18, name: 'Coraggio (+5)', description: '+5 ai TS contro paura.', type: 'Ex' },
     { level: 18, name: 'Talento Bonus', description: 'Ottiene un ulteriore talento bonus da combattimento.', choiceType: 'combat_feat' },
-    { level: 19, name: 'Armatura della Mente', description: 'Aggiunge metà del bonus competenza al TS Volontà contro paura.', type: 'Ex' },
-    { level: 20, name: 'Campione d\'Armi', description: 'Ottiene la padronanza assoluta con le armi: +1 aggiuntivo a tutti i tiri d\'attacco e danni.', type: 'Ex' },
+    { level: 20, name: 'Maestria delle Armi', description: 'Con l\'arma del Greater Weapon Focus: i critici sono automaticamente confermati, il moltiplicatore di critico aumenta di 1, e l\'arma non può essere disarmata né distrutta.', type: 'Ex' },
     { level: 20, name: 'Talento Bonus', description: 'Ottiene un ulteriore talento bonus da combattimento.', choiceType: 'combat_feat' },
   ],
 };
