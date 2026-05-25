@@ -470,7 +470,7 @@
       "id": "assalto_scivolante",
       "name": "Assalto Scivolante",
       "description": "Carica attraverso un nemico per un Attacco ai Fianchi",
-      "prerequisites": "Destrezza 15, Acrobazia 10 gradi o previlegio di classe Carica Acrobatica , Raggirare 3 gradi",
+      "prerequisites": "Destrezza 15, Acrobazia 10 gradi o privilegio di classe Carica Acrobatica , Raggirare 3 gradi",
       "benefit": "Carica attraverso un nemico per un Attacco ai Fianchi",
       "type": "Combat"
     },
@@ -798,7 +798,7 @@
       "id": "audacia_ispirante",
       "name": "Audacia Ispirante",
       "description": "Si concede la propria Audacia agli alleati entro 9 metri.",
-      "prerequisites": "Carisma 13, previlegio di classe Audacia",
+      "prerequisites": "Carisma 13, privilegio di classe Audacia",
       "benefit": "Si concede la propria Audacia agli alleati entro 9 metri.",
       "type": "Combat"
     },
@@ -806,7 +806,7 @@
       "id": "audacia_migliorata",
       "name": "Audacia Migliorata",
       "description": "L' Audacia si applica a tutti gli effetti di influenza mentale.",
-      "prerequisites": "Carisma 13, previlegio di classe Audacia",
+      "prerequisites": "Carisma 13, privilegio di classe Audacia",
       "benefit": "L' Audacia si applica a tutti gli effetti di influenza mentale.",
       "type": "Combat"
     },
@@ -814,7 +814,7 @@
       "id": "audacia_sociale",
       "name": "Audacia Sociale",
       "description": "L' Audacia del personaggio ispira audacia negli altri.",
-      "prerequisites": "Carisma 13, previlegio di classe Audacia",
+      "prerequisites": "Carisma 13, privilegio di classe Audacia",
       "benefit": "L' Audacia del personaggio ispira audacia negli altri.",
       "type": "Combat"
     },
@@ -1806,7 +1806,7 @@
       "id": "fanciulla_agile",
       "name": "Fanciulla Agile",
       "description": "Si tratta l' Armatura della Fanciulla Grigia come armatura media.",
-      "prerequisites": "Forza 13, Destrezza 13, Competenza nelle Armature Pesanti , Resistenza Fisica o previlegio di classe Addestramento nelle Armature",
+      "prerequisites": "Forza 13, Destrezza 13, Competenza nelle Armature Pesanti , Resistenza Fisica o privilegio di classe Addestramento nelle Armature",
       "benefit": "Si tratta l' Armatura della Fanciulla Grigia come armatura media.",
       "type": "Combat"
     },
@@ -1910,7 +1910,7 @@
       "id": "furioso_ostentato",
       "name": "Furioso Ostentato",
       "description": "Si va in Ira per distrarre i nemici quando si esibisce per denaro.",
-      "prerequisites": "Intimidire 5 gradi, previlegio di classe Ira",
+      "prerequisites": "Intimidire 5 gradi, privilegio di classe Ira",
       "benefit": "Si va in Ira per distrarre i nemici quando si esibisce per denaro.",
       "type": "Combat"
     },
@@ -2326,7 +2326,7 @@
       "id": "fuga_riposizionante",
       "name": "Fuga Riposizionante",
       "description": "Dopo aver Eluso si può Riposizionare il nemico nell'esplosione.",
-      "prerequisites": "Intelligenza 13, Maestria in Combattimento , Riposizionare Migliorato , previlegio di classe Eludere .",
+      "prerequisites": "Intelligenza 13, Maestria in Combattimento , Riposizionare Migliorato , privilegio di classe Eludere .",
       "benefit": "Dopo aver Eluso si può Riposizionare il nemico nell'esplosione.",
       "type": "Combat"
     },
@@ -2638,7 +2638,7 @@
       "id": "percepire_tradimento",
       "name": "Percepire Tradimento",
       "description": "Si applica Percepire Trappole alle prove per vedere attraverso i travestimenti ed evitare gli attacchi a sorpresa.",
-      "prerequisites": "Saggezza 13, Ladro 3° livello, previlegio di classe Percepire Trappole .",
+      "prerequisites": "Saggezza 13, Ladro 3° livello, privilegio di classe Percepire Trappole .",
       "benefit": "Si applica Percepire Trappole alle prove per vedere attraverso i travestimenti ed evitare gli attacchi a sorpresa.",
       "type": "Combat"
     },
@@ -2750,7 +2750,7 @@
       "id": "pronto_a_tutto",
       "name": "Pronto a Tutto",
       "description": "Il personaggio non abbassa mai la guardia.",
-      "prerequisites": "Allerta , Estrazione Rapida , Iniziativa Migliorata , Riflessi Fulminei , BAB +6 o previlegio di classe Schivare Prodigioso .",
+      "prerequisites": "Allerta , Estrazione Rapida , Iniziativa Migliorata , Riflessi Fulminei , BAB +6 o privilegio di classe Schivare Prodigioso .",
       "benefit": "Il personaggio non abbassa mai la guardia.",
       "type": "Combat"
     },
@@ -3158,7 +3158,7 @@
       "id": "studio_rapido",
       "name": "Studio Rapido",
       "description": "Si studia con un alleato per apprendere un Talento di Combattimento .",
-      "prerequisites": "Intelligenza 13, previlegio di classe Audacia +3, Guerriero 10° livello.",
+      "prerequisites": "Intelligenza 13, privilegio di classe Audacia +3, Guerriero 10° livello.",
       "benefit": "Si studia con un alleato per apprendere un Talento di Combattimento .",
       "type": "Combat"
     },
@@ -3472,7 +3472,7 @@
       "description": "Dopo un colpo critico, si può lanciare Dissolvi Magie",
       "prerequisites": "Colpo Arcano , Bonus di Attacco Base +11, capacità di lanciare Dissolvi Magie",
       "benefit": "Dopo un colpo critico, si può lanciare Dissolvi Magie",
-      "type": "General"
+      "type": "Combat"
     },
     {
       "id": "critico_focalizzato",
@@ -5989,9 +5989,9 @@
     {
       "id": "eidolon_vigile",
       "name": "Eidolon Vigile",
-      "description": "Bonus +4 alle prove di Percezionequando il proprio Eidolon è a portata di mano, cosciente e non indifeso.",
+      "description": "Bonus +4 alle prove di Percezione quando il proprio Eidolon è a portata di mano, cosciente e non indifeso.",
       "prerequisites": "Privilegio di classe Eidolon",
-      "benefit": "Bonus +4 alle prove di Percezionequando il proprio Eidolon è a portata di mano, cosciente e non indifeso.",
+      "benefit": "Bonus +4 alle prove di Percezione quando il proprio Eidolon è a portata di mano, cosciente e non indifeso.",
       "type": "General"
     },
     {
@@ -6646,7 +6646,7 @@
       "id": "incanalare_purificante",
       "name": "Incanalare Purificante",
       "description": "Brucia un nemico quando si curano gli alleati.",
-      "prerequisites": "Carisma 15, Incanalare Selettivo , previlegio di classe Incanalare Energia",
+      "prerequisites": "Carisma 15, Incanalare Selettivo , privilegio di classe Incanalare Energia",
       "benefit": "Brucia un nemico quando si curano gli alleati.",
       "type": "General"
     },
@@ -6878,7 +6878,7 @@
       "id": "indagine_spedita",
       "name": "Indagine Spedita",
       "description": "Si cerca più velocemente e si ottiene bonus +2 quando si prende 20.",
-      "prerequisites": "Percezione 3 gradi, previlegio di classe Ispirazione o Maestro del Sapere .",
+      "prerequisites": "Percezione 3 gradi, privilegio di classe Ispirazione o Maestro del Sapere .",
       "benefit": "Si cerca più velocemente e si ottiene bonus +2 quando si prende 20.",
       "type": "General"
     },
@@ -6925,9 +6925,9 @@
     {
       "id": "influenza_leggendaria_migliorata",
       "name": "Influenza Leggendaria Migliorata",
-      "description": "Si ottiengono due talenti diversi per ogni leggenda.",
+      "description": "Si ottengono due talenti diversi per ogni leggenda.",
       "prerequisites": "Influenza Leggendaria , Previlegi di classe Potere dello Spirito (Inferiore) e Propiziazione .",
-      "benefit": "Si ottiengono due talenti diversi per ogni leggenda.",
+      "benefit": "Si ottengono due talenti diversi per ogni leggenda.",
       "type": "General"
     },
     {
@@ -7052,16 +7052,16 @@
     {
       "id": "maschera_rituale",
       "name": "Maschera Rituale",
-      "description": "Uso dei rituali e previlegio di classe Spirito rinforzati.",
+      "description": "Uso dei rituali e privilegio di classe Spirito rinforzati.",
       "prerequisites": "Innominato , capacità di lanciare uno o più Rituali Occulti .",
-      "benefit": "Uso dei rituali e previlegio di classe Spirito rinforzati.",
+      "benefit": "Uso dei rituali e privilegio di classe Spirito rinforzati.",
       "type": "General"
     },
     {
       "id": "mascherato_dalla_paura",
       "name": "Mascherato dalla Paura",
       "description": "Si subiscono di meno gli effetti di paura.",
-      "prerequisites": "Innominato , Volontà base +6 o previlegio di classe Audacia",
+      "prerequisites": "Innominato , Volontà base +6 o privilegio di classe Audacia",
       "benefit": "Si subiscono di meno gli effetti di paura.",
       "type": "General"
     },
@@ -7517,7 +7517,7 @@
       "id": "mastro_artigiano",
       "name": "Mastro Artigiano",
       "description": "Puoi creare oggetti magici anche senza essere incantatore.",
-      "prerequisites": "5 gradi una qualsiasiabilità di Artigianato o Professione",
+      "prerequisites": "5 gradi una qualsiasi abilità di Artigianato o Professione",
       "benefit": "Puoi creare oggetti magici anche senza essere incantatore.",
       "type": "General"
     },
@@ -7533,7 +7533,7 @@
       "id": "mentore_motivante",
       "name": "Mentore Motivante",
       "description": "Ispirare Competenza agisce sugli alleati in un raggio di 9 metri.",
-      "prerequisites": "Carisma 13, previlegio di classe Ispirare Competenza",
+      "prerequisites": "Carisma 13, privilegio di classe Ispirare Competenza",
       "benefit": "Ispirare Competenza agisce sugli alleati in un raggio di 9 metri.",
       "type": "General"
     },
@@ -7541,7 +7541,7 @@
       "id": "mentore_onnipresente",
       "name": "Mentore Onnipresente",
       "description": "Ispirare Competenza raggiunge l'alleato a prescindere dalla distanza.",
-      "prerequisites": "Carisma 17, Mentore Motivante , previlegio di classe Ispirare Competenza",
+      "prerequisites": "Carisma 17, Mentore Motivante , privilegio di classe Ispirare Competenza",
       "benefit": "Ispirare Competenza raggiunge l'alleato a prescindere dalla distanza.",
       "type": "General"
     },
@@ -7796,9 +7796,9 @@
     {
       "id": "padronanza_degli_incantesimi_spontanei_extra",
       "name": "Padronanza degli Incantesimi Spontanei Extra",
-      "description": "Si ottiene un uso aggiuntivo del previlegio di classe.",
+      "description": "Si ottiene un uso aggiuntivo del privilegio di classe.",
       "prerequisites": "Previlegio di classe Padronanza degli Incantesimi Spontanei .",
-      "benefit": "Si ottiene un uso aggiuntivo del previlegio di classe.",
+      "benefit": "Si ottiene un uso aggiuntivo del privilegio di classe.",
       "type": "General"
     },
     {
@@ -7995,7 +7995,7 @@
     },
     {
       "id": "percepire_supposizoni",
-      "name": "Percepire Supposizoni",
+      "name": "Percepire Supposizioni",
       "description": "Rivela quali bugie potrebbe essere non credibili.",
       "prerequisites": "Intuizione 3 gradi.",
       "benefit": "Rivela quali bugie potrebbe essere non credibili.",
@@ -8013,7 +8013,7 @@
       "id": "agente_della_paura",
       "name": "Agente della Paura",
       "description": "Bersaglia più volte una creatura con le Apparizioni .",
-      "prerequisites": "Persuasivo , previlegio di classe Apparizione Spaventosa .",
+      "prerequisites": "Persuasivo , privilegio di classe Apparizione Spaventosa .",
       "benefit": "Bersaglia più volte una creatura con le Apparizioni .",
       "type": "General"
     },
@@ -8573,7 +8573,7 @@
       "id": "riflesso_dello_sguardo",
       "name": "Riflesso dello Sguardo",
       "description": "Si usa la propria occhiata per riflettere gli attacchi con lo Sguardo .",
-      "prerequisites": "Sapienza Magica 10 gradi, previlegio di classe Occhiata Audace o Trucco del Mesmerista",
+      "prerequisites": "Sapienza Magica 10 gradi, privilegio di classe Occhiata Audace o Trucco del Mesmerista",
       "benefit": "Si usa la propria occhiata per riflettere gli attacchi con lo Sguardo .",
       "type": "General"
     },

@@ -9,6 +9,7 @@ import {
 } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
 import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice } from '../../types';
+import { checkPrerequisites } from '../../utils/prerequisiteChecker';
 
 const ABILITY_LABELS: Record<AbilityKey, string> = {
   str: 'FOR', dex: 'DES', con: 'COS', int: 'INT', wis: 'SAG', cha: 'CAR',
@@ -405,10 +406,20 @@ export function LevelUpWizard({ char, onClose }: Props) {
                         onChange={e => setCfSearch(e.target.value)}
                       />
                       <div className="space-y-2 max-h-56 overflow-y-auto">
-                        {FEATS.filter(f =>
-                          f.type === 'Combat' &&
-                          f.name.toLowerCase().includes(cfSearch.toLowerCase()),
-                        ).sort((a, b) => a.name.localeCompare(b.name)).map(f => (
+                        {(() => {
+                          const otherChosenThisLevel = new Set(
+                            newFeaturesNeedingChoices
+                              .filter(f => f.choiceType === 'combat_feat' && f.name !== feature.name)
+                              .map(f => classFeatureChoices[f.name])
+                              .filter(Boolean),
+                          );
+                          return FEATS.filter(f => {
+                            if (f.type !== 'Combat') return false;
+                            if (!f.name.toLowerCase().includes(cfSearch.toLowerCase())) return false;
+                            if (char.feats.includes(f.id) && !f.repeatable) return false;
+                            if (otherChosenThisLevel.has(f.id)) return false;
+                            return checkPrerequisites(f, char, FEATS).met;
+                          }).sort((a, b) => a.name.localeCompare(b.name)).map(f => (
                           <button
                             key={f.id}
                             onClick={() => setClassFeatureChoices(prev => ({ ...prev, [feature.name]: f.id }))}
@@ -423,7 +434,8 @@ export function LevelUpWizard({ char, onClose }: Props) {
                             )}
                             <div style={{ fontSize: 12, color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
                           </button>
-                        ))}
+                        ));
+                        })()}
                       </div>
                     </div>
                   )}
@@ -460,10 +472,18 @@ export function LevelUpWizard({ char, onClose }: Props) {
                 onChange={e => setFeatSearch(e.target.value)}
               />
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {FEATS.filter(f =>
-                  f.name.toLowerCase().includes(featSearch.toLowerCase()) &&
-                  (!char.feats.includes(f.id) || f.repeatable)
-                ).sort((a, b) => a.name.localeCompare(b.name)).map(f => (
+                {FEATS.filter(f => {
+                  const bonusFeatsThisLevel = new Set(
+                    newFeaturesNeedingChoices
+                      .filter(nf => nf.choiceType === 'combat_feat')
+                      .map(nf => classFeatureChoices[nf.name])
+                      .filter(Boolean),
+                  );
+                  if (!f.name.toLowerCase().includes(featSearch.toLowerCase())) return false;
+                  if (char.feats.includes(f.id) && !f.repeatable) return false;
+                  if (bonusFeatsThisLevel.has(f.id) && !f.repeatable) return false;
+                  return checkPrerequisites(f, char, FEATS).met;
+                }).sort((a, b) => a.name.localeCompare(b.name)).map(f => (
                   <button
                     key={f.id}
                     onClick={() => setSelectedFeat(f.id)}

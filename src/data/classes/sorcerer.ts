@@ -25,7 +25,7 @@ export const SORCERER: ClassDefinition = {
     bonusSpellsFromAbility: true,
   },
   features: [
-    { level: 1, name: 'Eredità Arcana', description: 'Sceglie un\'eredità arcana che riflette la natura del potere magico nel sangue.', choices: ['Abissale','Angelica','Arcana','Celestiale','Draconico (acido)','Draconico (freddo)','Draconico (fuoco)','Draconico (fulmine)','Draconico (veleno)','Elementale (aria)','Elementale (acqua)','Elementale (fuoco)','Elementale (terra)','Fatata','Infernale','Spaventosa','Stregonesca','Orchesca','Selvaggia','Spettrale','Umana potenziata'] },
+    { level: 1, name: 'Eredità Arcana', description: 'Sceglie un\'eredità arcana che riflette la natura del potere magico nel sangue.', choices: ['Abissale','Angelica','Arcana','Celestiale','Draconico (acido)','Draconico (freddo)','Draconico (fuoco)','Draconico (fulmine)','Draconico (veleno)','Elementale (aria)','Elementale (acqua)','Elementale (fuoco)','Elementale (terra)','Fatata','Infernale','Spaventosa','Stregonesca','Orchesca','Selvaggia','Spettrale','Umana potenziata'], choiceType: 'class_list' },
     { level: 1, name: 'Poteri dell\'Eredità', description: 'Ottiene un potere speciale derivante dall\'eredità scelta ai livelli 1, 3, 9, 15, 20.' },
     { level: 3, name: 'Potere dell\'Eredità (1)', description: 'Secondo potere dell\'eredità arcana.' },
     { level: 9, name: 'Potere dell\'Eredità (2)', description: 'Terzo potere dell\'eredità arcana.' },
