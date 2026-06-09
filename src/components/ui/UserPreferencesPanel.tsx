@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { THEMES } from '../../themes';
@@ -11,6 +12,7 @@ export function UserPreferencesPanel() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+  const navigate = useNavigate();
 
   const handleToggle = () => {
     if (!open && btnRef.current) {
@@ -108,12 +110,20 @@ export function UserPreferencesPanel() {
       </div>
 
       {user && (
-        <button
-          className="pf-btn pf-btn-ghost text-xs px-2 py-1 w-full"
-          onClick={() => { signOut(); setOpen(false); }}
-        >
-          Esci
-        </button>
+        <div className="flex flex-col gap-1">
+          <button
+            className="pf-btn pf-btn-ghost text-xs px-2 py-1 w-full"
+            onClick={() => { navigate('/settings/account'); setOpen(false); }}
+          >
+            Impostazioni account
+          </button>
+          <button
+            className="pf-btn pf-btn-ghost text-xs px-2 py-1 w-full"
+            onClick={() => { signOut(); setOpen(false); }}
+          >
+            Esci
+          </button>
+        </div>
       )}
     </div>
   ) : null;

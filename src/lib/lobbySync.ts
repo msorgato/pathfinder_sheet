@@ -106,12 +106,13 @@ function docToMessage(d: { id: string; data(): any }): LobbyMessage {
 // ── Lobby CRUD ────────────────────────────────────────────────────────────────
 
 export async function createLobby(uid: string, displayName: string, name: string): Promise<Lobby> {
+  const safeName = displayName.trim().slice(0, 40);
   const code = await generateUniqueCode();
   const ref = await addDoc(lobbiesCol(), {
     code,
     name:      name.trim(),
     ownerId:   uid,
-    ownerName: displayName,
+    ownerName: safeName,
     gmUid:     uid,
     createdAt: serverTimestamp(),
     isActive:  true,
@@ -121,7 +122,7 @@ export async function createLobby(uid: string, displayName: string, name: string
   await Promise.all([
     setDoc(memberDoc(lobbyId, uid), {
       userId:      uid,
-      displayName,
+      displayName: safeName,
       joinedAt:    serverTimestamp(),
       lastSeenAt:  serverTimestamp(),
     }),
@@ -133,6 +134,7 @@ export async function createLobby(uid: string, displayName: string, name: string
 }
 
 export async function joinLobbyByCode(uid: string, displayName: string, code: string): Promise<Lobby> {
+  const safeName = displayName.trim().slice(0, 40);
   const snap = await getDocs(
     query(lobbiesCol(), where('code', '==', code.toUpperCase().trim()), where('isActive', '==', true)),
   );
@@ -148,7 +150,7 @@ export async function joinLobbyByCode(uid: string, displayName: string, code: st
   await Promise.all([
     setDoc(memberDoc(lobbyId, uid), {
       userId:      uid,
-      displayName,
+      displayName: safeName,
       joinedAt:    serverTimestamp(),
       lastSeenAt:  serverTimestamp(),
     }),

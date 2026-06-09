@@ -12,6 +12,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
+    function isAdmin() {
+      return isAuthenticated()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)/settings/profile).data.role == 'admin';
+    }
+
     function isLobbyMember(lobbyId) {
       return isAuthenticated()
         && exists(/databases/$(database)/documents/lobbies/$(lobbyId)/members/$(request.auth.uid));
@@ -27,32 +32,42 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.get('gmUid', '') == request.auth.uid;
     }
 
-    // ── User data (personaggi, impostazioni) ─────────────────────────────────
+    // ── User data (personaggi, impostazioni, rateLimits) ──────────────────────
     // Ogni utente può leggere e scrivere solo i propri dati.
+    // La Cloud Function usa Admin SDK e bypassa questa rule per scrivere rateLimits.
 
     match /users/{uid}/{document=**} {
       allow read, write: if isOwner(uid);
     }
 
-    // ── Library (feats e spells pubblici) ────────────────────────────────────
-    // Lettura pubblica; scrittura solo per utenti autenticati (admin check nel frontend).
+    // ── Library (feats e spells pubblici) ─────────────────────────────────────
+    // Lettura pubblica; scrittura solo per admin verificato server-side.
 
     match /library/{document=**} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ── Audit log ─────────────────────────────────────────────────────────────
+    // Solo admin può leggere; nessun client può scrivere (solo Cloud Functions).
+
+    match /audit_log/{document=**} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // ── Lobbies ───────────────────────────────────────────────────────────────
 
     match /lobbies/{lobbyId} {
-      // Qualsiasi utente autenticato può leggere le lobby (serve per il join tramite codice).
-      allow read: if isAuthenticated();
+      // getDoc richiede membership; list (query per codice join) richiede solo auth.
+      allow get: if isLobbyMember(lobbyId);
+      allow list: if isAuthenticated();
 
       // Solo utenti autenticati possono creare lobby, e devono essere l'owner.
       allow create: if isAuthenticated()
         && request.resource.data.ownerId == request.auth.uid;
 
-      // L'owner può modificare la lobby (es. chiuderla); il GM può aggiornare solo gmUid (trasferimento).
+      // L'owner può modificare la lobby (es. chiuderla); il GM può aggiornare solo gmUid.
       allow update: if isLobbyOwner(lobbyId)
         || (isLobbyGM(lobbyId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['gmUid']));
 
@@ -62,20 +77,17 @@ service cloud.firestore {
       // ── Members ────────────────────────────────────────────────────────────
 
       match /members/{memberId} {
-        // Un utente può leggere il proprio documento membro (serve per verificare
-        // se è già iscritto prima del join). I membri vedono tutta la lista.
         allow read: if isAuthenticated()
           && (memberId == request.auth.uid || isLobbyMember(lobbyId));
 
-        // Un utente autenticato può aggiungere solo sé stesso come membro.
         allow create: if isAuthenticated()
-          && memberId == request.auth.uid;
+          && memberId == request.auth.uid
+          && request.resource.data.displayName.size() <= 40;
 
-        // Un membro può aggiornare solo il proprio record (es. lastSeenAt).
         allow update: if isAuthenticated()
-          && memberId == request.auth.uid;
+          && memberId == request.auth.uid
+          && request.resource.data.displayName.size() <= 40;
 
-        // Un membro può rimuovere solo sé stesso; l'owner può rimuovere chiunque.
         allow delete: if isAuthenticated()
           && (memberId == request.auth.uid || isLobbyOwner(lobbyId));
       }
@@ -83,20 +95,18 @@ service cloud.firestore {
       // ── Messages ───────────────────────────────────────────────────────────
 
       match /messages/{messageId} {
-        // Solo i membri possono leggere i messaggi.
         allow read: if isLobbyMember(lobbyId);
 
-        // Solo i membri possono inviare messaggi in lobby attive,
-        // e devono firmare il messaggio con il proprio uid.
-        // I messaggi con hidden: true sono consentiti solo al GM corrente.
         allow create: if isLobbyMember(lobbyId)
           && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.keys().hasAll(['senderId', 'content', 'sentAt'])
+          && request.resource.data.content.size() > 0
+          && request.resource.data.content.size() <= 2000
           && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.isActive == true
           && (!('hidden' in request.resource.data)
               || request.resource.data.hidden == false
               || isLobbyGM(lobbyId));
 
-        // I messaggi non si modificano né si eliminano.
         allow update, delete: if false;
       }
     }
