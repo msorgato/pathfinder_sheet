@@ -1,6 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { LobbyMessage } from '../../types';
 import { RollMessage } from './RollMessage';
+
+const MAX_CHARS = 2000;
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
 interface Props {
   messages: LobbyMessage[];
@@ -19,20 +23,51 @@ export function ChatPanel({ messages, currentUserId, isActive, onSend }: Props) 
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [isRateLimited, setIsRateLimited] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sentTimestampsRef = useRef<number[]>([]);
+  const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  useEffect(() => {
+    return () => {
+      if (rateLimitTimerRef.current) clearTimeout(rateLimitTimerRef.current);
+    };
+  }, []);
+
+  const checkRateLimit = useCallback((): boolean => {
+    const now = Date.now();
+    sentTimestampsRef.current = sentTimestampsRef.current.filter(
+      (t) => now - t < RATE_LIMIT_WINDOW_MS,
+    );
+    return sentTimestampsRef.current.length >= RATE_LIMIT_MAX;
+  }, []);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || isRateLimited) return;
+
+    if (checkRateLimit()) {
+      setIsRateLimited(true);
+      setError('Stai inviando messaggi troppo velocemente. Riprova tra qualche secondo.');
+      const oldest = sentTimestampsRef.current[0];
+      const msUntilReset = RATE_LIMIT_WINDOW_MS - (Date.now() - oldest) + 100;
+      rateLimitTimerRef.current = setTimeout(() => {
+        setIsRateLimited(false);
+        setError('');
+      }, msUntilReset);
+      return;
+    }
+
     setSending(true);
     setError('');
     try {
       await onSend(trimmed);
+      sentTimestampsRef.current.push(Date.now());
       setText('');
     } catch (err) {
       setError((err as Error).message);
@@ -47,6 +82,9 @@ export function ChatPanel({ messages, currentUserId, isActive, onSend }: Props) 
       submit(e as unknown as React.FormEvent);
     }
   };
+
+  const charsLeft = MAX_CHARS - text.length;
+  const isInputDisabled = sending || isRateLimited;
 
   return (
     <div className="flex flex-col h-full">
@@ -99,20 +137,30 @@ export function ChatPanel({ messages, currentUserId, isActive, onSend }: Props) 
           className="border-t p-3 flex gap-2"
           style={{ borderColor: 'var(--theme-ghost-border)' }}
         >
-          <textarea
-            className="flex-1 pf-input resize-none text-sm"
-            rows={2}
-            value={text}
-            onChange={e => { setText(e.target.value); setError(''); }}
-            onKeyDown={handleKeyDown}
-            placeholder="Scrivi un messaggio… (Invio per inviare)"
-            disabled={sending}
-            maxLength={2000}
-          />
+          <div className="flex-1 flex flex-col gap-1">
+            <textarea
+              className="pf-input resize-none text-sm"
+              rows={2}
+              value={text}
+              onChange={e => { setText(e.target.value); setError(''); }}
+              onKeyDown={handleKeyDown}
+              placeholder={isRateLimited ? 'Attendi prima di inviare altri messaggi…' : 'Scrivi un messaggio… (Invio per inviare)'}
+              disabled={isInputDisabled}
+              maxLength={MAX_CHARS}
+            />
+            {text.length > 0 && (
+              <span
+                className="text-xs text-right pr-1"
+                style={{ color: charsLeft < 100 ? 'var(--theme-hp-low)' : 'var(--theme-text-faint)' }}
+              >
+                {charsLeft}
+              </span>
+            )}
+          </div>
           <button
             type="submit"
             className="pf-btn pf-btn-gold px-4 self-end text-sm font-semibold"
-            disabled={sending || !text.trim()}
+            disabled={isInputDisabled || !text.trim()}
           >
             {sending ? '…' : 'Invia'}
           </button>

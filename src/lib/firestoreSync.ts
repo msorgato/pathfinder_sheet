@@ -3,6 +3,7 @@ import {
   setDoc, deleteDoc,
   getDocs, getDoc,
   serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Character, FeatDefinition, SpellDefinition } from '../types';
@@ -37,6 +38,47 @@ export async function saveDataStore(uid: string, data: object): Promise<void> {
 export async function loadDataStore(uid: string): Promise<Record<string, unknown> | null> {
   const snap = await getDoc(dataDocRef(uid));
   return snap.exists() ? (snap.data() as Record<string, unknown>) : null;
+}
+
+export interface UserExport {
+  exportedAt: string;
+  uid: string;
+  profile: Record<string, unknown> | null;
+  characters: unknown[];
+  dataStore: Record<string, unknown> | null;
+  lobbyMemberships: Array<{ lobbyId: string; displayName: string; joinedAt: string | null }>;
+}
+
+function tsToIso(value: unknown): string | null {
+  if (value instanceof Timestamp) return value.toDate().toISOString();
+  return null;
+}
+
+export async function exportUserData(uid: string): Promise<UserExport> {
+  const [profileSnap, charsSnap, dataSnap, membershipsSnap] = await Promise.all([
+    getDoc(doc(db, 'users', uid, 'profile')),
+    getDocs(collection(db, 'users', uid, 'characters')),
+    getDoc(doc(db, 'users', uid, 'settings', 'dataStore')),
+    getDocs(collection(db, 'users', uid, 'lobbyMemberships')),
+  ]);
+
+  const lobbyIds = membershipsSnap.docs.map(d => d.id);
+  const memberSnaps = await Promise.all(
+    lobbyIds.map(lobbyId => getDoc(doc(db, 'lobbies', lobbyId, 'members', uid))),
+  );
+
+  return {
+    exportedAt: new Date().toISOString(),
+    uid,
+    profile: profileSnap.exists() ? profileSnap.data() as Record<string, unknown> : null,
+    characters: charsSnap.docs.map(d => d.data()),
+    dataStore: dataSnap.exists() ? dataSnap.data() as Record<string, unknown> : null,
+    lobbyMemberships: memberSnaps.map((snap, i) => ({
+      lobbyId: lobbyIds[i],
+      displayName: (snap.data()?.displayName as string) ?? '',
+      joinedAt: tsToIso(snap.data()?.joinedAt),
+    })),
+  };
 }
 
 const libraryCol = (type: 'feats' | 'spells') => collection(db, 'library', type, 'entries');
