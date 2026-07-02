@@ -79,7 +79,7 @@ export function FeaturesPanel({ char }: Props) {
                           <span className="text-xs" style={{ color: 'var(--theme-border)' }}>{f.className}</span>
                         </div>
                         <p className="text-xs mt-1" style={{ color: 'var(--theme-text-muted)' }}>{f.description}</p>
-                        {f.choices && (
+                        {'choices' in f && f.choices && (
                           <div className="mt-1 text-xs" style={{ color: '#9b7fd4' }}>
                             Scelte: {f.choices.slice(0, 6).join(', ')}{f.choices.length > 6 ? '...' : ''}
                           </div>
