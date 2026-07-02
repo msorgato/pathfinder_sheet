@@ -2,11 +2,13 @@ import {
   doc, collection,
   setDoc, deleteDoc,
   getDocs, getDoc,
+  onSnapshot,
   serverTimestamp,
   Timestamp,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Character, FeatDefinition, SpellDefinition } from '../types';
+import type { Character, FeatDefinition, SpellDefinition, CustomClassDefinition } from '../types';
 
 const charCol    = (uid: string) => collection(db, 'users', uid, 'characters');
 const charDocRef = (uid: string, charId: string) => doc(db, 'users', uid, 'characters', charId);
@@ -81,7 +83,10 @@ export async function exportUserData(uid: string): Promise<UserExport> {
   };
 }
 
-const libraryCol = (type: 'feats' | 'spells') => collection(db, 'library', type, 'entries');
+const libraryCol = (type: 'feats' | 'spells' | 'classes') => collection(db, 'library', type, 'entries');
+const customClassCol  = (uid: string) => collection(db, 'users', uid, 'customClasses');
+const customClassRef  = (uid: string, classId: string) => doc(db, 'users', uid, 'customClasses', classId);
+const publishedClassRef = (classId: string) => doc(db, 'library', 'classes', 'entries', classId);
 
 export async function publishToLibrary(
   type: 'feat' | 'spell',
@@ -101,4 +106,59 @@ export async function loadLibrary(): Promise<{ feats: FeatDefinition[]; spells: 
     feats:  featsSnap.docs.map(d => d.data() as FeatDefinition),
     spells: spellsSnap.docs.map(d => d.data() as SpellDefinition),
   };
+}
+
+// ── Custom Classes ────────────────────────────────────────────────────────────
+
+/** Load all draft custom classes for the given admin uid. */
+export async function loadCustomClasses(uid: string): Promise<CustomClassDefinition[]> {
+  const snap = await getDocs(customClassCol(uid));
+  return snap.docs.map(d => d.data() as CustomClassDefinition);
+}
+
+/** Persist a draft custom class (create or overwrite). */
+export async function saveCustomClass(uid: string, cls: CustomClassDefinition): Promise<void> {
+  await setDoc(customClassRef(uid, cls.id), clean(cls));
+}
+
+/** Delete a draft custom class document. */
+export async function deleteCustomClass(uid: string, classId: string): Promise<void> {
+  await deleteDoc(customClassRef(uid, classId));
+}
+
+/**
+ * Publish a custom class to library/classes/entries and mark the draft as published.
+ * Both writes are independent; if the second fails the draft retains 'draft' status
+ * and the user can re-publish.
+ */
+export async function publishCustomClass(uid: string, cls: CustomClassDefinition): Promise<void> {
+  const now = Date.now();
+  const published: CustomClassDefinition = { ...cls, status: 'published', publishedAt: now, updatedAt: now };
+  await setDoc(publishedClassRef(cls.id), clean({ ...published, publishedBy: uid, publishedAt: serverTimestamp() }));
+  await setDoc(customClassRef(uid, cls.id), clean(published));
+}
+
+/**
+ * Remove a class from the shared library and revert its draft status.
+ */
+export async function withdrawCustomClass(uid: string, classId: string): Promise<void> {
+  await deleteDoc(publishedClassRef(classId));
+  const draftSnap = await getDoc(customClassRef(uid, classId));
+  if (draftSnap.exists()) {
+    const draft = draftSnap.data() as CustomClassDefinition;
+    await setDoc(customClassRef(uid, classId), clean({ ...draft, status: 'draft', updatedAt: Date.now() }));
+  }
+}
+
+/**
+ * Subscribe to real-time updates on published custom classes.
+ * Calls `onUpdate` whenever the collection changes.
+ * Returns an unsubscribe function.
+ */
+export function subscribePublishedClasses(
+  onUpdate: (classes: CustomClassDefinition[]) => void,
+): Unsubscribe {
+  return onSnapshot(libraryCol('classes'), (snap) => {
+    onUpdate(snap.docs.map(d => d.data() as CustomClassDefinition));
+  });
 }

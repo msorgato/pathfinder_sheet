@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
 import { publishToLibrary, loadLibrary } from '../lib/firestoreSync';
+import { CustomClassList } from '../components/admin/CustomClassList';
 import type { FeatDefinition, SpellDefinition, SpellSchool } from '../types';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -374,7 +375,7 @@ function SharedLibrary({ extraFeatIds, extraSpellIds, onImportFeat, onImportSpel
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = 'feats' | 'spells' | 'library';
+type Tab = 'feats' | 'spells' | 'library' | 'classes';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -421,8 +422,13 @@ export function AdminPanel() {
     }
   };
 
-  const deleteFeat = (id: string) => {
-    if (baseFeatIds.has(id)) store.hideFeat(id);
+  const deleteFeat = (id: string, name: string) => {
+    const isBase = baseFeatIds.has(id);
+    const msg = isBase
+      ? `Nascondere il talento "${name}"? Non apparirà più nella lista (può essere ripristinato).`
+      : `Eliminare il talento "${name}"? Questa azione non è reversibile.`;
+    if (!window.confirm(msg)) return;
+    if (isBase) store.hideFeat(id);
     else store.deleteFeat(id);
     if (expanded === id) setExpanded(null);
   };
@@ -450,8 +456,13 @@ export function AdminPanel() {
     }
   };
 
-  const deleteSpell = (id: string) => {
-    if (baseSpellIds.has(id)) store.hideSpell(id);
+  const deleteSpell = (id: string, name: string) => {
+    const isBase = baseSpellIds.has(id);
+    const msg = isBase
+      ? `Nascondere l'incantesimo "${name}"? Non apparirà più nella lista (può essere ripristinato).`
+      : `Eliminare l'incantesimo "${name}"? Questa azione non è reversibile.`;
+    if (!window.confirm(msg)) return;
+    if (isBase) store.hideSpell(id);
     else store.deleteSpell(id);
     if (expanded === id) setExpanded(null);
   };
@@ -522,7 +533,17 @@ export function AdminPanel() {
           >
             Libreria Condivisa
           </button>
+          <button
+            onClick={() => { setTab('classes'); setExpanded(null); setSearch(''); }}
+            className="flex-1 py-2 rounded text-sm font-semibold transition-all"
+            style={{ background: tab === 'classes' ? 'rgba(20,184,166,0.8)' : 'transparent', color: tab === 'classes' ? '#fff' : 'var(--theme-text-muted)' }}
+          >
+            Classi
+          </button>
         </div>
+
+        {/* Classi tab */}
+        {tab === 'classes' && <CustomClassList />}
 
         {/* Toolbar — solo per tab feats/spells */}
         {isListTab && (
@@ -574,7 +595,7 @@ export function AdminPanel() {
                         feat={feat}
                         isBase={isBase}
                         onSave={saveFeat}
-                        onDelete={() => deleteFeat(feat.id)}
+                        onDelete={() => deleteFeat(feat.id, feat.name)}
                         onReset={isBase ? () => store.resetFeat(feat.id) : undefined}
                         onPublish={!isBase ? () => publishFeat(feat) : undefined}
                       />
@@ -613,7 +634,7 @@ export function AdminPanel() {
                         spell={spell}
                         isBase={isBase}
                         onSave={saveSpell}
-                        onDelete={() => deleteSpell(spell.id)}
+                        onDelete={() => deleteSpell(spell.id, spell.name)}
                         onReset={isBase ? () => store.resetSpell(spell.id) : undefined}
                         onPublish={!isBase ? () => publishSpell(spell) : undefined}
                       />

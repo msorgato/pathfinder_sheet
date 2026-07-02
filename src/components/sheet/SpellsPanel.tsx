@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getClass } from '../../data/classes';
+import { getClass, isBuiltinClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
 import { computeSpellSlots, effectiveAbilityScores, spellDC } from '../../utils/calculations';
 import type { Character, PreparedSpell } from '../../types';
@@ -35,7 +35,10 @@ export function SpellsPanel({ char }: Props) {
 
   const scores = effectiveAbilityScores(char);
 
-  const casterClasses = char.classes.filter(e => !!getClass(e.classId)?.spellcasting);
+  const casterClasses = char.classes.filter(e => {
+    const cls = getClass(e.classId);
+    return cls && isBuiltinClass(cls) && !!cls.spellcasting;
+  });
   if (casterClasses.length === 0) {
     return (
       <div className="pf-panel p-8 text-center">

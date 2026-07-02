@@ -3,7 +3,7 @@ import { FEATS } from '../data/feats';
 import { SPELLS } from '../data/spells';
 import { auth } from '../lib/firebase';
 import { saveDataStore, loadDataStore } from '../lib/firestoreSync';
-import type { FeatDefinition, SpellDefinition } from '../types';
+import type { FeatDefinition, SpellDefinition, CustomClassDefinition } from '../types';
 
 interface DataState {
   builtinFeats: FeatDefinition[];
@@ -38,6 +38,16 @@ interface DataState {
   importData: (raw: unknown) => void;
   mergeExtraFeats: (feats: FeatDefinition[]) => void;
   mergeExtraSpells: (spells: SpellDefinition[]) => void;
+
+  // Admin draft classes (users/{uid}/customClasses/)
+  customClasses: CustomClassDefinition[];
+  setCustomClasses: (classes: CustomClassDefinition[]) => void;
+  upsertCustomClass: (cls: CustomClassDefinition) => void;
+  removeCustomClass: (classId: string) => void;
+
+  // Published classes from library/classes/entries (visible to all users)
+  publishedCustomClasses: CustomClassDefinition[];
+  setPublishedCustomClasses: (classes: CustomClassDefinition[]) => void;
 }
 
 const empty = {
@@ -64,6 +74,8 @@ export const useDataStore = create<DataState>()((set, get) => ({
   builtinSpells: [...SPELLS],
   builtinLoaded: false,
   ...empty,
+  customClasses: [],
+  publishedCustomClasses: [],
 
   loadBuiltinData: async () => {
     const [spellsRes, featsRes] = await Promise.all([
@@ -94,7 +106,7 @@ export const useDataStore = create<DataState>()((set, get) => ({
     });
   },
 
-  clearStore: () => set({ ...empty }),
+  clearStore: () => set({ ...empty, customClasses: [], publishedCustomClasses: [] }),
 
   patchFeat: (id, patch) => {
     set(s => ({ featPatches: { ...s.featPatches, [id]: { ...s.featPatches[id], ...patch } } }));
@@ -234,6 +246,21 @@ export const useDataStore = create<DataState>()((set, get) => ({
     });
     sync(get());
   },
+
+  setCustomClasses: (classes) => set({ customClasses: classes }),
+
+  upsertCustomClass: (cls) =>
+    set(s => ({
+      customClasses: [
+        ...s.customClasses.filter(c => c.id !== cls.id),
+        cls,
+      ],
+    })),
+
+  removeCustomClass: (classId) =>
+    set(s => ({ customClasses: s.customClasses.filter(c => c.id !== classId) })),
+
+  setPublishedCustomClasses: (classes) => set({ publishedCustomClasses: classes }),
 }));
 
 export function useMergedFeats(): FeatDefinition[] {

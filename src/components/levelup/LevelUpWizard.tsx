@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CLASSES } from '../../data/classes';
+import { useDataStore } from '../../store/dataStore';
 import { SKILLS } from '../../data/skills';
 import { useMergedFeats, useMergedSpells } from '../../store/dataStore';
 import { getClass } from '../../data/classes';
@@ -46,6 +47,9 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const [spellFilterLevel, setSpellFilterLevel] = useState<number | 'all'>('all');
   const [classFeatureChoices, setClassFeatureChoices] = useState<Record<string, string>>({});
   const [cfSearch, setCfSearch] = useState('');
+
+  const publishedCustomClasses = useDataStore(s => s.publishedCustomClasses);
+  const allClasses = [...CLASSES, ...publishedCustomClasses];
 
   const needsFeat = featLevels().includes(nextLevel);
   const needsAbility = abilityIncreaseLevels().includes(nextLevel);
@@ -247,7 +251,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
                 <div className="mt-2">
                   <p className="text-xs mb-2" style={{ color: 'var(--theme-border-strong)' }}>Oppure aggiungi una nuova classe (multiclasse):</p>
                   <div className="grid grid-cols-2 gap-2">
-                    {CLASSES.filter(c => !char.classes.find(e => e.classId === c.id)).map(c => (
+                    {allClasses.filter(c => !char.classes.find(e => e.classId === c.id)).map(c => (
                       <button
                         key={c.id}
                         onClick={() => setSelectedClassId(c.id)}

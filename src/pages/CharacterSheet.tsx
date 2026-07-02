@@ -287,7 +287,11 @@ export function CharacterSheet() {
               <span>{race?.name ?? char.race}</span>
               <span style={{ color: 'var(--line-mid)' }}>·</span>
               <span>
-                {classes.map(({ entry, cls }) => `${cls?.name ?? entry.classId} ${entry.level}`).join(' / ')}
+                {classes.map(({ entry, cls }) =>
+                  cls
+                    ? `${cls.name} ${entry.level}`
+                    : `[${entry.classId}?] ${entry.level}`,
+                ).join(' / ')}
               </span>
               <span style={{ color: 'var(--line-mid)' }}>·</span>
               <span style={{ color: 'var(--gold-bright)' }}>LV {char.totalLevel}</span>
