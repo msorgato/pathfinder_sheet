@@ -233,6 +233,51 @@ export type WizardStep =
   | 'spells'
   | 'details';
 
+// ── Custom Classes ───────────────────────────────────────────────────────────
+
+export type CustomClassFeatureType = 'Ex' | 'Su' | 'Sp' | 'special';
+
+export type CustomClassStatus = 'draft' | 'published';
+
+export interface CustomClassFeature {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  type: CustomClassFeatureType;
+  modifiers?: string;
+}
+
+export interface CustomClassSpellcasting {
+  enabled: boolean;
+  sourceList?: string;
+  customSpells?: string[];
+}
+
+export interface CustomClassDefinition {
+  id: string;
+  name: string;
+  description: string;
+  hitDie: number;
+  status: CustomClassStatus;
+  armorProficiencies: string[];
+  weaponProficiencies: string;
+  skillsPerLevel: number;
+  classSkills: string[];
+  /** Index 0 = level 1, length 20 */
+  bab: number[];
+  saves: {
+    fort: number[];
+    ref: number[];
+    will: number[];
+  };
+  features: CustomClassFeature[];
+  spellcasting?: CustomClassSpellcasting;
+  createdAt: number;
+  updatedAt: number;
+  publishedAt?: number;
+}
+
 // ── Lobby & Chat ─────────────────────────────────────────────────────────────
 
 export interface Lobby {

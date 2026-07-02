@@ -13,6 +13,7 @@ import { useAuthStore } from './store/authStore';
 import { useCharacterStore } from './store/characterStore';
 import { useDataStore } from './store/dataStore';
 import { useLobbyStore } from './store/lobbyStore';
+import { subscribePublishedClasses } from './lib/firestoreSync';
 
 function LoadingScreen() {
   return (
@@ -65,6 +66,15 @@ function App() {
       clearData();
       clearLobbies();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, authLoading]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const unsub = subscribePublishedClasses(classes => {
+      useDataStore.getState().setPublishedCustomClasses(classes);
+    });
+    return unsub;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid, authLoading]);
 

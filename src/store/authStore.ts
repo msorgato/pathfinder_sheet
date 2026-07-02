@@ -37,9 +37,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (user) {
         try {
           const profileSnap = await getDoc(doc(db, 'users', user.uid, 'settings', 'profile'));
+          console.log('[auth] uid:', user.uid, 'exists:', profileSnap.exists(), 'data:', profileSnap.data());
           const isAdmin = profileSnap.exists() && profileSnap.data()?.role === 'admin';
           set({ user, isAdmin, loading: false });
-        } catch {
+        } catch (err) {
+          console.error('[auth] profile read failed:', err);
           set({ user, isAdmin: false, loading: false });
         }
       } else {

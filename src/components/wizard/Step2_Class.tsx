@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { CLASSES } from '../../data/classes';
-import type { ClassDefinition } from '../../types';
+import { CLASSES, isBuiltinClass } from '../../data/classes';
+import { useDataStore } from '../../store/dataStore';
 import { WizardLayout } from './WizardLayout';
 
 interface Props {
@@ -10,14 +10,20 @@ interface Props {
   onBack: () => void;
 }
 
+const BAB_LABEL: Record<string, string> = {
+  full: 'Pieno', 'three-quarters': '¾', half: '½',
+};
+
+function babLabel(bab: unknown): string {
+  if (Array.isArray(bab)) return 'Pers.';
+  return BAB_LABEL[bab as string] ?? '?';
+}
+
 export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props) {
   const [classId, setClassId] = useState(selectedClassId);
-  const cls = CLASSES.find(c => c.id === classId);
-
-  const BAB_LABEL: Record<string, string> = {
-    full: 'Pieno', 'three-quarters': '¾', half: '½',
-  };
-  const SAVE_ICON = (s: string) => s === 'good' ? '✓' : '–';
+  const publishedCustomClasses = useDataStore(s => s.publishedCustomClasses);
+  const allClasses = [...CLASSES, ...publishedCustomClasses];
+  const cls = allClasses.find(c => c.id === classId);
 
   const handleCommit = () => {
     onSelect(classId);
@@ -32,7 +38,7 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
       nextDisabled={!classId}
     >
       <div className="grid grid-cols-2 gap-2 mb-5">
-        {CLASSES.map(c => (
+        {allClasses.map(c => (
           <button
             key={c.id}
             onClick={() => setClassId(c.id)}
@@ -45,8 +51,10 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
             <div className="font-bold" style={{ fontSize: 15, color: 'var(--theme-accent)' }}>{c.name}</div>
             <div className="mt-1 flex gap-2" style={{ fontSize: 13, color: 'var(--theme-text-neutral)' }}>
               <span>d{c.hitDie}</span>
-              <span>BAB {BAB_LABEL[c.bab]}</span>
-              {c.spellcasting && <span style={{ color: '#9b7fd4' }}>✨</span>}
+              <span>BAB {babLabel(c.bab)}</span>
+              {isBuiltinClass(c)
+                ? c.spellcasting && <span style={{ color: '#9b7fd4' }}>✨</span>
+                : c.spellcasting?.enabled && <span style={{ color: '#9b7fd4' }}>✨</span>}
             </div>
           </button>
         ))}
@@ -62,7 +70,7 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
           <div className="grid grid-cols-3 gap-3 text-center text-sm">
             {[
               ['Dado Vita', `d${cls.hitDie}`],
-              ['BAB', BAB_LABEL[cls.bab]],
+              ['BAB', babLabel(cls.bab)],
               ['Abilità/LV', String(cls.skillsPerLevel)],
             ].map(([label, val]) => (
               <div key={label} className="stat-box py-2">
@@ -73,22 +81,24 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
           </div>
 
           <div className="grid grid-cols-3 gap-3 text-center text-sm">
-            {(['fort', 'ref', 'will'] as const).map(save => (
-              <div key={save} className="stat-box py-2">
-                <div className="text-xs uppercase" style={{ color: 'var(--theme-border-strong)' }}>
-                  {save === 'fort' ? 'Tempra' : save === 'ref' ? 'Riflessi' : 'Volontà'}
+            {(['fort', 'ref', 'will'] as const).map(save => {
+              const prog = cls.saves[save];
+              const isArr = Array.isArray(prog);
+              const isGood = !isArr && prog === 'good';
+              return (
+                <div key={save} className="stat-box py-2">
+                  <div className="text-xs uppercase" style={{ color: 'var(--theme-border-strong)' }}>
+                    {save === 'fort' ? 'Tempra' : save === 'ref' ? 'Riflessi' : 'Volontà'}
+                  </div>
+                  <div className="font-bold" style={{ color: isGood ? 'var(--theme-hp-high)' : 'var(--theme-text-neutral)' }}>
+                    {isArr ? 'Pers.' : (isGood ? 'Alta' : 'Bassa')}
+                  </div>
                 </div>
-                <div
-                  className="font-bold"
-                  style={{ color: cls.saves[save] === 'good' ? 'var(--theme-hp-high)' : 'var(--theme-text-neutral)' }}
-                >
-                  {cls.saves[save] === 'good' ? 'Alta' : 'Bassa'}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {cls.spellcasting && (
+          {isBuiltinClass(cls) && cls.spellcasting && (
             <div className="p-3 rounded text-sm" style={{ background: 'var(--theme-bg)', border: '1px solid #4b3080' }}>
               <div className="font-semibold mb-1" style={{ color: '#9b7fd4' }}>✨ Incantatore</div>
               <div style={{ color: 'var(--theme-text-muted)' }}>
@@ -100,14 +110,22 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
               </div>
             </div>
           )}
+          {!isBuiltinClass(cls) && cls.spellcasting?.enabled && (
+            <div className="p-3 rounded text-sm" style={{ background: 'var(--theme-bg)', border: '1px solid #4b3080' }}>
+              <div className="font-semibold" style={{ color: '#9b7fd4' }}>✨ Incantatore</div>
+              {cls.spellcasting.sourceList && (
+                <div style={{ color: 'var(--theme-text-muted)' }}>Lista: {cls.spellcasting.sourceList}</div>
+              )}
+            </div>
+          )}
 
           <div>
             <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--theme-border-strong)' }}>
               Capacità al 1° livello
             </div>
             <div className="space-y-1">
-              {cls.features.filter(f => f.level === 1).map(f => (
-                <div key={f.name} className="text-sm">
+              {cls.features.filter(f => f.level === 1).map((f, i) => (
+                <div key={f.name + i} className="text-sm">
                   <span className="font-semibold" style={{ color: 'var(--theme-accent)' }}>{f.name}</span>
                   {f.type && <span className="ml-1 text-xs px-1 rounded" style={{ background: 'var(--theme-bg-panel)', color: 'var(--theme-text-neutral)' }}>{f.type}</span>}
                   <span style={{ color: 'var(--theme-text-muted)' }}>: {f.description}</span>

@@ -1,5 +1,5 @@
 import type { Character, CharacterClassEntry, AbilityKey } from '../types';
-import { getClass } from '../data/classes';
+import { getClass, isBuiltinClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { getBonusSpells } from '../data/spellSlots';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
@@ -52,8 +52,10 @@ export function effectiveAbilityScores(char: Character): Record<AbilityKey, numb
 export function classBAB(classId: string, classLevel: number): number {
   const cls = getClass(classId);
   if (!cls) return 0;
-  if (cls.bab === 'full') return classLevel;
-  if (cls.bab === 'three-quarters') return Math.floor((classLevel * 3) / 4);
+  const bab = cls.bab;
+  if (Array.isArray(bab)) return bab[classLevel - 1] ?? 0;
+  if (bab === 'full') return classLevel;
+  if (bab === 'three-quarters') return Math.floor((classLevel * 3) / 4);
   return Math.floor(classLevel / 2);
 }
 
@@ -82,8 +84,12 @@ export function totalSave(
     const cls = getClass(e.classId);
     if (!cls) return;
     const prog = cls.saves[save];
-    if (prog === 'good') hasGood = true;
-    total += prog === 'good' ? goodSave(e.level) : poorSave(e.level);
+    if (Array.isArray(prog)) {
+      total += prog[e.level - 1] ?? 0;
+    } else {
+      if (prog === 'good') hasGood = true;
+      total += prog === 'good' ? goodSave(e.level) : poorSave(e.level);
+    }
   });
   // When multiclassing, the +2 bonus for a good save is counted once per base class
   // PF1e: simply sum the individual class saves (which already include the +2 for good saves)
@@ -126,7 +132,7 @@ export function computeSpellSlots(
   abilityScore: number,
 ): { level: number; base: number; bonus: number; total: number }[] {
   const cls = getClass(classId);
-  if (!cls?.spellcasting) return [];
+  if (!cls || !isBuiltinClass(cls) || !cls.spellcasting) return [];
 
   const slotTable = cls.spellcasting.slots[classLevel];
   if (!slotTable) return [];
@@ -171,6 +177,6 @@ export function spellDC(spellLevel: number, abilityScore: number): number {
 // ── Spells known for spontaneous casters ─────────────────────────────────────
 export function spellsKnownAtLevel(classId: string, classLevel: number): number[] {
   const cls = getClass(classId);
-  if (!cls?.spellcasting?.spellsKnown) return [];
+  if (!cls || !isBuiltinClass(cls) || !cls.spellcasting?.spellsKnown) return [];
   return cls.spellcasting.spellsKnown[classLevel] ?? [];
 }

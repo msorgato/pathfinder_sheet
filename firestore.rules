@@ -32,16 +32,18 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/lobbies/$(lobbyId)).data.get('gmUid', '') == request.auth.uid;
     }
 
-    // ── User data (personaggi, impostazioni, rateLimits) ──────────────────────
+    // ── User data (personaggi, impostazioni, rateLimits, customClasses draft) ──
     // Ogni utente può leggere e scrivere solo i propri dati.
+    // Copre anche users/{uid}/customClasses/{classId} (bozze classi custom admin).
     // La Cloud Function usa Admin SDK e bypassa questa rule per scrivere rateLimits.
 
     match /users/{uid}/{document=**} {
       allow read, write: if isOwner(uid);
     }
 
-    // ── Library (feats e spells pubblici) ─────────────────────────────────────
-    // Lettura pubblica; scrittura solo per admin verificato server-side.
+    // ── Library (feats, spells, classi pubblicate) ────────────────────────────
+    // Lettura pubblica (incluso library/classes/entries); scrittura solo admin.
+    // Copre: library/feats/entries, library/spells/entries, library/classes/entries
 
     match /library/{document=**} {
       allow read: if true;
