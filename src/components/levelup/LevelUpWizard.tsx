@@ -3,13 +3,17 @@ import { CLASSES } from '../../data/classes';
 import { useDataStore } from '../../store/dataStore';
 import { SKILLS } from '../../data/skills';
 import { useMergedFeats, useMergedSpells } from '../../store/dataStore';
-import { getClass } from '../../data/classes';
+import { getClass, isBuiltinClass } from '../../data/classes';
 import { getRace } from '../../data/races';
 import {
   effectiveAbilityScores, abilityMod, featLevels, abilityIncreaseLevels, computeSpellSlots,
 } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
-import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice } from '../../types';
+import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice, ClassFeature, CustomClassFeature } from '../../types';
+
+function isBuiltinFeature(f: ClassFeature | CustomClassFeature): f is ClassFeature {
+  return 'choiceType' in f;
+}
 import { checkPrerequisites } from '../../utils/prerequisiteChecker';
 
 const ABILITY_LABELS: Record<AbilityKey, string> = {
@@ -55,8 +59,9 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const needsAbility = abilityIncreaseLevels().includes(nextLevel);
 
   const selectedCls = getClass(selectedClassId);
+  const builtinCls = selectedCls && isBuiltinClass(selectedCls) ? selectedCls : undefined;
   const maxHpRoll = selectedCls?.hitDie ?? 6;
-  const isSpellbookCaster = !!selectedCls?.spellcasting?.usesSpellbook;
+  const isSpellbookCaster = !!builtinCls?.spellcasting?.usesSpellbook;
 
   const race = getRace(char.race);
   const intMod = abilityMod(scores.int);
@@ -78,12 +83,12 @@ export function LevelUpWizard({ char, onClose }: Props) {
     return f.level === newClassLevel;
   }) ?? [];
 
-  const newFeaturesNeedingChoices = newFeatures.filter(f => !!f.choiceType);
+  const newFeaturesNeedingChoices = newFeatures.filter(isBuiltinFeature).filter(f => !!f.choiceType);
   const needsClassFeatureChoice = newFeaturesNeedingChoices.length > 0;
 
   // Spells available to learn at this level-up
   const newClassLevel = (char.classes.find(e => e.classId === selectedClassId)?.level ?? 0) + 1;
-  const spellcasting = selectedCls?.spellcasting;
+  const spellcasting = builtinCls?.spellcasting;
   const abilityScore = spellcasting ? scores[spellcasting.ability] : 10;
   const accessibleLevels = isSpellbookCaster
     ? computeSpellSlots(selectedClassId, newClassLevel, abilityScore).map(s => s.level)

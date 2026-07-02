@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getClass } from '../../data/classes';
+import { getClass, isBuiltinClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
 import { computeSpellSlots, spellsKnownAtLevel, abilityMod } from '../../utils/calculations';
 import type { AbilityScores, KnownSpell } from '../../types';
@@ -30,7 +30,7 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
 
   // For spellbook casters: auto-add all cantrips on mount
   useEffect(() => {
-    if (!cls?.spellcasting?.usesSpellbook) return;
+    if (!cls || !isBuiltinClass(cls) || !cls.spellcasting?.usesSpellbook) return;
     const cantrips = getSpellsForClassAndLevel(classId, 0);
     const alreadyHasAny = knownSpells.some(ks => ks.classId === classId);
     if (!alreadyHasAny && cantrips.length > 0) {
@@ -42,7 +42,7 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
-  if (!cls?.spellcasting) {
+  if (!cls?.spellcasting || !isBuiltinClass(cls)) {
     return (
       <WizardLayout
         step={6} totalSteps={7}

@@ -51,6 +51,7 @@ export function SpellsPanel({ char }: Props) {
   const currentClassId = activeClassId ?? casterClasses[0].classId;
   const currentClassEntry = char.classes.find(e => e.classId === currentClassId)!;
   const currentCls = getClass(currentClassId)!;
+  if (!isBuiltinClass(currentCls)) return null; // casterClasses already filtered to builtins
   const spellcasting = currentCls.spellcasting!;
   const abilityScore = scores[spellcasting.ability];
   const slots = computeSpellSlots(currentClassId, currentClassEntry.level, abilityScore);
