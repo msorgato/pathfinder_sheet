@@ -1,3 +1,11 @@
+# lobby-management Specification
+
+## Purpose
+
+Ciclo di vita delle lobby: creazione, ingresso con codice, uscita e chiusura.
+
+## Requirements
+
 ### Requirement: Creazione lobby
 Un utente autenticato SHALL poter creare una nuova lobby specificando un nome. Il sistema genera automaticamente un codice univoco di 6 caratteri alfanumerici. L'utente diventa owner della lobby e viene automaticamente assegnato come GM (`gmUid = creatorUid`).
 

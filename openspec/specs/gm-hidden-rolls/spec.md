@@ -1,3 +1,11 @@
+# gm-hidden-rolls Specification
+
+## Purpose
+
+Tiri nascosti del GM in chat, visibili solo al GM.
+
+## Requirements
+
 ### Requirement: Flag hidden sui messaggi roll del GM
 I messaggi di tipo `roll` SHALL supportare un campo opzionale `hidden: boolean` (default: `false`). Solo il GM della lobby SHALL poter inviare messaggi con `hidden: true`.
 

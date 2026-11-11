@@ -1,3 +1,11 @@
+# shared-library Specification
+
+## Purpose
+
+Libreria condivisa: pubblicazione delle voci custom da parte degli admin e import da parte degli utenti.
+
+## Requirements
+
 ### Requirement: Admin can publish a custom entry to the shared library
 An admin user SHALL be able to publish any custom (non-built-in) spell or feat from their collection to a global Firestore-backed shared library. The published entry SHALL include the `publishedBy` (uid) and `publishedAt` (timestamp) metadata.
 

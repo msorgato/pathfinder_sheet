@@ -1,3 +1,11 @@
+# lobby-sheet-panel Specification
+
+## Purpose
+
+Pannello della scheda personaggio dentro la lobby, con layout desktop e mobile e valori tirabili.
+
+## Requirements
+
 ### Requirement: Selezione personaggio attivo in lobby
 Un membro di una lobby SHALL poter associare uno dei propri personaggi alla sessione. L'associazione SHALL essere persistita nel documento `LobbyMember` su Firestore e visibile agli altri membri. Un membro SHALL poter cambiare il personaggio attivo durante la sessione.
 

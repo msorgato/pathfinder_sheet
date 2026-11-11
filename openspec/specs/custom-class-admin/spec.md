@@ -1,3 +1,11 @@
+# custom-class-admin Specification
+
+## Purpose
+
+Creazione e modifica delle classi custom da parte degli admin, con metadati, BAB e tiri salvezza per livello.
+
+## Requirements
+
 ### Requirement: Admin può creare una nuova classe custom
 L'admin SHALL poter creare una nuova classe custom vuota dal tab "Classi" dell'AdminPanel. La classe viene salvata come bozza nella sottocollezione `users/{adminUid}/customClasses/{classId}` con `status: 'draft'`.
 

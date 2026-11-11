@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
-import { CHARACTER_PALETTES } from '../themes';
+import { CharacterCustomizationPanel } from '../components/sheet/CharacterCustomizationPanel';
+import { CharacterPortraitGlyph } from '../components/sheet/CharacterPortraitGlyph';
+import { defaultPortraitIcon } from '../data/portraitIcons';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
@@ -30,18 +32,7 @@ export function CharacterSheet() {
   const [diceOpen, setDiceOpen] = useState(false);
   const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const colorPickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showColorPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (colorPickerRef.current?.contains(e.target as Node)) return;
-      setShowColorPicker(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showColorPicker]);
+  const [showCustomize, setShowCustomize] = useState(false);
 
   const handleQuickRoll = (req: RollRequest) => {
     setDiceOpen(true);
@@ -88,112 +79,43 @@ export function CharacterSheet() {
         <FrameCorners />
 
         {/* Top action row */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 24px 0',
-        }}>
+        <div className="char-header-actions">
           <button
-            className="btn btn-ghost"
-            style={{ fontSize: 11, padding: '6px 14px' }}
+            className="btn btn-ghost char-back-btn"
+            aria-label="Torna alla compagnia"
             onClick={() => navigate('/')}
           >
-            ← Compagnia
+            ←<span className="label"> Compagnia</span>
           </button>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <UserPreferencesPanel />
-
-            {/* Character accent colour picker */}
-            <div ref={colorPickerRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowColorPicker(p => !p)}
-                title="Colore personaggio"
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: '50%',
-                  background: char.accentColor ?? 'var(--gold)',
-                  border: showColorPicker ? '2px solid white' : '2px solid var(--line-mid)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  flexShrink: 0,
-                  transition: 'border-color 0.15s, transform 0.15s',
-                  transform: showColorPicker ? 'scale(1.15)' : 'scale(1)',
-                }}
-              />
-              {showColorPicker && (
-                <div
-                  className="pf-panel"
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 6px)',
-                    right: 0,
-                    padding: '12px 14px',
-                    zIndex: 9999,
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.55)',
-                    minWidth: 190,
-                  }}
-                >
-                  <div className="label-rune-soft" style={{ marginBottom: 10 }}>Colore Personaggio</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {CHARACTER_PALETTES.map(p => (
-                      <button
-                        key={p.id}
-                        title={p.name}
-                        onClick={() => { updateCharacter(char.id, { accentColor: p.hex }); setShowColorPicker(false); }}
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: '50%',
-                          background: p.hex,
-                          border: char.accentColor === p.hex ? '2px solid white' : '2px solid transparent',
-                          cursor: 'pointer',
-                          padding: 0,
-                          outline: 'none',
-                          flexShrink: 0,
-                          boxShadow: char.accentColor === p.hex ? `0 0 0 1px rgba(255,255,255,0.5), 0 0 6px ${p.hex}` : 'none',
-                          transition: 'transform 0.1s',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  {char.accentColor && (
-                    <div style={{ marginTop: 10, borderTop: '1px solid var(--line-soft)', paddingTop: 8 }}>
-                      <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginBottom: 4 }}>
-                        {CHARACTER_PALETTES.find(p => p.hex === char.accentColor)?.name ?? ''}
-                      </div>
-                      <button
-                        className="pf-btn pf-btn-ghost"
-                        style={{ fontSize: 10, padding: '3px 8px' }}
-                        onClick={() => { updateCharacter(char.id, { accentColor: undefined }); setShowColorPicker(false); }}
-                      >
-                        Ripristina oro
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
+          <div className="char-header-actions-group">
             {char.totalLevel < 20 && (
               <button
-                className="btn btn-primary"
-                style={{ fontSize: 11, padding: '6px 16px' }}
+                className="btn btn-primary btn-icon"
+                aria-label="Level Up"
+                title="Level Up"
                 onClick={() => setShowLevelUp(true)}
               >
-                ↑ Level Up
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 20V5" />
+                  <path d="M5 12l7-7 7 7" />
+                </svg>
               </button>
             )}
             <button
-              className="btn btn-ghost"
-              style={{ fontSize: 11, padding: '6px 10px' }}
-              onClick={() => setShowDeleteConfirm(true)}
+              className="btn btn-icon"
+              aria-label="Personalizzazione personaggio"
+              title="Personalizzazione personaggio"
+              onClick={() => setShowCustomize(true)}
             >
-              🗑
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+              </svg>
             </button>
+            <UserPreferencesPanel />
           </div>
         </div>
+
 
         {/* Character identity */}
         <div style={{ padding: '16px 24px 20px', display: 'flex', alignItems: 'flex-start', gap: 20 }}>
@@ -247,18 +169,21 @@ export function CharacterSheet() {
               </svg>
             </div>
 
-            {/* Character initial — above sigil layers */}
-            <div className="char-portrait-initial" style={{
-              position: 'relative',
-              zIndex: 1,
-              fontFamily: 'var(--font-display)',
-              fontStyle: 'italic',
-              color: 'var(--char-accent, var(--gold))',
-              opacity: 0.6,
-              userSelect: 'none',
-            }}>
-              {char.name?.[0] ?? '?'}
-            </div>
+            {/* Portrait icon or initial — above sigil layers */}
+            <CharacterPortraitGlyph
+              char={char}
+              iconClassName="char-portrait-icon"
+              initialClassName="char-portrait-initial"
+              initialStyle={{
+                position: 'relative',
+                zIndex: 1,
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                color: 'var(--char-accent, var(--gold))',
+                opacity: 0.6,
+                userSelect: 'none',
+              }}
+            />
           </div>
 
           {/* Name + meta + bars */}
@@ -266,7 +191,7 @@ export function CharacterSheet() {
             <h1 style={{
               fontFamily: 'var(--font-display)',
               fontSize: 28,
-              fontWeight: 500,
+              fontWeight: 700,
               color: 'var(--ink)',
               margin: '0 0 4px',
               lineHeight: 1.1,
@@ -278,7 +203,7 @@ export function CharacterSheet() {
               flexWrap: 'wrap',
               gap: '3px 10px',
               fontFamily: 'var(--font-rune)',
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--ink-mute)',
@@ -332,7 +257,7 @@ export function CharacterSheet() {
             onClick={() => setTab(t.id)}
             style={{
               fontFamily: 'var(--font-rune)',
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
               padding: '12px 20px',
@@ -421,6 +346,18 @@ export function CharacterSheet() {
 
       {showLevelUp && (
         <LevelUpWizard char={char} onClose={() => setShowLevelUp(false)} />
+      )}
+
+      {showCustomize && (
+        <CharacterCustomizationPanel
+          accentColor={char.accentColor}
+          onChangeColor={hex => updateCharacter(char.id, { accentColor: hex })}
+          portraitIcon={char.portraitIcon}
+          autoIcon={defaultPortraitIcon(char)}
+          onChangeIcon={id => updateCharacter(char.id, { portraitIcon: id })}
+          onDelete={() => { setShowCustomize(false); setShowDeleteConfirm(true); }}
+          onClose={() => setShowCustomize(false)}
+        />
       )}
 
       {showDeleteConfirm && (

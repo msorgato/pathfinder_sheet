@@ -1,3 +1,11 @@
+# builtin-database Specification
+
+## Purpose
+
+Caricamento automatico del dataset di base all'avvio, senza import manuale.
+
+## Requirements
+
 ### Requirement: Built-in dataset is loaded lazily at app startup
 The app SHALL include the full Pathfinder 1e spells and feats database as lazy-loaded built-in data. The dataset SHALL be loaded once during app bootstrap via dynamic import (Vite chunk). While loading, the app SHALL display a loading indicator and SHALL NOT render components that depend on spell/feat data.
 

@@ -1,3 +1,11 @@
+# attack-chain-roll Specification
+
+## Purpose
+
+Tiro rapido della catena di attacchi globale dalla scheda personaggio.
+
+## Requirements
+
 ### Requirement: Clickable global attack chain
 The system SHALL render each iteration of the global attack chain (Mischia and Distanza) as a separate clickable badge. Clicking a badge SHALL forward a `RollRequest` of `1d20 + bonus` to the `onQuickRoll` callback, where `bonus` is the iteration's BAB value plus the relevant ability modifier (STR for Mischia, DEX for Distanza).
 

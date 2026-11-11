@@ -1,3 +1,11 @@
+# class-file-structure Specification
+
+## Purpose
+
+Organizzazione delle classi base: un file per classe, indice aggregato e API pubblica stabile.
+
+## Requirements
+
 ### Requirement: One file per class
 Each Pathfinder class SHALL be defined in its own dedicated TypeScript file under `src/data/classes/<class-id>.ts`. The file SHALL export a single named constant of type `ClassDefinition`.
 

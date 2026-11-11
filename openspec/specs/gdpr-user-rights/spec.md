@@ -1,4 +1,10 @@
-## ADDED Requirements
+# gdpr-user-rights Specification
+
+## Purpose
+
+Diritti GDPR dell'utente: pagina account, export dei dati personali ed eliminazione definitiva dell'account.
+
+## Requirements
 
 ### Requirement: Pagina Account Settings accessibile dall'utente autenticato
 Il sistema SHALL esporre una pagina `/settings/account` raggiungibile dal menu utente, visibile solo agli utenti autenticati.

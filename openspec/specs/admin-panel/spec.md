@@ -1,3 +1,11 @@
+# admin-panel Specification
+
+## Purpose
+
+Pannello di amministrazione: import dei dati, libreria condivisa, pubblicazione delle voci custom e gestione delle classi.
+
+## Requirements
+
 ### Requirement: AdminPanel import actions
 The AdminPanel SHALL NOT include file-based import buttons for the built-in dataset (previously "Importa Dati", "+ Importa Talenti", "+ Importa Incantesimi"). The "Esporta Dati" button SHALL be retained. Custom entry creation (+ Aggiungi) and editing SHALL remain available.
 

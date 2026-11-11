@@ -1,3 +1,11 @@
+# dice-fab-design Specification
+
+## Purpose
+
+Aspetto del pulsante flottante del tiro di dadi.
+
+## Requirements
+
 ### Requirement: Circular gold floating-die button
 The dice-roller FAB SHALL be a circle (68px desktop, 56px mobile) styled with a gold radial gradient background, gold border, and a gold glow box-shadow. It SHALL use the `.dice-fab` CSS class defined in `src/index.css`.
 

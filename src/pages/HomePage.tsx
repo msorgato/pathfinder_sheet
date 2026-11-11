@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CharacterPortraitGlyph } from '../components/sheet/CharacterPortraitGlyph';
 import { useCharacterStore } from '../store/characterStore';
 import { useAuthStore } from '../store/authStore';
 import { useLobbyStore } from '../store/lobbyStore';
@@ -119,7 +120,7 @@ export function HomePage() {
                 position: 'absolute', top: -6, right: -6,
                 background: 'var(--blood)', color: 'var(--ink)',
                 borderRadius: '50%', width: 18, height: 18,
-                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'var(--font-mono)',
               }}>
                 {totalUnread}
@@ -221,7 +222,7 @@ export function HomePage() {
           marginTop: 48,
           textAlign: 'center',
           fontFamily: 'var(--font-rune)',
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.2em',
           color: 'var(--ink-faint)',
           textTransform: 'uppercase',
@@ -300,17 +301,19 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 52,
-          fontStyle: 'italic',
-          color: 'var(--gold)',
-          opacity: 0.25,
-          lineHeight: 1,
-          userSelect: 'none',
-        }}>
-          {char.name?.[0] ?? '?'}
-        </div>
+        <CharacterPortraitGlyph
+          char={char}
+          iconStyle={{ width: 60, height: 60, opacity: 0.4, position: 'relative', zIndex: 1 }}
+          initialStyle={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 52,
+            fontStyle: 'italic',
+            color: 'var(--gold)',
+            opacity: 0.25,
+            lineHeight: 1,
+            userSelect: 'none',
+          }}
+        />
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -339,7 +342,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
         <h3 style={{
           fontFamily: 'var(--font-display)',
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 700,
           color: 'var(--ink)',
           margin: '0 0 6px',
           lineHeight: 1.1,
@@ -353,7 +356,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
           gap: '4px 10px',
           marginBottom: 12,
           fontFamily: 'var(--font-rune)',
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
           color: 'var(--ink-mute)',
@@ -391,7 +394,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
               padding: '5px 4px',
             }}>
               <div className="numeral" style={{ fontSize: 16, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
-              <div className="label-rune-soft" style={{ fontSize: 9, marginTop: 2 }}>{label}</div>
+              <div className="label-rune-soft" style={{ fontSize: 11, marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -400,14 +403,14 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
         <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ flex: 1, fontSize: 10, padding: '4px 6px' }}
+            style={{ flex: 1, fontSize: 12, padding: '4px 6px' }}
             onClick={e => { e.stopPropagation(); onOpen(); }}
           >
             Apri
           </button>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ fontSize: 10, padding: '4px 8px' }}
+            style={{ fontSize: 12, padding: '4px 8px' }}
             onClick={onExport}
             title="Esporta"
           >
@@ -415,7 +418,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
           </button>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ fontSize: 10, padding: '4px 8px' }}
+            style={{ fontSize: 12, padding: '4px 8px' }}
             onClick={onDelete}
             title="Elimina"
           >
