@@ -1,4 +1,10 @@
-## ADDED Requirements
+# audit-logging Specification
+
+## Purpose
+
+Registro delle operazioni critiche nella collection audit_log, leggibile solo dagli admin.
+
+## Requirements
 
 ### Requirement: Log delle operazioni critiche in collection audit_log
 Il sistema SHALL scrivere un documento in `audit_log/{docId}` per le seguenti operazioni critiche:

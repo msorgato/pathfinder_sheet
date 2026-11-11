@@ -1,3 +1,11 @@
+# attack-rolls Specification
+
+## Purpose
+
+Calcolo della catena di attacchi, definizione delle armi e visualizzazione e tiro rapido degli attacchi.
+
+## Requirements
+
 ### Requirement: Attack chain calculation
 The system SHALL compute the iterative attack bonus array from the character's total BAB following PF1e rules: one additional attack for every 5 points of BAB above 1 (at BAB−5, BAB−10, BAB−15). A character with BAB 0 SHALL receive a single attack at +0.
 

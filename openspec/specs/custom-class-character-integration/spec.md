@@ -1,3 +1,11 @@
+# custom-class-character-integration Specification
+
+## Purpose
+
+Uso delle classi custom pubblicate nella creazione e nella scheda dei personaggi.
+
+## Requirements
+
 ### Requirement: Le classi custom pubblicate sono selezionabili nel character sheet
 Il character sheet SHALL mostrare le classi custom pubblicate accanto alle classi built-in nel selettore di classe. Le due sorgenti vengono unite in un unico array ordinato alfabeticamente.
 

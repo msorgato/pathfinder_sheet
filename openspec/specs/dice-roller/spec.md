@@ -1,3 +1,11 @@
+# dice-roller Specification
+
+## Purpose
+
+Comportamento del pannello del tiro di dadi.
+
+## Requirements
+
 ### Requirement: Dice panel close mechanism
 The DiceRoller panel SHALL close only via explicit user controls: the ✕ button inside the panel header, or the floating 🎲 toggle button. The panel SHALL NOT close when the user clicks outside of it.
 

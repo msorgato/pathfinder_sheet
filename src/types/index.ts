@@ -221,6 +221,8 @@ export interface Character {
   experience: number;
   notes: string;
   accentColor?: string;
+  /** Id of the chosen portrait icon (file name in public/icons/classi without extension). */
+  portraitIcon?: string;
   classFeatureChoices?: ClassFeatureChoice[];
 }
 

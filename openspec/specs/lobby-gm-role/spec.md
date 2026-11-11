@@ -1,3 +1,11 @@
+# lobby-gm-role Specification
+
+## Purpose
+
+Ruolo GM nelle lobby: assegnazione al creatore, unicità, trasferimento e visibilità.
+
+## Requirements
+
 ### Requirement: Assegnazione automatica ruolo GM al creatore
 Quando una lobby viene creata, il sistema SHALL assegnare automaticamente il ruolo GM all'utente creatore impostando `gmUid = creatorUid` nel documento lobby.
 

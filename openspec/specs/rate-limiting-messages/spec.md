@@ -1,4 +1,10 @@
-## ADDED Requirements
+# rate-limiting-messages Specification
+
+## Purpose
+
+Limite di frequenza dei messaggi in chat, applicato lato server con feedback in UI.
+
+## Requirements
 
 ### Requirement: Limite di 10 messaggi al minuto per utente nella chat lobby
 Il sistema SHALL impedire a un singolo utente di inviare più di 10 messaggi in una qualsiasi finestra di 60 secondi all'interno di una lobby. Tentativi oltre il limite SHALL essere rifiutati con un messaggio di errore visibile nel client.

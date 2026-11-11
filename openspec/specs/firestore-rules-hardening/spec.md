@@ -1,4 +1,10 @@
-## ADDED Requirements
+# firestore-rules-hardening Specification
+
+## Purpose
+
+Regole Firestore rafforzate per libreria, membri, messaggi e accesso alle lobby.
+
+## Requirements
 
 ### Requirement: Library write richiede ruolo admin server-side
 La rule Firestore per `match /library/{document=**}` SHALL negare qualsiasi write a utenti che non abbiano `users/{uid}/profile.role == 'admin'`. La lettura resta pubblica (non autenticata).

@@ -45,8 +45,9 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                 className="numeral"
                 style={{
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   padding: '2px 8px',
+                  borderRadius: 8,
                   background: mod >= 0 ? 'rgba(212,165,116,0.12)' : 'rgba(220,38,38,0.12)',
                   color: mod >= 0 ? 'var(--gold)' : 'var(--blood)',
                   border: `1px solid ${mod >= 0 ? 'var(--line-mid)' : 'rgba(220,38,38,0.4)'}`,
@@ -61,11 +62,11 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                 {modStr(mod)}
               </button>
 
-              <div style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 12, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                 {base}{racial !== 0 ? ` ${racial >= 0 ? '+' : ''}${racial}R` : ''}
                 {increases !== 0 ? ` +${increases}↑` : ''}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'var(--font-rune)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>
+              <div className="ability-full" style={{ color: 'var(--ink-faint)', fontFamily: 'var(--font-rune)', textTransform: 'uppercase', marginTop: 2 }}>
                 {ABILITY_FULL[key]}
               </div>
             </div>

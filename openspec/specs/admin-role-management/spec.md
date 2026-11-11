@@ -1,4 +1,10 @@
-## ADDED Requirements
+# admin-role-management Specification
+
+## Purpose
+
+Ruolo admin salvato in Firestore, caricato all'autenticazione e usato per proteggere le funzioni di amministrazione.
+
+## Requirements
 
 ### Requirement: Admin role stored in Firestore
 Il sistema SHALL memorizzare il ruolo utente nel documento Firestore `users/{uid}/profile` con campo `role: 'admin' | 'player'`. Il valore di default per i nuovi utenti è `'player'`.

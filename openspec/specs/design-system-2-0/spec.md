@@ -1,3 +1,11 @@
+# design-system-2-0 Specification
+
+## Purpose
+
+Design system dell'app: token dei temi, migrazione dei temi legacy, tipografia e decorazioni.
+
+## Requirements
+
 ### Requirement: Theme token set (sigil/astral/blood)
 The system SHALL declare three theme variants — `sigil` (default), `astral`, and `blood` — as CSS custom properties on `[data-theme]` selectors in `src/index.css`. Each theme MUST define: `--bg-deep`, `--bg-base`, `--bg-elev`, `--bg-glass`, `--surface-1`, `--surface-2`, `--line-soft`, `--line-mid`, `--line-strong`, `--gold`, `--gold-bright`, `--gold-deep`, `--amethyst`, `--amethyst-bright`, `--amethyst-deep`, `--ember`, `--blood`, `--blood-deep`, `--vital`, `--vital-deep`, `--ink`, `--ink-soft`, `--ink-mute`, `--ink-faint`, `--rune-glow`, `--card-shadow`, `--inner-shadow`. Font stack variables `--font-display`, `--font-rune`, `--font-body`, `--font-mono` SHALL be declared on `:root` (theme-invariant). Old `--theme-*` tokens SHALL be removed.
 

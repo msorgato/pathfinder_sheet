@@ -1,3 +1,11 @@
+# custom-class-publishing Specification
+
+## Purpose
+
+Pubblicazione e ritiro delle classi custom, con stato visibile e regole Firestore dedicate.
+
+## Requirements
+
 ### Requirement: Admin pubblica una classe custom
 L'admin SHALL poter pubblicare una classe draft sulla collezione condivisa `library/classes/entries/{classId}`. La pubblicazione copia il documento nella collezione condivisa e aggiorna `status` a `'published'` nel draft originale.
 

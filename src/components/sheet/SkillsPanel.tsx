@@ -47,7 +47,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="label-rune">Abilità</div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-mute)' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-mute)' }}>
           Gradi: {usedPoints}/{totalSkillPoints}
         </span>
       </div>
@@ -62,7 +62,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
         <button
           className="pf-btn"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             padding: '6px 12px',
             background: onlyTrained ? 'var(--gold)' : 'var(--surface-1)',
             color: onlyTrained ? 'var(--bg-deep)' : 'var(--ink-mute)',
@@ -82,7 +82,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
             gridTemplateColumns: '1fr 20px 40px 40px 40px 50px',
             color: 'var(--ink-faint)',
             fontFamily: 'var(--font-rune)',
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
           }}
@@ -123,13 +123,13 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                   {skill.name}
                 </span>
                 {skill.trainedOnly && (
-                  <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--ink-faint)' }}>*</span>
+                  <span style={{ marginLeft: 4, fontSize: 12, color: 'var(--ink-faint)' }}>*</span>
                 )}
               </div>
-              <div style={{ fontSize: 10, textAlign: 'center', color: 'var(--vital)' }}>
+              <div style={{ fontSize: 12, textAlign: 'center', color: 'var(--vital)' }}>
                 {isClass ? '✓' : ''}
               </div>
-              <div className="label-rune-soft" style={{ textAlign: 'center', fontSize: 9 }}>
+              <div className="label-rune-soft" style={{ textAlign: 'center', fontSize: 11 }}>
                 {AB_LABELS[skill.ability]}
               </div>
               <div className="text-center">

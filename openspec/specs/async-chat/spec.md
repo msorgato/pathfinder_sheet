@@ -1,3 +1,11 @@
+# async-chat Specification
+
+## Purpose
+
+Chat asincrona delle lobby: invio e lettura paginata dei messaggi, conteggio dei non letti e notifiche in-app.
+
+## Requirements
+
 ### Requirement: Invio messaggio in lobby
 Un membro di una lobby attiva SHALL poter inviare un messaggio alla chat della lobby. Il messaggio SHALL essere di tipo `text` o `roll`. I messaggi di tipo `text` contengono contenuto testuale non vuoto; i messaggi di tipo `roll` contengono i dati strutturati del tiro (`rollData`) e una stringa human-readable nel campo `content`. Ogni messaggio SHALL essere associato al mittente e registrato con il timestamp server-side.
 

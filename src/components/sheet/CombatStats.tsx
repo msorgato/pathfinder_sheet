@@ -76,7 +76,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           <div key={label} className="stat-tile py-3">
             <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
             <div className="numeral" style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
-            <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>{detail}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>{detail}</div>
           </div>
         ))}
       </div>
@@ -88,7 +88,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           value={modStr(bab)}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab }) : undefined}
           extra={bab >= 6 ? (
-            <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
               {modStr(bab)}/{modStr(bab - 5)}
               {bab >= 11 ? `/${modStr(bab - 10)}` : ''}
               {bab >= 16 ? `/${modStr(bab - 15)}` : ''}
@@ -156,13 +156,13 @@ function RollableStat({
       <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
       <div className="numeral" style={{ fontSize: 24, color: valueColor ?? 'var(--gold)', lineHeight: 1 }}>{value}</div>
       {detail && (
-        <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>
           {detail}
         </div>
       )}
       {extra}
       {onRoll && (
-        <div style={{ fontSize: 10, marginTop: 3, opacity: 0.5, color: 'var(--gold)' }}>🎲</div>
+        <div style={{ fontSize: 12, marginTop: 3, opacity: 0.5, color: 'var(--gold)' }}>🎲</div>
       )}
     </div>
   );
@@ -181,7 +181,7 @@ function HpButton({ label, color, onSubmit }: { label: string; color: string; on
     return (
       <button
         className="pf-btn flex-1"
-        style={{ background: color + '22', border: `1px solid ${color}55`, color, fontSize: 10, padding: '6px 8px' }}
+        style={{ background: color + '22', border: `1px solid ${color}55`, color, fontSize: 12, padding: '6px 8px' }}
         onClick={() => setOpen(true)}
       >
         {label}
@@ -200,8 +200,8 @@ function HpButton({ label, color, onSubmit }: { label: string; color: string; on
         autoFocus
         style={{ maxWidth: '60px', fontSize: 13 }}
       />
-      <button className="pf-btn" style={{ background: color + '33', color, fontSize: 11, padding: '4px 8px' }} onClick={submit}>✓</button>
-      <button className="pf-btn pf-btn-ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setOpen(false)}>✕</button>
+      <button className="pf-btn" style={{ background: color + '33', color, fontSize: 13, padding: '4px 8px' }} onClick={submit}>✓</button>
+      <button className="pf-btn pf-btn-ghost" style={{ fontSize: 13, padding: '4px 8px' }} onClick={() => setOpen(false)}>✕</button>
     </div>
   );
 }

@@ -1,3 +1,11 @@
+# lobby-dice-to-chat Specification
+
+## Purpose
+
+Pubblicazione dei tiri di dadi nella chat della lobby, con un tipo di messaggio dedicato.
+
+## Requirements
+
 ### Requirement: Pubblicazione tiro in chat
 Quando un tiro viene effettuato all'interno di una lobby attiva, il risultato SHALL essere pubblicato come messaggio di tipo `roll` nella chat della lobby. Se il tiro è nascosto (`hidden: true`), il messaggio SHALL essere salvato su Firestore ma visibile solo al GM nella propria ChatPanel; i non-GM non vedranno il messaggio. Il messaggio roll SHALL contenere nome personaggio, label del tiro, formula, valori singoli dei dadi, modificatore, totale e flag critici/fumble.
 
