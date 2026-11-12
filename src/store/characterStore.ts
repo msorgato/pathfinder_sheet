@@ -4,7 +4,10 @@ import { getRace } from '../data/races';
 import { auth } from '../lib/firebase';
 import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firestoreSync';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
+import * as status from '../utils/characterStatus';
+import { deriveStats } from '../utils/derivedStats';
 import type {
+  NegativeLevels,
   Character, CharacterClassEntry, SkillRank,
   KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment, WeaponAttack, ClassFeatureChoice,
 } from '../types';
@@ -114,6 +117,16 @@ interface CharacterState {
   setTempHp: (id: string, amount: number) => void;
   fullRest: (id: string) => void;
 
+  addCondition: (id: string, conditionId: string, note?: string) => void;
+  removeCondition: (id: string, activeId: string) => void;
+  addEffect: (id: string, effect: status.EffectInput) => void;
+  updateEffect: (id: string, effectId: string, effect: status.EffectInput) => void;
+  toggleEffect: (id: string, effectId: string) => void;
+  removeEffect: (id: string, effectId: string) => void;
+  setAbilityDamage: (id: string, ability: AbilityKey, value: number) => void;
+  setAbilityDrain: (id: string, ability: AbilityKey, value: number) => void;
+  setNegativeLevels: (id: string, value: NegativeLevels) => void;
+
   addWeaponAttack: (charId: string, weapon: WeaponAttack) => void;
   removeWeaponAttack: (charId: string, weaponId: string) => void;
 
@@ -129,7 +142,15 @@ interface CharacterState {
   commitWizardDraft: () => string | null;
 }
 
-export const useCharacterStore = create<CharacterState>()((set, get) => ({
+export const useCharacterStore = create<CharacterState>()((set, get) => {
+  /** Applies a computed patch to one character and syncs it. */
+  const patchChar = (id: string, fn: (c: Character) => Partial<Character>) => {
+    set(s => ({ characters: s.characters.map(c => (c.id === id ? { ...c, ...fn(c) } : c)) }));
+    const updated = get().characters.find(c => c.id === id);
+    if (updated) syncChar(updated);
+  };
+
+  return {
   characters: [],
   activeId: null,
   wizardDraft: null,
@@ -450,9 +471,10 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     set(s => ({
       characters: s.characters.map(c => {
         if (c.id !== id) return c;
+        const rested = { ...c, ...status.restAbilityDamage(c) };
         return {
-          ...c,
-          currentHp: calcMaxHp(c),
+          ...rested,
+          currentHp: deriveStats(rested).maxHp.total,
           tempHp: 0,
           nonLethalDamage: 0,
           preparedSpells: c.preparedSpells.map(sp => ({ ...sp, used: false })),
@@ -461,6 +483,34 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     }));
     const updated = get().characters.find(c => c.id === id);
     if (updated) syncChar(updated);
+  },
+
+  addCondition: (id, conditionId, note) => {
+    patchChar(id, c => status.applyCondition(c, conditionId, note));
+  },
+  removeCondition: (id, activeId) => {
+    patchChar(id, c => status.removeCondition(c, activeId));
+  },
+  addEffect: (id, effect) => {
+    patchChar(id, c => status.addEffect(c, effect));
+  },
+  updateEffect: (id, effectId, effect) => {
+    patchChar(id, c => status.updateEffect(c, effectId, effect));
+  },
+  toggleEffect: (id, effectId) => {
+    patchChar(id, c => status.toggleEffect(c, effectId));
+  },
+  removeEffect: (id, effectId) => {
+    patchChar(id, c => status.removeEffect(c, effectId));
+  },
+  setAbilityDamage: (id, ability, value) => {
+    patchChar(id, c => status.setAbilityDamage(c, ability, value));
+  },
+  setAbilityDrain: (id, ability, value) => {
+    patchChar(id, c => status.setAbilityDrain(c, ability, value));
+  },
+  setNegativeLevels: (id, value) => {
+    patchChar(id, () => status.setNegativeLevels(value));
   },
 
   addWeaponAttack: (charId, weapon) => {
@@ -556,4 +606,5 @@ export const useCharacterStore = create<CharacterState>()((set, get) => ({
     syncChar(full);
     return id;
   },
-}));
+};
+});

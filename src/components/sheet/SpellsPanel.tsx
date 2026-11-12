@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { getClass, isBuiltinClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
-import { computeSpellSlots, effectiveAbilityScores, spellDC } from '../../utils/calculations';
+import { computeSpellSlots } from '../../utils/calculations';
+import { useDerivedStats } from './statHelpers';
 import type { Character, PreparedSpell } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -33,7 +34,8 @@ export function SpellsPanel({ char }: Props) {
   const getSpell = (id: string) => mergedSpells.find(s => s.id === id);
   const getSpellsForClass = (classId: string) => mergedSpells.filter(s => classId in s.levels);
 
-  const scores = effectiveAbilityScores(char);
+  const derived = useDerivedStats(char);
+  const scores = derived.scores;
 
   const casterClasses = char.classes.filter(e => {
     const cls = getClass(e.classId);
@@ -54,6 +56,9 @@ export function SpellsPanel({ char }: Props) {
   if (!isBuiltinClass(currentCls)) return null; // casterClasses already filtered to builtins
   const spellcasting = currentCls.spellcasting!;
   const abilityScore = scores[spellcasting.ability];
+  /** Effective casting modifier (ability damage included). */
+  const castingMod = derived.mods[spellcasting.ability];
+  const spellDC = (level: number) => 10 + level + castingMod;
   const slots = computeSpellSlots(currentClassId, currentClassEntry.level, abilityScore);
   const isSpontaneous = spellcasting.type === 'spontaneous';
   const isSpellbook = !!spellcasting.usesSpellbook;
@@ -93,6 +98,11 @@ export function SpellsPanel({ char }: Props) {
         <span>✨ {currentCls.name} LV {currentClassEntry.level}</span>
         <span>{isSpontaneous ? 'Spontaneo' : 'Preparato'}</span>
         <span>Car: <strong style={{ color: 'var(--theme-accent)' }}>{ABIL_LABEL[spellcasting.ability]}</strong> {abilityScore}</span>
+        {derived.negativeLevels > 0 && (
+          <span className="is-debuffed" title="Livelli negativi: le capacità che dipendono dal livello contano livelli in meno">
+            Liv. incantatore effettivo −{derived.negativeLevels}
+          </span>
+        )}
         <span>Max: {spellcasting.maxSpellLevel}° livello</span>
         <div className="flex gap-2 ml-auto">
           <button
@@ -152,9 +162,9 @@ export function SpellsPanel({ char }: Props) {
                       <span
                         className="text-xs font-semibold px-1.5 py-0.5 rounded"
                         style={{ background: 'rgba(200,164,67,0.1)', color: 'var(--theme-text-neutral)', border: '1px solid var(--theme-border)' }}
-                        title={`CD = 10 + ${s.level} (livello) + ${spellDC(s.level, abilityScore) - 10 - s.level} (mod ${ABIL_LABEL[spellcasting.ability] ?? spellcasting.ability})`}
+                        title={`CD = 10 + ${s.level} (livello) + ${castingMod} (mod ${ABIL_LABEL[spellcasting.ability] ?? spellcasting.ability})`}
                       >
-                        CD {spellDC(s.level, abilityScore)}
+                        CD {spellDC(s.level)}
                       </span>
                     )}
                   </div>

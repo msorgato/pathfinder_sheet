@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { Character, WeaponAttack } from '../../types';
-import { effectiveAbilityScores, totalBAB, abilityMod, modStr, attackChain } from '../../utils/calculations';
+import { abilityMod, modStr, attackChain } from '../../utils/calculations';
+import { StatBreakdown } from './StatBreakdown';
+import { statTone, useDerivedStats } from './statHelpers';
 import { useCharacterStore } from '../../store/characterStore';
 import type { RollRequest } from './DiceRoller';
 
@@ -24,11 +26,11 @@ function newId(): string {
 
 export function AttacksPanel({ char, onQuickRoll }: Props) {
   const { addWeaponAttack, removeWeaponAttack } = useCharacterStore();
-  const scores = effectiveAbilityScores(char);
-  const bab = totalBAB(char.classes);
+  const d = useDerivedStats(char);
+  const bab = d.bab;
   const chain = attackChain(bab);
-  const strMod = abilityMod(scores.str);
-  const dexMod = abilityMod(scores.dex);
+  /** Appended to quick-roll labels so non-numeric condition effects are not forgotten. */
+  const noteSuffix = d.attackNotes.length ? ` · ${d.attackNotes.join(' · ')}` : '';
   const weapons = char.weaponAttacks ?? [];
 
   const [showForm, setShowForm] = useState(false);
@@ -65,22 +67,30 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
     <div className="pf-panel p-4 space-y-4">
       <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--theme-accent)' }}>Attacchi</h3>
 
+      {d.attackNotes.length > 0 && (
+        <div className="attack-notes" role="note">
+          {d.attackNotes.map(n => <div key={n}>⚠ {n}</div>)}
+        </div>
+      )}
+
       {/* Global attack chain */}
       <div className="grid grid-cols-2 gap-3">
         {([
-          { label: 'Mischia', abMod: strMod, abLabel: 'FOR', icon: '⚔' },
-          { label: 'Distanza', abMod: dexMod, abLabel: 'DES', icon: '🏹' },
-        ] as const).map(({ label, abMod, abLabel, icon }) => (
-          <div key={label} className="stat-box py-3">
+          { label: 'Mischia', stat: d.attack.melee, abMod: d.mods.str, abLabel: 'FOR', icon: '⚔' },
+          { label: 'Distanza', stat: d.attack.ranged, abMod: d.mods.dex, abLabel: 'DES', icon: '🏹' },
+        ] as const).map(({ label, stat, abMod, abLabel, icon }) => {
+          const extra = stat.total - bab;
+          return (
+          <div key={label} className="stat-box py-3" style={{ position: 'relative' }}>
             <div className="text-xs uppercase tracking-wider mb-1.5" style={{ color: 'var(--theme-border-strong)' }}>{label}</div>
             <div className="flex flex-wrap gap-1.5">
               {chain.map((b, i) => {
-                const bonus = b + abMod;
+                const bonus = b + extra;
                 return (
                   <button
                     key={i}
                     type="button"
-                    className="attack-roll-button rounded px-2 py-1 text-sm font-bold transition-all hover:brightness-125 active:scale-95"
+                    className={`attack-roll-button rounded px-2 py-1 text-sm font-bold transition-all hover:brightness-125 active:scale-95 ${statTone(stat)}`}
                     style={{
                       background: 'rgba(200,164,67,0.12)',
                       color: 'var(--theme-accent)',
@@ -89,16 +99,20 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
                       margin: 'auto',
                     }}
                     title={onQuickRoll ? `Tira d20 ${modStr(bonus)} — ${label} att. ${i + 1}` : undefined}
-                    onClick={() => onQuickRoll?.({ label: `${label} att. ${i + 1}`, numDice: 1, dieType: 20, modifier: bonus })}
+                    onClick={() => onQuickRoll?.({ label: `${label} att. ${i + 1}${noteSuffix}`, numDice: 1, dieType: 20, modifier: bonus })}
                   >
-                    {icon} {modStr(bonus)}
+                    {icon} {modStr(bonus)}{noteSuffix ? ' ⚠' : ''}
                   </button>
                 );
               })}
             </div>
-            <div className="text-xs mt-1.5" style={{ color: 'var(--theme-text-faint)' }}>BAB {modStr(bab)} + {abLabel} {modStr(abMod)}</div>
+            <div className="text-xs mt-1.5" style={{ color: 'var(--theme-text-faint)' }}>
+              BAB {modStr(bab)} + {abLabel} {modStr(abMod)}{stat.total !== bab + abMod ? ` ${modStr(stat.total - bab - abMod)}` : ''}
+            </div>
+            <StatBreakdown label={`Attacco in ${label.toLowerCase()}`} stat={stat} />
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Weapon list */}
@@ -116,12 +130,16 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
               key={weapon.id}
               weapon={weapon}
               chain={chain}
-              abMod={abilityMod(scores[weapon.abilityKey])}
+              abMod={d.mods[weapon.abilityKey]}
+              attackMod={d.attackMods[weapon.attackType].total}
+              damageMod={d.damageMods[weapon.attackType].total}
+              abilityDelta={d.mods[weapon.abilityKey] - abilityMod(d.rawScores[weapon.abilityKey])}
               confirmRemove={confirmRemoveId === weapon.id}
               onConfirmRemove={() => setConfirmRemoveId(weapon.id)}
               onCancelRemove={() => setConfirmRemoveId(null)}
               onRemove={() => { removeWeaponAttack(char.id, weapon.id); setConfirmRemoveId(null); }}
               onQuickRoll={onQuickRoll}
+              noteSuffix={noteSuffix}
             />
           ))}
         </div>
@@ -228,12 +246,20 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
 }
 
 function WeaponRow({
-  weapon, chain, abMod, confirmRemove,
-  onConfirmRemove, onCancelRemove, onRemove, onQuickRoll,
+  weapon, chain, abMod, attackMod, damageMod, abilityDelta, confirmRemove,
+  onConfirmRemove, onCancelRemove, onRemove, onQuickRoll, noteSuffix,
 }: {
+  /** Non-numeric condition effects on attacks, appended to roll labels. */
+  noteSuffix: string;
   weapon: WeaponAttack;
   chain: number[];
   abMod: number;
+  /** Attack modifiers from conditions/effects for this weapon's attack type. */
+  attackMod: number;
+  /** Damage modifiers from conditions/effects for this weapon's attack type. */
+  damageMod: number;
+  /** Change of the ability modifier caused by effects, drain or damage. */
+  abilityDelta: number;
   confirmRemove: boolean;
   onConfirmRemove: () => void;
   onCancelRemove: () => void;
@@ -260,7 +286,9 @@ function WeaponRow({
     );
   }
 
-  const damageLabel = `${weapon.damageDiceCount}d${weapon.damageDieType}${abMod !== 0 ? (abMod > 0 ? `+${abMod}` : abMod) : ''}`;
+  const dmgBonus = abMod + damageMod;
+  const damageLabel = `${weapon.damageDiceCount}d${weapon.damageDieType}${dmgBonus !== 0 ? (dmgBonus > 0 ? `+${dmgBonus}` : dmgBonus) : ''}`;
+  const tone = (v: number) => (v > 0 ? 'is-buffed' : v < 0 ? 'is-debuffed' : '');
 
   return (
     <div className="rounded p-3" style={{ background: 'rgba(200,164,67,0.06)', border: '1px solid var(--theme-ghost-border)' }}>
@@ -290,13 +318,13 @@ function WeaponRow({
 
       <div className="flex flex-wrap gap-2 items-center">
         {chain.map((b, i) => {
-          const toHit = b + abMod;
+          const toHit = b + abMod + attackMod;
           const icon = weapon.attackType === 'melee' ? '⚔' : '🏹';
           return (
             <button
               key={i}
               type="button"
-              className="rounded px-2 py-1 text-xs font-bold transition-all hover:brightness-125 active:scale-95"
+              className={`rounded px-2 py-1 text-xs font-bold transition-all hover:brightness-125 active:scale-95 ${tone(attackMod + abilityDelta)}`}
               style={{
                 background: 'rgba(200,164,67,0.12)',
                 color: 'var(--theme-accent)',
@@ -304,15 +332,15 @@ function WeaponRow({
                 cursor: onQuickRoll ? 'pointer' : 'default',
               }}
               title={onQuickRoll ? `Tira d20 ${modStr(toHit)} — ${weapon.name} attacco ${i + 1}` : undefined}
-              onClick={() => onQuickRoll?.({ label: `${weapon.name} att. ${i + 1}`, numDice: 1, dieType: 20, modifier: toHit })}
+              onClick={() => onQuickRoll?.({ label: `${weapon.name} att. ${i + 1}${noteSuffix}`, numDice: 1, dieType: 20, modifier: toHit })}
             >
-              {icon} {modStr(toHit)}
+              {icon} {modStr(toHit)}{noteSuffix ? ' ⚠' : ''}
             </button>
           );
         })}
         <button
           type="button"
-          className="rounded px-2 py-1 text-xs font-bold transition-colors ml-auto"
+          className={`rounded px-2 py-1 text-xs font-bold transition-colors ml-auto ${tone(damageMod + abilityDelta)}`}
           style={{
             background: 'rgba(99,102,241,0.15)',
             color: '#a5b4fc',
@@ -320,7 +348,7 @@ function WeaponRow({
             cursor: onQuickRoll ? 'pointer' : 'default',
           }}
           title={onQuickRoll ? `Tira ${damageLabel} danni` : undefined}
-          onClick={() => onQuickRoll?.({ label: `${weapon.name} danni`, numDice: weapon.damageDiceCount, dieType: weapon.damageDieType, modifier: abMod })}
+          onClick={() => onQuickRoll?.({ label: `${weapon.name} danni`, numDice: weapon.damageDiceCount, dieType: weapon.damageDieType, modifier: dmgBonus })}
         >
           {damageLabel}
         </button>

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { SKILLS } from '../../data/skills';
 import { getClass } from '../../data/classes';
 import type { Character, AbilityKey } from '../../types';
-import { effectiveAbilityScores, abilityMod, skillTotal } from '../../utils/calculations';
+import { abilityMod } from '../../utils/calculations';
+import { StatBreakdown } from './StatBreakdown';
+import { statTone, useDerivedStats } from './statHelpers';
 import { useCharacterStore } from '../../store/characterStore';
 import type { RollRequest } from './DiceRoller';
 
@@ -20,7 +22,8 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
   const [search, setSearch] = useState('');
   const [onlyTrained, setOnlyTrained] = useState(false);
 
-  const scores = effectiveAbilityScores(char);
+  const d = useDerivedStats(char);
+  const scores = d.rawScores;
 
   const classSkillSet = new Set(
     char.classes.flatMap(e => getClass(e.classId)?.classSkills ?? []),
@@ -79,7 +82,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
         <div
           className="grid px-2 mb-2"
           style={{
-            gridTemplateColumns: '1fr 20px 40px 40px 40px 50px',
+            gridTemplateColumns: '1fr 20px 40px 40px 40px 64px',
             color: 'var(--ink-faint)',
             fontFamily: 'var(--font-rune)',
             fontSize: 11,
@@ -100,14 +103,15 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
           const ranks = skillData?.ranks ?? 0;
           const misc = skillData?.misc ?? 0;
           const isClass = classSkillSet.has(skill.id);
-          const total = skillTotal(skill.id, skill.ability, scores[skill.ability], ranks, isClass, misc);
+          const stat = d.skills[skill.id];
+          const total = stat.total;
 
           return (
             <div
               key={skill.id}
               className="grid items-center px-2 py-1.5"
               style={{
-                gridTemplateColumns: '1fr 20px 40px 40px 40px 50px',
+                gridTemplateColumns: '1fr 20px 40px 40px 40px 64px',
                 borderBottom: '1px solid var(--line-soft)',
                 background: ranks > 0 ? 'rgba(212,165,116,0.04)' : 'transparent',
               }}
@@ -166,7 +170,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
               </div>
               <div className="text-center">
                 <button
-                  className="numeral"
+                  className={`numeral ${statTone(stat)}`}
                   style={{
                     fontSize: 14,
                     padding: '1px 4px',
@@ -180,6 +184,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                 >
                   {total >= 0 ? '+' : ''}{total}
                 </button>
+                <StatBreakdown label={skill.name} stat={stat} inline />
               </div>
             </div>
           );

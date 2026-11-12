@@ -147,7 +147,7 @@ export function UserPreferencesPanel() {
           <img
             src={user.photoURL}
             alt={user.displayName ?? ''}
-            className="w-6 h-6 rounded-full"
+            className="user-avatar rounded-full"
             referrerPolicy="no-referrer"
           />
         ) : (

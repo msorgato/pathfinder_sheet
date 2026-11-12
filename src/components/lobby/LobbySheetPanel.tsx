@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Character, RollResultData } from '../../types';
 import { AbilityPanel } from '../sheet/AbilityPanel';
-import { CombatStats } from '../sheet/CombatStats';
+import { CombatStats, HitPointsPanel } from '../sheet/CombatStats';
 import { SkillsPanel } from '../sheet/SkillsPanel';
 import { AttacksPanel } from '../sheet/AttacksPanel';
 import { DiceRoller } from '../sheet/DiceRoller';
@@ -90,7 +90,12 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
       {/* Scrollable tab content */}
       <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-3">
         {activeTab === 'abilities' && <AbilityPanel  char={character} onQuickRoll={handleQuickRoll} />}
-        {activeTab === 'combat'    && <CombatStats   char={character} onQuickRoll={handleQuickRoll} />}
+        {activeTab === 'combat'    && (
+          <div className="space-y-4">
+            <HitPointsPanel char={character} />
+            <CombatStats char={character} onQuickRoll={handleQuickRoll} />
+          </div>
+        )}
         {activeTab === 'skills'    && <SkillsPanel   char={character} onQuickRoll={handleQuickRoll} />}
         {activeTab === 'attacks'   && <AttacksPanel  char={character} onQuickRoll={handleQuickRoll} />}
       </div>

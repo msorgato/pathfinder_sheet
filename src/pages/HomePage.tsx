@@ -6,7 +6,8 @@ import { useAuthStore } from '../store/authStore';
 import { useLobbyStore } from '../store/lobbyStore';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
-import { effectiveAbilityScores, maxHP, abilityMod, totalBAB, modStr } from '../utils/calculations';
+import { modStr } from '../utils/calculations';
+import { deriveStats } from '../utils/derivedStats';
 import { UserPreferencesPanel } from '../components/ui/UserPreferencesPanel';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { FrameCorners } from '../components/ui/FrameCorners';
@@ -253,12 +254,12 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
   delay: number;
 }) {
   const race = getRace(char.race);
-  const scores = effectiveAbilityScores(char);
-  const hp = maxHP(char, scores.con);
+  const derived = deriveStats(char);
+  const hp = derived.maxHp.total;
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / hp) * 100));
-  const bab = totalBAB(char.classes);
-  const ac = 10 + abilityMod(scores.dex);
-  const init = abilityMod(scores.dex);
+  const bab = derived.bab;
+  const ac = derived.ac.total;
+  const init = derived.initiative.total;
   const delayClass = `d${Math.min(delay + 1, 8)}`;
 
   const classLabel = char.classes.map(e => {
