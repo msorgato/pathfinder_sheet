@@ -9,13 +9,15 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
-import { effectiveAbilityScores, abilityMod, maxHP } from '../utils/calculations';
+import { deriveStats } from '../utils/derivedStats';
 import { AbilityPanel } from '../components/sheet/AbilityPanel';
-import { CombatStats } from '../components/sheet/CombatStats';
+import { CombatStats, HitPointsPanel } from '../components/sheet/CombatStats';
 import { SkillsPanel } from '../components/sheet/SkillsPanel';
 import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
 import { AttacksPanel } from '../components/sheet/AttacksPanel';
+import { StatusChips } from '../components/sheet/StatusChips';
+import { StatusPanel } from '../components/sheet/StatusPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import type { RollRequest } from '../components/sheet/DiceRoller';
@@ -51,10 +53,10 @@ export function CharacterSheet() {
     );
   }
 
-  const scores = effectiveAbilityScores(char);
+  const derived = deriveStats(char);
   const race = getRace(char.race);
   const classes = char.classes.map(e => ({ entry: e, cls: getClass(e.classId) }));
-  const maxHp = maxHP(char, scores.con);
+  const maxHp = derived.maxHp.total;
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
 
   const TABS: { id: Tab; label: string }[] = [
@@ -83,9 +85,13 @@ export function CharacterSheet() {
           <button
             className="btn btn-ghost char-back-btn"
             aria-label="Torna alla compagnia"
+            title="Torna alla compagnia"
             onClick={() => navigate('/')}
           >
-            ←<span className="label"> Compagnia</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+            <span className="label">Compagnia</span>
           </button>
           <div className="char-header-actions-group">
             {char.totalLevel < 20 && (
@@ -239,6 +245,8 @@ export function CharacterSheet() {
               </div>
             </div>
 
+            <StatusChips char={char} />
+
           </div>
 
         </div>
@@ -280,6 +288,8 @@ export function CharacterSheet() {
         {tab === 'overview' && (
           <div className="space-y-4">
             <AbilityPanel char={char} onQuickRoll={handleQuickRoll} />
+            <HitPointsPanel char={char} />
+            <StatusPanel char={char} />
             <CombatStats char={char} onQuickRoll={handleQuickRoll} />
             <AttacksPanel char={char} onQuickRoll={handleQuickRoll} />
           </div>

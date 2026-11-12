@@ -224,6 +224,64 @@ export interface Character {
   /** Id of the chosen portrait icon (file name in public/icons/classi without extension). */
   portraitIcon?: string;
   classFeatureChoices?: ClassFeatureChoice[];
+
+  /** Active conditions (e.g. Scosso), by catalogue id. */
+  conditions?: ActiveCondition[];
+  /** Active effects from spells or other sources (preset copies or custom). */
+  effects?: ActiveEffect[];
+  /** Ability damage: lowers the modifier by 1 every 2 points, score unchanged. */
+  abilityDamage?: Partial<AbilityScores>;
+  /** Ability drain: lowers the score itself. */
+  abilityDrain?: Partial<AbilityScores>;
+  negativeLevels?: NegativeLevels;
+}
+
+// ── Modifiers, conditions and effects ────────────────────────────────────────
+
+export type BonusType =
+  | 'alchemical' | 'armor' | 'circumstance' | 'competence' | 'deflection' | 'dodge'
+  | 'enhancement' | 'inherent' | 'insight' | 'luck' | 'morale' | 'natural' | 'profane'
+  | 'racial' | 'resistance' | 'sacred' | 'shield' | 'size' | 'trait' | 'untyped';
+
+export type AttackScope = 'all' | 'melee' | 'ranged';
+export type SaveKey = 'fort' | 'ref' | 'will';
+
+export type ModifierTarget =
+  | { kind: 'ability'; ability: AbilityKey }
+  | { kind: 'attack'; scope: AttackScope }
+  | { kind: 'damage'; scope: AttackScope }
+  | { kind: 'save'; save: 'all' | SaveKey }
+  | { kind: 'skill'; skillId: string /* 'all' or a skill id */ }
+  | { kind: 'ac' }
+  | { kind: 'abilityCheck' }
+  | { kind: 'initiative' }
+  | { kind: 'cmb' }
+  | { kind: 'cmd' };
+
+export interface Modifier {
+  target: ModifierTarget;
+  type: BonusType;
+  value: number;
+}
+
+export interface ActiveCondition {
+  id: string;
+  conditionId: string;
+  note?: string;
+}
+
+export interface ActiveEffect {
+  id: string;
+  name: string;
+  presetId?: string;
+  modifiers: Modifier[];
+  note?: string;
+  disabled?: boolean;
+}
+
+export interface NegativeLevels {
+  temporary: number;
+  permanent: number;
 }
 
 export type WizardStep =

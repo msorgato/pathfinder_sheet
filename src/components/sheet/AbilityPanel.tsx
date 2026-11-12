@@ -1,5 +1,7 @@
 import type { Character, AbilityKey } from '../../types';
-import { effectiveAbilityScores, abilityMod, modStr } from '../../utils/calculations';
+import { modStr } from '../../utils/calculations';
+import { StatBreakdown } from './StatBreakdown';
+import { statTone, useDerivedStats } from './statHelpers';
 import { getRace } from '../../data/races';
 import type { RollRequest } from './DiceRoller';
 
@@ -18,7 +20,8 @@ interface Props {
 }
 
 export function AbilityPanel({ char, onQuickRoll }: Props) {
-  const scores = effectiveAbilityScores(char);
+  const d = useDerivedStats(char);
+  const scores = d.scores;
   const abilities: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
   const raceModifiers = getRace(char.race)?.abilityModifiers ?? {};
 
@@ -33,12 +36,16 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
           const selectableRacial = char.racialAbilityBonus?.[key] ?? 0;
           const racial = fixedRacial + selectableRacial;
           const increases = char.abilityIncreases.reduce((s, inc) => s + (inc[key] ?? 0), 0);
-          const mod = abilityMod(score);
+          const mod = d.mods[key];
+          const check = d.abilityChecks[key];
+          const damage = d.abilityDamage[key];
+          const drain = d.abilityDrain[key];
 
           return (
             <div key={key} className="stat-tile p-3">
               <div className="label-rune-soft" style={{ marginBottom: 4 }}>{ABILITY_LABELS[key]}</div>
-              <div className="numeral" style={{ fontSize: 30, color: 'var(--ink)', lineHeight: 1, marginBottom: 4 }}>{score}</div>
+              <div className={`numeral ${statTone(d.abilityStats[key])}`} style={{ fontSize: 30, color: 'var(--ink)', lineHeight: 1, marginBottom: 4 }}>{score}</div>
+              <StatBreakdown label={ABILITY_FULL[key]} stat={d.abilityStats[key]} format={String} />
 
               {/* Modifier badge — clickable for roll */}
               <button
@@ -56,11 +63,18 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                   marginBottom: 4,
                   transition: 'box-shadow 0.15s',
                 }}
-                title={onQuickRoll ? `Tira 1d20${modStr(mod)}` : undefined}
-                onClick={() => onQuickRoll?.({ label: ABILITY_LABELS[key], numDice: 1, dieType: 20, modifier: mod })}
+                title={onQuickRoll ? `Prova di caratteristica: 1d20${modStr(check.total)}` : undefined}
+                onClick={() => onQuickRoll?.({ label: ABILITY_LABELS[key], numDice: 1, dieType: 20, modifier: check.total })}
               >
                 {modStr(mod)}
               </button>
+              {(damage > 0 || drain > 0) && (
+                <div className="is-debuffed" style={{ fontSize: 12, fontFamily: 'var(--font-mono)', marginBottom: 2 }}>
+                  {damage > 0 && <span title="Danno di caratteristica: −1 al modificatore ogni 2 punti">−{damage} dan.</span>}
+                  {damage > 0 && drain > 0 && ' · '}
+                  {drain > 0 && <span title="Risucchio di caratteristica: riduce il punteggio">−{drain} ris.</span>}
+                </div>
+              )}
 
               <div style={{ fontSize: 12, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                 {base}{racial !== 0 ? ` ${racial >= 0 ? '+' : ''}${racial}R` : ''}

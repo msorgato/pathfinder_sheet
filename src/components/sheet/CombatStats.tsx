@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Character } from '../../types';
-import {
-  effectiveAbilityScores, totalBAB, totalSave,
-  abilityMod, modStr, maxHP,
-} from '../../utils/calculations';
+import { modStr } from '../../utils/calculations';
+import type { Stat } from '../../utils/derivedStats';
+import { StatBreakdown } from './StatBreakdown';
+import { statTone, useDerivedStats } from './statHelpers';
 import { useCharacterStore } from '../../store/characterStore';
 import type { RollRequest } from './DiceRoller';
 
@@ -13,70 +13,71 @@ interface Props {
   onQuickRoll?: (req: RollRequest) => void;
 }
 
-export function CombatStats({ char, onQuickRoll }: Props) {
+/** Hit points: current/max, damage, healing, temporary HP and full rest. */
+export function HitPointsPanel({ char }: { char: Character }) {
   const { takeDamage, heal, setTempHp, fullRest } = useCharacterStore();
-  const scores = effectiveAbilityScores(char);
-  const bab = totalBAB(char.classes);
-  const fort = totalSave('fort', char.classes) + abilityMod(scores.con);
-  const ref  = totalSave('ref',  char.classes) + abilityMod(scores.dex);
-  const will = totalSave('will', char.classes) + abilityMod(scores.wis);
-  const maxHp = maxHP(char, scores.con);
-  const ac = 10 + abilityMod(scores.dex);
-  const cmb = bab + abilityMod(scores.str);
-  const cmd = 10 + bab + abilityMod(scores.str) + abilityMod(scores.dex);
-  const init = abilityMod(scores.dex);
+  const d = useDerivedStats(char);
+  const maxHp = d.maxHp.total;
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
 
   return (
-    <div className="space-y-4">
-      {/* HP */}
-      <div className="pf-panel p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="label-rune">Punti Ferita</div>
-          <button
-            className="pf-btn pf-btn-outline text-xs px-3 py-1"
-            onClick={() => fullRest(char.id)}
-          >
-            Riposo Completo
-          </button>
-        </div>
-
-        <div className="vital-row" style={{ marginBottom: 12 }}>
-          <div className="vital-label" style={{ marginBottom: 4 }}>
-            <span className="val" style={{ fontSize: 28 }}>{char.currentHp}</span>
-            <span style={{ fontFamily: 'var(--font-display)', color: 'var(--ink-mute)', fontSize: 14 }}>
-              / {maxHp}
-              {char.tempHp > 0 && <span style={{ color: 'var(--amethyst-bright)', marginLeft: 8 }}>+{char.tempHp} temp</span>}
-            </span>
-          </div>
-          <div className="vital-bar" style={{ height: 8 }}>
-            <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <HpButton label="Danno" color="var(--blood)" onSubmit={v => takeDamage(char.id, v)} />
-          <HpButton label="Cura" color="var(--vital)" onSubmit={v => heal(char.id, v)} />
-          <HpButton label="Temp HP" color="var(--amethyst-bright)" onSubmit={v => setTempHp(char.id, v)} />
-        </div>
-        {char.nonLethalDamage > 0 && (
-          <div className="mt-2 text-xs" style={{ color: 'var(--ember)' }}>
-            Danno non letale: {char.nonLethalDamage}
-          </div>
-        )}
+    <div className="pf-panel p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="label-rune">Punti Ferita</div>
+        <button
+          className="pf-btn pf-btn-outline text-xs px-3 py-1"
+          onClick={() => fullRest(char.id)}
+        >
+          Riposo Completo
+        </button>
       </div>
 
-      {/* Core combat grid */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'CA',             value: modStr(ac - 10 + 10), detail: `DES ${modStr(abilityMod(scores.dex))}` },
-          { label: 'Contatto',       value: String(10 + abilityMod(scores.dex)), detail: 'Senza armatura' },
-          { label: 'Preso Sorpresa', value: String(10), detail: 'Senza DES' },
-        ].map(({ label, value, detail }) => (
-          <div key={label} className="stat-tile py-3">
-            <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
-            <div className="numeral" style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
-            <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>{detail}</div>
+      <div className="vital-row" style={{ marginBottom: 12 }}>
+        <div className="vital-label" style={{ marginBottom: 4 }}>
+          <span className="val" style={{ fontSize: 28 }}>{char.currentHp}</span>
+          <span style={{ fontFamily: 'var(--font-display)', color: 'var(--ink-mute)', fontSize: 14 }}>
+            / <span className={statTone(d.maxHp)}>{maxHp}</span>
+            {char.tempHp > 0 && <span style={{ color: 'var(--amethyst-bright)', marginLeft: 8 }}>+{char.tempHp} temp</span>}
+          </span>
+        </div>
+        <div className="vital-bar" style={{ height: 8 }}>
+          <div className="vital-bar-fill" style={{ width: `${hpPct}%` }} />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <HpButton label="Danno" color="var(--blood)" onSubmit={v => takeDamage(char.id, v)} />
+        <HpButton label="Cura" color="var(--vital)" onSubmit={v => heal(char.id, v)} />
+        <HpButton label="Temp HP" color="var(--amethyst-bright)" onSubmit={v => setTempHp(char.id, v)} />
+      </div>
+      {char.nonLethalDamage > 0 && (
+        <div className="mt-2 text-xs" style={{ color: 'var(--ember)' }}>
+          Danno non letale: {char.nonLethalDamage}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Armor Class, BAB, initiative, saving throws and combat maneuvers. */
+export function CombatStats({ char, onQuickRoll }: Props) {
+  const d = useDerivedStats(char);
+  const { bab } = d;
+
+  return (
+    <div className="space-y-4 combat-stats">
+      {/* Armor Class: three tiles on desktop, one box with three rows on mobile */}
+      <div className="ac-group">
+        {([
+          { label: 'CA',             stat: d.ac,         detail: `DES ${modStr(d.mods.dex)}` },
+          { label: 'Contatto',       stat: d.touch,      detail: 'Senza armatura' },
+          { label: 'Colto di sorpresa', stat: d.flatFooted, detail: 'Senza DES' },
+        ] as { label: string; stat: Stat; detail: string }[]).map(({ label, stat, detail }) => (
+          <div key={label} className="stat-tile ac-item">
+            <div className="label-rune-soft ac-label">{label}</div>
+            <div className={`numeral ac-value ${statTone(stat)}`}>{stat.total}</div>
+            <div className="ac-detail">{detail}</div>
+            <StatBreakdown label={label} stat={stat} format={String} />
           </div>
         ))}
       </div>
@@ -97,25 +98,25 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         />
         <RollableStat
           label="Iniziativa"
-          value={modStr(init)}
-          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'Iniziativa', numDice: 1, dieType: 20, modifier: init }) : undefined}
+          stat={d.initiative}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'Iniziativa', numDice: 1, dieType: 20, modifier: d.initiative.total }) : undefined}
         />
       </div>
 
       {/* Saves */}
       <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Tempra',   value: fort, detail: `base + COS ${modStr(abilityMod(scores.con))}` },
-          { label: 'Riflessi', value: ref,  detail: `base + DES ${modStr(abilityMod(scores.dex))}` },
-          { label: 'Volontà',  value: will, detail: `base + SAG ${modStr(abilityMod(scores.wis))}` },
-        ].map(({ label, value, detail }) => (
+        {([
+          { label: 'Tempra',   stat: d.saves.fort, detail: `base + COS ${modStr(d.mods.con)}` },
+          { label: 'Riflessi', stat: d.saves.ref,  detail: `base + DES ${modStr(d.mods.dex)}` },
+          { label: 'Volontà',  stat: d.saves.will, detail: `base + SAG ${modStr(d.mods.wis)}` },
+        ] as { label: string; stat: Stat; detail: string }[]).map(({ label, stat, detail }) => (
           <RollableStat
             key={label}
             label={label}
-            value={modStr(value)}
+            stat={stat}
             detail={detail}
-            valueColor={value >= 0 ? 'var(--vital)' : 'var(--blood)'}
-            onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: value }) : undefined}
+            valueColor={stat.total >= 0 ? 'var(--vital)' : 'var(--blood)'}
+            onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: stat.total }) : undefined}
           />
         ))}
       </div>
@@ -124,12 +125,13 @@ export function CombatStats({ char, onQuickRoll }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <RollableStat
           label="CMB"
-          value={modStr(cmb)}
-          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: cmb }) : undefined}
+          stat={d.cmb}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: d.cmb.total }) : undefined}
         />
         <div className="stat-tile py-3">
           <div className="label-rune-soft" style={{ marginBottom: 4 }}>CMD</div>
-          <div className="numeral" style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{cmd}</div>
+          <div className={`numeral ${statTone(d.cmd)}`} style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>{d.cmd.total}</div>
+          <StatBreakdown label="CMD" stat={d.cmd} format={String} />
         </div>
       </div>
     </div>
@@ -137,24 +139,28 @@ export function CombatStats({ char, onQuickRoll }: Props) {
 }
 
 function RollableStat({
-  label, value, detail, valueColor, onRoll, extra,
+  label, value, stat, detail, valueColor, onRoll, extra,
 }: {
   label: string;
-  value: string;
+  /** Explicit display value; when `stat` is given, its total is shown with modifier highlighting. */
+  value?: string;
+  stat?: Stat;
   detail?: string;
   valueColor?: string;
   onRoll?: () => void;
   extra?: ReactNode;
 }) {
+  const shown = value ?? (stat ? modStr(stat.total) : '');
   return (
     <div
       className="stat-tile py-3"
       style={{ cursor: onRoll ? 'pointer' : 'default' }}
       onClick={onRoll}
-      title={onRoll ? `Tira 1d20 ${value} (${label})` : undefined}
+      title={onRoll ? `Tira 1d20 ${shown} (${label})` : undefined}
     >
       <div className="label-rune-soft" style={{ marginBottom: 4 }}>{label}</div>
-      <div className="numeral" style={{ fontSize: 24, color: valueColor ?? 'var(--gold)', lineHeight: 1 }}>{value}</div>
+      <div className={`numeral ${stat ? statTone(stat) : ''}`} style={{ fontSize: 24, color: valueColor ?? 'var(--gold)', lineHeight: 1 }}>{shown}</div>
+      {stat && <StatBreakdown label={label} stat={stat} />}
       {detail && (
         <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>
           {detail}
