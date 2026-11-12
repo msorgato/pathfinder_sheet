@@ -21,8 +21,8 @@ export const WIZARD: ClassDefinition = {
   saves: { fort: 'poor', ref: 'poor', will: 'good' },
   skillsPerLevel: 2,
   classSkills: ['appraise','craft_alchemy','fly','knowledge_arcana','knowledge_dungeoneering','knowledge_engineering','knowledge_geography','knowledge_history','knowledge_local','knowledge_nature','knowledge_nobility','knowledge_planes','knowledge_religion','linguistics','perception','profession','spellcraft'],
-  armorProficiencies: ['Nessuna'],
-  weaponProficiencies: 'Bastone ferrato, balestra leggera, balestra pesante, coltello, dardo, fionda',
+  armorProficiencies: [],
+  weaponProficiencies: { groups: [], weapons: ['randello', 'pugnale', 'balestra-pesante', 'balestra-leggera', 'bastone-ferrato'] },
   spellcasting: {
     type: 'prepared',
     ability: 'int',

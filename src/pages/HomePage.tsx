@@ -269,7 +269,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
 
   return (
     <div
-      className={`frame-corners-4 anim-enter ${delayClass}`}
+      className={`frame-corners-4 char-card anim-enter ${delayClass}`}
       onClick={onOpen}
       style={{
         background: 'linear-gradient(160deg, var(--surface-1), var(--bg-elev))',
@@ -392,6 +392,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
               textAlign: 'center',
               background: 'var(--bg-base)',
               border: '1px solid var(--line-soft)',
+              borderRadius: 10,
               padding: '5px 4px',
             }}>
               <div className="numeral" style={{ fontSize: 16, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>

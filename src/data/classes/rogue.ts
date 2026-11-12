@@ -21,8 +21,8 @@ export const ROGUE: ClassDefinition = {
   saves: { fort: 'poor', ref: 'good', will: 'poor' },
   skillsPerLevel: 8,
   classSkills: ['acrobatics','appraise','bluff','climb','craft_alchemy','diplomacy','disable_device','disguise','escape_artist','intimidate','knowledge_dungeoneering','knowledge_local','linguistics','perception','perform_act','perform_dance','perform_oratory','perform_sing','perform_string','profession','sense_motive','sleight_of_hand','stealth','swim','use_magic_device'],
-  armorProficiencies: ['Leggera'],
-  weaponProficiencies: 'Semplici + balestra a mano, balestra leggera, spada corta',
+  armorProficiencies: ['light'],
+  weaponProficiencies: { groups: ['simple'], weapons: ['balestra-a-mano', 'stocco', 'manganello', 'arco-corto', 'arco-corto-composito', 'spada-corta'] },
   features: [
     { level: 1, name: 'Attacco Furtivo +1d6', description: '+1d6 danno quando l\'avversario è privo di DES alla CA o è fiancheggiato. Aumenta di 1d6 ogni 2 livelli.', type: 'Ex' },
     { level: 1, name: 'Trovare le Trappole', description: 'Può usare Percezione e Disattivare Congegni per trovare e disattivare trappole magiche.', type: 'Ex' },

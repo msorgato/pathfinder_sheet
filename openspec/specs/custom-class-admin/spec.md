@@ -18,7 +18,7 @@ L'admin SHALL poter creare una nuova classe custom vuota dal tab "Classi" dell'A
 - **THEN** la bozza viene persistita su Firestore e la classe appare nell'elenco con badge "Bozza"
 
 ### Requirement: Admin definisce i metadati della classe
-L'admin SHALL poter definire: nome (stringa, obbligatorio), descrizione (testo libero), dado vita (numero intero 4/6/8/10/12), competenze armatura (testo libero), competenze armi (testo libero), abilità di classe (lista selezionabile), abilità per livello (numero intero).
+L'admin SHALL poter definire: nome (stringa, obbligatorio), descrizione (testo libero), dado vita (numero intero 4/6/8/10/12), competenze armatura (categorie selezionabili: leggere, medie, pesanti, scudi, scudo torre), competenze armi (gruppi selezionabili: semplici, da guerra, più un elenco di armi scelte dal catalogo e una nota libera), abilità di classe (lista selezionabile), abilità per livello (numero intero).
 
 #### Scenario: Validazione nome obbligatorio
 - **WHEN** l'admin tenta di salvare senza aver inserito il nome
@@ -27,6 +27,14 @@ L'admin SHALL poter definire: nome (stringa, obbligatorio), descrizione (testo l
 #### Scenario: Selezione dado vita
 - **WHEN** l'admin seleziona il dado vita tra i valori disponibili (4, 6, 8, 10, 12)
 - **THEN** il valore viene aggiornato nella bozza
+
+#### Scenario: Competenze strutturate
+- **WHEN** l'admin seleziona "Leggere", "Scudi", "Semplici" e aggiunge "Stocco" dal catalogo
+- **THEN** i personaggi di quella classe sono competenti in armature leggere, scudi (non torre), armi semplici e stocco
+
+#### Scenario: Migrazione del testo libero
+- **WHEN** una classe custom salvata in precedenza ha competenze in testo libero
+- **THEN** il testo viene mostrato nella nota delle competenze e nessun dato va perso
 
 ### Requirement: Admin definisce il BAB manualmente per ogni livello
 L'admin SHALL poter inserire il valore di BAB per ciascuno dei 20 livelli. I valori devono essere numeri interi non negativi.

@@ -58,8 +58,36 @@ export interface ClassDefinition {
     bonusSpellsFromAbility: boolean;
     usesSpellbook?: boolean;
   };
-  armorProficiencies: string[];
-  weaponProficiencies: string;
+  armorProficiencies: ArmorProficiency[];
+  weaponProficiencies: WeaponProficiencies;
+}
+
+// ── Proficiencies ────────────────────────────────────────────────────────────
+
+export type ArmorProficiency = 'light' | 'medium' | 'heavy' | 'shield' | 'tower';
+export type WeaponGroup = 'simple' | 'martial' | 'exotic';
+
+export interface WeaponProficiencies {
+  /** Whole groups (exotic is only granted per weapon). */
+  groups: ('simple' | 'martial')[];
+  /** Specific catalogue weapon ids. */
+  weapons: string[];
+  /** Free text for what is not structured (e.g. migrated custom class text). */
+  note?: string;
+  /** The class grants the deity's favored weapon (e.g. Chierico). */
+  deityWeapon?: boolean;
+}
+
+export interface FeatChoice {
+  featId: string;
+  /** Distinguishes repeated instances of the same feat (0-based). */
+  index: number;
+  choice: string;
+}
+
+export interface ExtraProficiencies {
+  armor?: ArmorProficiency[];
+  weapons?: string[];
 }
 
 export interface RacialTrait {
@@ -80,6 +108,10 @@ export interface RaceDefinition {
   bonusSkillRanks?: number;
   languages: string[];
   bonusLanguages: string[];
+  /** Catalogue weapon ids the race is proficient with (weapon familiarity). */
+  weaponFamiliarity?: string[];
+  /** Speed is never reduced by armor (Nano). */
+  armorSpeedUnaffected?: boolean;
 }
 
 export interface FeatDefinition {
@@ -163,17 +195,130 @@ export interface WeaponAttack {
   abilityKey: 'str' | 'dex';
   attackType: AttackType;
   notes?: string;
+  /** Linked inventory weapon: name, dice, critical, type and handedness come from it. */
+  itemId?: string;
+  /** Lowest natural roll that threatens a critical (default 20). */
+  critRange?: number;
+  /** Critical multiplier (default 2). */
+  critMult?: number;
+  twoHanded?: boolean;
 }
 
+// ── Items ────────────────────────────────────────────────────────────────────
+
+export type ItemKind = 'weapon' | 'armor' | 'shield' | 'ammo' | 'gear' | 'magic' | 'consumable';
+
+export type ConsumableForm = 'potion' | 'scroll' | 'wand';
+
+/** A potion, scroll or wand made from a spell. */
+export interface SpellItem {
+  form: ConsumableForm;
+  spellId: string;
+  /** Snapshot of the spell name, kept if the spell is later renamed or removed. */
+  spellName: string;
+  /** Class list chosen for the spell (sets the spell level). */
+  classId: string;
+  spellLevel: number;
+  casterLevel: number;
+  /** Wands only. */
+  charges?: number;
+  maxCharges?: number;
+}
+
+export type MaterialId = 'mithral' | 'adamantine' | 'cold-iron' | 'alchemical-silver' | 'darkwood';
+
+export type BodySlot =
+  | 'armor' | 'shield' | 'head' | 'headband' | 'eyes' | 'neck' | 'shoulders' | 'chest'
+  | 'body' | 'belt' | 'wrists' | 'hands' | 'ring' | 'feet' | 'none';
+
+export interface Dice {
+  count: number;
+  die: number;
+}
+
+export type DamageType = 'C' | 'P' | 'T';
+export type WeaponHandedness = 'light' | 'one-handed' | 'two-handed' | 'ranged';
+
+export interface WeaponStats {
+  group: WeaponGroup;
+  handedness: WeaponHandedness;
+  damage: { small: Dice | null; medium: Dice | null };
+  /** Lowest natural roll that threatens (19 = 19–20). */
+  critRange: number;
+  critMult: number;
+  /** Range increment in meters. */
+  rangeM?: number;
+  damageTypes: DamageType[];
+  special: string[];
+}
+
+export type ArmorCategory = 'light' | 'medium' | 'heavy' | 'shield' | 'tower';
+
+export interface ArmorStats {
+  category: ArmorCategory;
+  bonus: number;
+  /** Maximum Dexterity bonus; null = no limit. */
+  maxDex: number | null;
+  /** Armor check penalty (0 or negative). */
+  checkPenalty: number;
+  /** Arcane spell failure chance in percent. */
+  arcaneFailure: number;
+  metal: boolean;
+}
+
+/** Built-in catalogue entry (public/data/items.json). */
+export interface ItemDefinition {
+  id: string;
+  name: string;
+  kind: ItemKind;
+  /** Catalogue category label (e.g. "Armi da guerra a una mano"). */
+  category: string;
+  priceGp: number;
+  weightKg: number;
+  url: string;
+  weapon?: WeaponStats;
+  armor?: ArmorStats;
+  /** Magic items: body slot, tier (e.g. "Anello minore inferiore") and source book. */
+  slot?: BodySlot;
+  tier?: string;
+  source?: string;
+}
+
+/** An item owned by a character (a copy of the catalogue data, freely editable). */
 export interface EquipmentItem {
   id: string;
   name: string;
-  type: 'weapon' | 'armor' | 'gear' | 'magic' | 'wondrous';
-  weight: number;
-  value: number;
   quantity: number;
   notes: string;
   equipped: boolean;
+  catalogId?: string;
+  kind?: ItemKind;
+  slot?: BodySlot;
+  priceGp?: number;
+  weightKg?: number;
+  weapon?: WeaponStats;
+  armor?: ArmorStats;
+  /** Owner-set: treat as non-proficient regardless of computed proficiencies. */
+  nonProficient?: boolean;
+  /** Masterwork quality (implied by enhancement and by special materials). */
+  masterwork?: boolean;
+  /** Enhancement bonus, 0 to 5. */
+  enhancement?: number;
+  material?: MaterialId;
+  /** Special ability ids (see data/itemAbilities). */
+  abilities?: string[];
+  /** Modifiers applied while the item is equipped and active. */
+  modifiers?: Modifier[];
+  /** Price before masterwork/material/enhancement, used to recompute the list price. */
+  basePriceGp?: number;
+  /** Potion, scroll or wand: the spell and its parameters. */
+  spellItem?: SpellItem;
+  /** @deprecated legacy format */
+  type?: 'weapon' | 'armor' | 'gear' | 'magic' | 'wondrous';
+  /** @deprecated legacy format (weight) */
+  weight?: number;
+  /** @deprecated legacy format (value in gp) */
+  value?: number;
 }
 
 export interface Character {
@@ -224,6 +369,12 @@ export interface Character {
   /** Id of the chosen portrait icon (file name in public/icons/classi without extension). */
   portraitIcon?: string;
   classFeatureChoices?: ClassFeatureChoice[];
+  /** Choices for feats that need one (e.g. Competenza nelle Armi Esotiche → weapon id). */
+  featChoices?: FeatChoice[];
+  /** Proficiencies added by the owner (traits, archetypes, house rules). */
+  extraProficiencies?: ExtraProficiencies;
+  /** Deity's favored weapon (catalogue id), for classes that grant it. */
+  deityWeaponId?: string;
 
   /** Active conditions (e.g. Scosso), by catalogue id. */
   conditions?: ActiveCondition[];
@@ -320,8 +471,10 @@ export interface CustomClassDefinition {
   description: string;
   hitDie: number;
   status: CustomClassStatus;
+  /** Structured categories, or legacy free text entries (normalized on read). */
   armorProficiencies: string[];
-  weaponProficiencies: string;
+  /** Structured, or legacy free text (normalized on read). */
+  weaponProficiencies: string | WeaponProficiencies;
   skillsPerLevel: number;
   classSkills: string[];
   /** Index 0 = level 1, length 20 */

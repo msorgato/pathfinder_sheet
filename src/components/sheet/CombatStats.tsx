@@ -82,8 +82,8 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         ))}
       </div>
 
-      {/* BAB + Init */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* BAB + Init + Speed */}
+      <div className="grid grid-cols-3 gap-3">
         <RollableStat
           label="BAB"
           value={modStr(bab)}
@@ -101,6 +101,13 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           stat={d.initiative}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'Iniziativa', numDice: 1, dieType: 20, modifier: d.initiative.total }) : undefined}
         />
+        <div className="stat-tile py-3">
+          <div className="label-rune-soft" style={{ marginBottom: 4 }}>Velocità</div>
+          <div className={`numeral ${statTone(d.speed)}`} style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1 }}>
+            {d.speed.total.toLocaleString('it-IT')}<span style={{ fontSize: 14 }}> m</span>
+          </div>
+          <StatBreakdown label="Velocità" stat={d.speed} format={v => `${v.toLocaleString('it-IT')} m`} />
+        </div>
       </div>
 
       {/* Saves */}

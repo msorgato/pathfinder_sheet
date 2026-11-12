@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { CustomClassDefinition, CustomClassFeature, CustomClassFeatureType } from '../../types';
+import type { ArmorProficiency, CustomClassDefinition, CustomClassFeature, CustomClassFeatureType, WeaponProficiencies } from '../../types';
 import { BAB_PRESETS, SAVES_PRESETS, EMPTY_20 } from '../../data/classPresets';
 import { SKILLS } from '../../data/skills';
-import { useMergedSpells } from '../../store/dataStore';
+import { useDataStore, useMergedSpells } from '../../store/dataStore';
+import { ARMOR_PROFICIENCIES, ARMOR_PROFICIENCY_LABELS, classProficiencies } from '../../utils/proficiencies';
 
 interface Props {
   cls: CustomClassDefinition;
@@ -176,12 +177,25 @@ function FeatureRow({ feature, onChange, onDelete }: FeatureRowProps) {
 // ── Main editor ───────────────────────────────────────────────────────────────
 
 export function CustomClassEditor({ cls, onSave, onDelete, onPublish, onWithdraw }: Props) {
-  const [draft, setDraft] = useState<CustomClassDefinition>(() =>
-    JSON.parse(JSON.stringify(cls)),
-  );
+  const catalogue = useDataStore(s => s.builtinItems);
+  const catalogueWeapons = catalogue.filter(i => i.kind === 'weapon');
+  // Legacy free-text proficiencies are converted on open; the original text is kept in the note.
+  const [initial] = useState<CustomClassDefinition>(() => {
+    const copy: CustomClassDefinition = JSON.parse(JSON.stringify(cls));
+    const { armor, weapons } = classProficiencies(copy, new Set(catalogueWeapons.map(w => w.id)));
+    return { ...copy, armorProficiencies: armor, weaponProficiencies: weapons };
+  });
+  const [draft, setDraft] = useState<CustomClassDefinition>(initial);
+  const [weaponToAdd, setWeaponToAdd] = useState('');
   const mergedSpells = useMergedSpells();
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(cls);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
+  const wp: WeaponProficiencies = typeof draft.weaponProficiencies === 'string'
+    ? { groups: [], weapons: [], note: draft.weaponProficiencies }
+    : draft.weaponProficiencies;
+  const setWp = (patch: Partial<WeaponProficiencies>) => update('weaponProficiencies', { ...wp, ...patch });
+  const toggleArmor = (a: ArmorProficiency, on: boolean) => update('armorProficiencies',
+    ARMOR_PROFICIENCIES.filter(x => (x === a ? on : draft.armorProficiencies.includes(x))));
 
   function update<K extends keyof CustomClassDefinition>(key: K, value: CustomClassDefinition[K]) {
     setDraft(d => ({ ...d, [key]: value }));
@@ -306,21 +320,50 @@ export function CustomClassEditor({ cls, onSave, onDelete, onPublish, onWithdraw
 
           <div>
             <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Competenze Armature</div>
-            <input
-              className="pf-input"
-              value={draft.armorProficiencies.join(', ')}
-              onChange={e => update('armorProficiencies', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-              placeholder="Leggera, Media, ..."
-            />
+            <div className="flex flex-wrap gap-3" role="group" aria-label="Competenze armature">
+              {ARMOR_PROFICIENCIES.map(a => (
+                <label key={a} className="checkbox-inline">
+                  <input type="checkbox" checked={draft.armorProficiencies.includes(a)} onChange={e => toggleArmor(a, e.target.checked)} />
+                  {ARMOR_PROFICIENCY_LABELS[a]}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>
             <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Competenze Armi</div>
+            <div className="flex flex-wrap gap-3" role="group" aria-label="Gruppi di armi">
+              {(['simple', 'martial'] as const).map(g => (
+                <label key={g} className="checkbox-inline">
+                  <input type="checkbox" checked={wp.groups.includes(g)}
+                    onChange={e => setWp({ groups: (['simple', 'martial'] as const).filter(x => (x === g ? e.target.checked : wp.groups.includes(x))) })} />
+                  {g === 'simple' ? 'Semplici' : 'Da guerra'}
+                </label>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {wp.weapons.map(id => (
+                <span key={id} className="status-chip is-effect">
+                  {catalogue.find(i => i.id === id)?.name ?? id}
+                  <button type="button" aria-label="Rimuovi" style={{ marginLeft: 6, background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                    onClick={() => setWp({ weapons: wp.weapons.filter(w => w !== id) })}>✕</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <select className="pf-input" style={{ flex: 1, minWidth: 0 }} value={weaponToAdd} onChange={e => setWeaponToAdd(e.target.value)}
+                aria-label="Arma specifica">
+                <option value="">Aggiungi un'arma specifica…</option>
+                {catalogueWeapons.filter(w => !wp.weapons.includes(w.id)).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+              </select>
+              <button type="button" className="pf-btn pf-btn-outline" disabled={!weaponToAdd}
+                onClick={() => { setWp({ weapons: [...wp.weapons, weaponToAdd] }); setWeaponToAdd(''); }}>+</button>
+            </div>
             <input
-              className="pf-input"
-              value={draft.weaponProficiencies}
-              onChange={e => update('weaponProficiencies', e.target.value)}
-              placeholder="Semplici e Marziali"
+              className="pf-input mt-2"
+              value={wp.note ?? ''}
+              onChange={e => setWp({ note: e.target.value || undefined })}
+              placeholder="Nota (es. testo originale, eccezioni)"
             />
           </div>
         </div>

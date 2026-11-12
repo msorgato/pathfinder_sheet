@@ -9,8 +9,8 @@ export const FIGHTER: ClassDefinition = {
   saves: { fort: 'good', ref: 'poor', will: 'poor' },
   skillsPerLevel: 2,
   classSkills: ['climb','craft_armor','craft_weapons','handle_animal','intimidate','knowledge_dungeoneering','knowledge_engineering','profession','ride','survival','swim'],
-  armorProficiencies: ['Leggera', 'Media', 'Pesante', 'Scudi', 'Scudo a torre'],
-  weaponProficiencies: 'Semplici e Marziali',
+  armorProficiencies: ['light', 'medium', 'heavy', 'shield', 'tower'],
+  weaponProficiencies: { groups: ['simple', 'martial'], weapons: [] },
   features: [
     { level: 1, name: 'Talento Bonus', description: 'Ottiene un talento bonus dalla lista dei talenti da combattimento del guerriero.', choiceType: 'combat_feat' },
     { level: 2, name: 'Talento Bonus', description: 'Ottiene un ulteriore talento bonus da combattimento.', choiceType: 'combat_feat' },

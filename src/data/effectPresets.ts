@@ -6,6 +6,8 @@ export interface EffectPreset {
   /** Short description, including situational parts that are not automated. */
   summary: string;
   modifiers: Modifier[];
+  /** Modifiers when the effect is applied at a given caster level (presets that scale). */
+  modifiersAt?: (casterLevel: number) => Modifier[];
 }
 
 const m = (target: ModifierTarget, type: BonusType, value: number): Modifier => ({ target, type, value });
@@ -49,9 +51,11 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   { id: 'scudo', name: 'Scudo', summary: '+4 di scudo alla CA; immunità a dardo incantato.',
     modifiers: [m(ac, 'shield', 4)] },
   { id: 'scudo-della-fede', name: 'Scudo della fede', summary: '+2 di deviazione alla CA (+1 ogni 6 livelli dell\'incantatore, max +5).',
-    modifiers: [m(ac, 'deflection', 2)] },
+    modifiers: [m(ac, 'deflection', 2)],
+    modifiersAt: cl => [m(ac, 'deflection', Math.min(5, 2 + Math.floor(Math.max(cl, 1) / 6)))] },
   { id: 'pelle-coriacea', name: 'Pelle coriacea', summary: "+2 di armatura naturale alla CA (+1 ogni 3 livelli dell'incantatore oltre il 3°, max +5).",
-    modifiers: [m(ac, 'natural', 2)] },
+    modifiers: [m(ac, 'natural', 2)],
+    modifiersAt: cl => [m(ac, 'natural', Math.min(5, 2 + Math.floor(Math.max(cl - 3, 0) / 3)))] },
   { id: 'resistenza', name: 'Resistenza', summary: '+1 di resistenza ai tiri salvezza.',
     modifiers: [m(saves, 'resistance', 1)] },
   { id: 'eroismo', name: 'Eroismo', summary: '+2 morale ai tiri per colpire, ai TS e alle prove di abilità.',
@@ -67,3 +71,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
 ];
 
 export const getEffectPreset = (id: string) => EFFECT_PRESETS.find(p => p.id === id);
+
+/** Modifiers of a preset at a caster level (falls back to the fixed modifiers). */
+export const presetModifiersAt = (preset: EffectPreset, casterLevel: number): Modifier[] =>
+  preset.modifiersAt ? preset.modifiersAt(casterLevel) : preset.modifiers;

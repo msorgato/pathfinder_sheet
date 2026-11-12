@@ -18,8 +18,8 @@ export const PALADIN: ClassDefinition = {
   saves: { fort: 'good', ref: 'poor', will: 'good' },
   skillsPerLevel: 2,
   classSkills: ['craft_alchemy','diplomacy','handle_animal','heal','knowledge_nobility','knowledge_religion','profession','ride','sense_motive','spellcraft'],
-  armorProficiencies: ['Leggera', 'Media', 'Pesante', 'Scudi'],
-  weaponProficiencies: 'Semplici e Marziali',
+  armorProficiencies: ['light', 'medium', 'heavy', 'shield'],
+  weaponProficiencies: { groups: ['simple', 'martial'], weapons: [] },
   spellcasting: {
     type: 'prepared',
     ability: 'cha',

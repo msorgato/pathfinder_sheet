@@ -12,8 +12,8 @@ export const BARD: ClassDefinition = {
   saves: { fort: 'poor', ref: 'good', will: 'good' },
   skillsPerLevel: 6,
   classSkills: ['acrobatics','appraise','bluff','climb','craft_alchemy','diplomacy','disguise','escape_artist','intimidate','knowledge_arcana','knowledge_dungeoneering','knowledge_engineering','knowledge_geography','knowledge_history','knowledge_local','knowledge_nature','knowledge_nobility','knowledge_planes','knowledge_religion','linguistics','perception','perform_act','perform_dance','perform_oratory','perform_sing','perform_string','profession','sense_motive','sleight_of_hand','spellcraft','stealth','use_magic_device'],
-  armorProficiencies: ['Leggera', 'Scudi (non a torre)'],
-  weaponProficiencies: 'Semplici + spada corta, spada a striscia, mano, frombola, arco corto',
+  armorProficiencies: ['light', 'shield'],
+  weaponProficiencies: { groups: ['simple'], weapons: ['spada-lunga', 'stocco', 'manganello', 'spada-corta', 'arco-corto', 'arco-corto-composito', 'frusta'] },
   spellcasting: {
     type: 'spontaneous',
     ability: 'cha',

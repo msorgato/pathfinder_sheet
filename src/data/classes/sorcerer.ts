@@ -12,8 +12,8 @@ export const SORCERER: ClassDefinition = {
   saves: { fort: 'poor', ref: 'poor', will: 'good' },
   skillsPerLevel: 2,
   classSkills: ['appraise','bluff','craft_alchemy','fly','intimidate','knowledge_arcana','perception','profession','spellcraft','use_magic_device'],
-  armorProficiencies: ['Nessuna'],
-  weaponProficiencies: 'Semplici',
+  armorProficiencies: [],
+  weaponProficiencies: { groups: ['simple'], weapons: [] },
   spellcasting: {
     type: 'spontaneous',
     ability: 'cha',

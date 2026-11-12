@@ -12,8 +12,8 @@ export const CLERIC: ClassDefinition = {
   saves: { fort: 'good', ref: 'poor', will: 'good' },
   skillsPerLevel: 2,
   classSkills: ['appraise','craft_alchemy','diplomacy','heal','knowledge_arcana','knowledge_history','knowledge_nobility','knowledge_planes','knowledge_religion','linguistics','perception','profession','sense_motive','spellcraft'],
-  armorProficiencies: ['Leggera', 'Media', 'Pesante', 'Scudi'],
-  weaponProficiencies: 'Semplici + arma preferita della divinità',
+  armorProficiencies: ['light', 'medium', 'shield'],
+  weaponProficiencies: { groups: ['simple'], weapons: [], deityWeapon: true },
   spellcasting: {
     type: 'prepared',
     ability: 'wis',
