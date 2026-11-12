@@ -19,7 +19,7 @@ export const SLOT_ORDER: BodySlot[] = [
 export const SLOT_CAPACITY: Partial<Record<BodySlot, number>> = { ring: 2 };
 
 export const KIND_LABELS: Record<ItemKind, string> = {
-  weapon: 'Arma', armor: 'Armatura', shield: 'Scudo', ammo: 'Munizioni', gear: 'Equipaggiamento', magic: 'Oggetto magico',
+  weapon: 'Arma', armor: 'Armatura', shield: 'Scudo', ammo: 'Munizioni', gear: 'Equipaggiamento', magic: 'Oggetto magico', consumable: 'Consumabile',
 };
 
 export const WEAPON_GROUP_LABELS: Record<WeaponGroup, string> = { simple: 'Semplice', martial: 'Da guerra', exotic: 'Esotica' };

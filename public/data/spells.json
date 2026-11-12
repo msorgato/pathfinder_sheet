@@ -1390,6 +1390,29 @@
       "description": "Rivela gli aspetti magici di un soggetto"
     },
     {
+      "id": "anatema",
+      "name": "Anatema",
+      "school": "Enchantment",
+      "subSchool": "compulsione",
+      "descriptor": "emozione, influenza mentale, paura",
+      "levels": {
+        "antipaladin": 1,
+        "cleric": 1,
+        "inquisitor": 1,
+        "mesmerist": 1,
+        "oracle": 1,
+        "warpriest": 1,
+        "shaman": 1
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, FD",
+      "range": "15 m",
+      "duration": "1 minuto/livello",
+      "savingThrow": "Volontà nega",
+      "spellResistance": "sì",
+      "description": "Area: emanazione del raggio di 15 m, centrata su se stessi. Anatema colma i nemici di dubbi e paure. Ciascuna creatura interessata subisce penalità -1 ai tiri per colpire e ai tiri salvezza contro gli effetti di paura. Anatema contrasta e dissolve Benedizione."
+    },
+    {
       "id": "anatema_mitico",
       "name": "Anatema (Mitico)",
       "school": "Universal",
@@ -4469,6 +4492,29 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "L’arma ottiene un Colpo Accurato contro i nemici malvagi"
+    },
+    {
+      "id": "benedizione",
+      "name": "Benedizione",
+      "school": "Enchantment",
+      "subSchool": "compulsione",
+      "descriptor": "influenza mentale",
+      "levels": {
+        "adept": 1,
+        "cleric": 1,
+        "oracle": 1,
+        "warpriest": 1,
+        "inquisitor": 1,
+        "paladin": 1,
+        "shaman": 1
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, FD",
+      "range": "15 m",
+      "duration": "1 minuto/livello",
+      "savingThrow": "nessuno",
+      "spellResistance": "sì (innocuo)",
+      "description": "Area: se stessi e tutti gli alleati entro un'esplosione di 15 m centrata su di sé. Benedizione infonde coraggio nei propri alleati, che ottengono bonus morale +1 ai tiri per colpire e ai tiri salvezza contro effetti di paura. Benedizione contrasta e dissolve Anatema."
     },
     {
       "id": "benedizione_mitico",
@@ -8580,6 +8626,28 @@
       "description": "Comunica una gran quantità di informazioni in un istante"
     },
     {
+      "id": "cono_di_freddo",
+      "name": "Cono di Freddo",
+      "school": "Evocation",
+      "descriptor": "freddo",
+      "levels": {
+        "arcanist": 5,
+        "witch": 6,
+        "wizard": 5,
+        "magus": 5,
+        "occultist": 5,
+        "shaman": 6,
+        "sorcerer": 5
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M (un piccolo cono di cristallo o di vetro)",
+      "range": "18 m",
+      "duration": "istantaneo",
+      "savingThrow": "Riflessi dimezza",
+      "spellResistance": "sì",
+      "description": "Area: esplosione a forma di cono. Cono di Freddo crea un’area di freddo estremo, che si origina dalla propria mano e si estende progressivamente a formare un cono. Il cono assorbe il calore, provocando 1d6 danni da freddo per livello dell’incantatore (massimo 15d6)."
+    },
+    {
       "id": "cono_di_freddo_mitico_p",
       "name": "Cono di Freddo (Mitico) P",
       "school": "Universal",
@@ -10778,6 +10846,27 @@
       "description": "1d8 danni/livello (max 20d8) ai bersagli"
     },
     {
+      "id": "dardo_incantato",
+      "name": "Dardo Incantato",
+      "school": "Evocation",
+      "descriptor": "forza",
+      "levels": {
+        "arcanist": 1,
+        "bloodrager": 1,
+        "wizard": 1,
+        "magus": 1,
+        "psychic": 1,
+        "sorcerer": 1
+      },
+      "castingTime": "1 azione standard",
+      "components": "V,S",
+      "range": "medio (30 m + 3 m/livello)",
+      "duration": "istantaneo",
+      "savingThrow": "nessuno",
+      "spellResistance": "sì",
+      "description": "Bersagli: fino a 5 creature, due delle quali non possono trovarsi a più di 4,5 metri l'una dall'altra. Un dardo di energia magica scaturisce dalle proprie dita e colpisce il bersaglio, infliggendo 1d4+1 danni da forza. Il dardo non manca mai il bersaglio anche se quest'ultimo è in mischia oppure beneficia di una Copertura o di un Occultamento inferiore a Totale. Non possono essere colpite parti specifiche di una creature. Questo incantesimo non è in grado di danneggiare oggetti inanimati. Ogni 2 livelli dell'incantatore oltre il 1°,si ottiene un ulteriore dardo: 2 al 3° livello, 3 al 5°, 4 al 7° fino a un massimo di 5 al 9° livello e oltre. Se si è in grado di lanciare più dardi, si può decidere che colpiscano una o più creature. Un dardo singolo può colpire una sola creatura. Bisogna designare i bersagli prima di tirare per la Resistenza agli Incantesimi o per i danni."
+    },
+    {
       "id": "dardo_incantato_mitico_p",
       "name": "Dardo Incantato (Mitico) P",
       "school": "Universal",
@@ -11523,6 +11612,27 @@
       "description": "Disincanta magie e oggetti magici"
     },
     {
+      "id": "disintegrazione",
+      "name": "Disintegrazione",
+      "school": "Transmutation",
+      "levels": {
+        "arcanist": 6,
+        "wizard": 6,
+        "magus": 6,
+        "occultist": 6,
+        "psychic": 6,
+        "spiritualist": 6,
+        "sorcerer": 6
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M/FD (una pietra di magnetite e un pizzico di polvere)",
+      "range": "medio (30 m + 3 m/livello)",
+      "duration": "istantaneo",
+      "savingThrow": "Tempra parziale (oggetto)",
+      "spellResistance": "sì",
+      "description": "Effetto: raggio. Un sottile raggio verde scaturisce dal proprio dito indice. Per colpire il bersaglio, occorre compiere con successo un attacco di contatto a distanza. Ogni creatura colpita dal raggio subisce 2d6 danni per livello dell’incantatore (fino a un massimo di 40d6). Una creatura ridotta a 0 o meno punti ferita da questo incantesimo viene completamente disintegrata, lasciandosi dietro solo una scia di polvere. L’Equipaggiamento della creatura non viene disintegrato. Quando usato contro un oggetto, il raggio semplicemente disintegra fino a un cubo con spigolo di 3 metri di materia non vivente, quindi nel caso di oggetti o strutture molto grandi, solo una parte viene disintegrata, il raggio ha effetto anche su oggetti costruiti interamente di Forza, come Mano Possente o Muro di Forza, ma non su effetti magici come Globo di Invulnerabilità o Campo Antimagia. Se la creatura o l’oggetto supera il Tiro Salvezza su Tempra, subisce solo 5d6 danni. Se i danni subiti riducono la creatura o l’oggetto a 0 o meno Punti Ferita, vengono completamente disintegrati. Solo la prima creatura o il primo oggetto colpiti ne subiscono gli effetti; cioè, il raggio funziona solo su un singolo bersaglio ad ogni lancio dell’incantesimo."
+    },
+    {
       "id": "disintegrazione_mitico_p",
       "name": "Disintegrazione (Mitico) P",
       "school": "Universal",
@@ -11883,6 +11993,43 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Bonus +4 contro gli attacchi"
+    },
+    {
+      "id": "dissolvi_magie",
+      "name": "Dissolvi Magie",
+      "school": "Abjuration",
+      "levels": {
+        "antipaladin": 3,
+        "arcanist": 3,
+        "bard": 3,
+        "hunter": 4,
+        "cleric": 3,
+        "summoner": 3,
+        "summoner_revised": 3,
+        "druid": 4,
+        "witch": 3,
+        "inquisitor": 3,
+        "wizard": 3,
+        "magus": 3,
+        "medium": 3,
+        "mesmerist": 3,
+        "occultist": 3,
+        "oracle": 3,
+        "paladin": 3,
+        "psychic": 3,
+        "warpriest": 3,
+        "skald": 3,
+        "shaman": 3,
+        "spiritualist": 3,
+        "sorcerer": 3
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S",
+      "range": "medio (30 m + 3 m/livello)",
+      "duration": "istantanea",
+      "savingThrow": "nessuno",
+      "spellResistance": "no",
+      "description": "Bersaglio o area: 1 incantatore, 1 creatura o 1 oggetto. È possibile utilizzare Dissolvi Magie per porre fine a incantesimi in atto su una creatura o un oggetto, per sopprimere temporaneamente le capacità di un oggetto magico, oppure per contrastare gli incantesimi di un altro incantatore. Un incantesimo dissolto termina come se il suo tempo di durata si fosse esaurito. Alcuni incantesimi, come riportato nelle loro descrizioni, non possono essere annullati da Dissolvi Magie. Questo incantesimo può dissolvere (ma non contrastare) gli effetti magici così come gli incantesimi. L'effetto di un incantesimo che ha durata istantanea non può essere dissolto, in quanto la magia ha già avuto effetto prima che Dissolvi Magie sia potuto entrare in azione. Si può scegliere di usare Dissolvi Magie in due modi: come controincantesimo o dissolvere mirato. • Dissolvere Mirato: Il bersaglio dell'incantesimo è un oggetto, una creatura o un incantesimo. Occorre effettuare una prova di dissolvere (1d20 + il livello dell'incantatore) e paragonarlo con l'incantesimo con il più alto livello dell'incantatore (CD = 11 + livello dell'incantatore dell'incantesimo). Se si ha successo, l'incantesimo termina. Se no, occorre comparare lo stesso risultato all'incantesimo con il successivo livello dell'incantatore più alto. Si deve ripetere questo processo fino a che non sarà stato dissolto un incantesimo che ha effetto sul bersaglio, oppure non sarà stato dissolto alcun incantesimo. Per esempio, un incantatore di 7° livello lancia Dissolvi Magie, prendendo come bersaglio una creatura sotto l'effetto di Pelle di Pietra (12° livello dell'incantatore) e Volare (6° livello dell'incantatore). La prova di livello dell'incantatore dà come risultato 19. Questa prova non è abbastanza alta per porre fine a Pelle di Pietra (che avrebbe richiesto almeno 23), ma è abbastanza alto per porre fine a Volare (che richiedeva solo un 17). Se la prova avesse avuto come risultato almeno 23, Pelle di Pietra sarebbe stato dissolto, lasciando intatto Volare. Se avesse avuto come risultato 16 o meno, non sarebbe stato dissolto alcun incantesimo. Si può anche bersagliare uno specifico incantesimo che interessa il bersaglio o un'area (come Muro di Fuoco). Occorre indicare specificamente l'effetto dell'incantesimo che si bersaglia in questo modo. Se la prova di livello dell'incantatore è uguale o superiore alla CD di quell'incantesimo, esso termina. Non viene bersagliato alcun altro incantesimo od effetto sul bersaglio, nel caso la prova non sia abbastanza alta da porre fine all'effetto specificamente dichiarato. Se si prende a bersaglio un oggetto o una creatura che è effetto di un incantesimo in corso (come un mostro evocato da Evoca Mostri), si effettua una prova di dissolvere per terminare l'incantesimo che ha evocato l'oggetto o la creatura. Se l'oggetto scelto come bersaglio è un oggetto magico, occorre effettuare una prova di dissolvere contro il livello dell'incantatore dell'oggetto (CD = 11 + il livello dell'incantatore dell'oggetto). Se la si supera, tutte le proprietà magiche dell'oggetto vengono soppresse per 1d4 round. Un oggetto soppresso diventa non magico per la durata di questo effetto. Un'apertura extradimensionale (come una Borsa Conservante) viene temporaneamente chiusa. Le proprietà fisiche di un oggetto magico rimangono immutate: una spada magica soppressa rimane sempre una spada (una spada perfetta, oltretutto). Gli Artefatti e le divinità non sono influenzati dalle magie dei mortali come questa. Si ottiene un successo automatico in ogni prova di dissolvere che contrasta un incantesimo lanciato da se stessi. • Controincantesimo: Quando Dissolvi Magie viene usato in questo modo, agisce su un incantatore scelto come bersaglio e viene lanciato come un controincantesimo. A differenza di un vero controincantesimo, tuttavia, c'è il rischio che non funzioni. Occorre superare una prova di dissolvere per contrastare l'incantesimo dell'altro incantatore."
     },
     {
       "id": "dissolvi_magie_mitico",
@@ -16816,6 +16963,29 @@
       "description": "Si risponde a un attacco diventando per un breve periodo di tempo vaporosi e privi di consistenza"
     },
     {
+      "id": "fulmine",
+      "name": "Fulmine",
+      "school": "Evocation",
+      "descriptor": "elettricità",
+      "levels": {
+        "adept": 3,
+        "arcanist": 3,
+        "witch": 3,
+        "bloodrager": 3,
+        "wizard": 3,
+        "magus": 3,
+        "occultist": 3,
+        "sorcerer": 3
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M (un ciuffo di pelo e una verga di vetro)",
+      "range": "36 m",
+      "duration": "istantaneo",
+      "savingThrow": "Riflessi dimezza",
+      "spellResistance": "sì",
+      "description": "Area: linea di 36 m. Si genera una potente scarica di energia elettrica che infligge 1d6 danni da elettricità per livello dell’incantatore (massimo 10d6) ad ogni creatura presente all’interno dell’area. Il fulmine scaturisce dalla punta delle proprie dita. Il fulmine incendia qualsiasi combustibile e danneggia qualunque oggetto sulla sua strada. È in grado di sciogliere i metalli con un basso punto di fusione come il piombo, l’oro, il rame, l’argento e il bronzo. Se il danno causato ad una barriera sulla traiettoria del fulmine è sufficiente a distruggerla o a farlo passare, il fulmine proseguirà se il raggio di azione dell’incantesimo lo permette; altrimenti si fermerà come qualsiasi altro effetto magico. Nota: questo incantesimo non può innescare un incendio su una nave."
+    },
+    {
       "id": "fulmine_mitico_p",
       "name": "Fulmine (Mitico) P",
       "school": "Universal",
@@ -17985,6 +18155,33 @@
       "description": "Il bersaglio è protetto da Scudo della Fede e da un incantesimo di protezione e può trasferire gli effetti a un'altra creatura"
     },
     {
+      "id": "guarigione",
+      "name": "Guarigione",
+      "school": "Conjuration",
+      "subSchool": "guarigione",
+      "levels": {
+        "adept": 5,
+        "alchemist": 6,
+        "cleric": 6,
+        "druid": 7,
+        "witch": 7,
+        "inquisitor": 6,
+        "investigator": 6,
+        "occultist": 6,
+        "oracle": 6,
+        "warpriest": 6,
+        "shaman": 7,
+        "spiritualist": 6
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S",
+      "range": "contatto",
+      "duration": "istantaneo",
+      "savingThrow": "Volontà nega (innocuo)",
+      "spellResistance": "sì (innocuo)",
+      "description": "Bersaglio: 1 creatura toccata. Guarigione permette di Incanalare Energia positiva in una creatura per Guarire ferite e afflizioni. L’incantesimo fa immediatamente cessare tutte le seguenti condizioni avverse sul bersaglio: Abbagliato, Accecato, Affaticato, Assordato, Avvelenato, Confuso, Danni alle Caratteristiche, Demente, Esausto, Frastornato, Folle, Infermo, Malato, Nauseato e Stordito. Cura anche 10 danni per livello dell’incantatore, fino a un massimo di 150 danni al 15° livello. Guarigione non rimuove Livelli Negativi e non ripristina livelli o Punteggi di Caratteristica risucchiati permanentemente. Se utilizzato contro una creatura Non Morta, Guarigione funziona come Ferire."
+    },
+    {
       "id": "guarigione_mitico_p",
       "name": "Guarigione (Mitico) P",
       "school": "Universal",
@@ -18525,6 +18722,33 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Crea illusioni minori"
+    },
+    {
+      "id": "immagine_speculare",
+      "name": "Immagine Speculare",
+      "school": "Illusion",
+      "subSchool": "finzione",
+      "levels": {
+        "adept": 2,
+        "arcanist": 2,
+        "bard": 2,
+        "bloodrager": 2,
+        "wizard": 2,
+        "magus": 2,
+        "medium": 2,
+        "mesmerist": 2,
+        "occultist": 2,
+        "psychic": 2,
+        "skald": 2,
+        "sorcerer": 2
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S",
+      "range": "personale",
+      "duration": "1 minuto/livello",
+      "savingThrow": "-",
+      "spellResistance": "-",
+      "description": "Bersaglio: se stessi. Dal nulla scaturiscono diversi duplicati illusori di se stessi, che rimangono vicini, rendendo difficile per i nemici determinare chi attaccare, e scompaiono una volta colpiti. Immagine Speculare crea 1d4 immagini più 1 ogni 3 livelli dell'incantatore (massimo 8 immagini). Queste finzioni restano vicine e si muovono all'unisono, mimando esattamente i movimenti, i rumori e le azioni che si effettuano. Ogni volta che si viene attaccati o si subisce un incantesimo che richiede un tiro per colpire, c'è una probabilità che venga colpita invece una delle immagini. Se l'attacco va a segno, tirate a caso il dado per vedere se il bersaglio è reale o finto. Se è finto, si distrugge un'immagine. Se l'attacco manca di 5 o meno, viene distrutta un'immagine. Gli incantesimi ad area colpiscono normalmente e non distruggono nessuna immagine. Gli incantesimi e gli effetti che non richiedono Tiro per Colpire non distruggono nessuna immagine e colpiscono invece il bersaglio reale. Gli incantesimi che richiedono un attacco a contatto vengono scaricati senza alcun danno se vengono usati per distruggere un'immagine. Chi attacca deve essere in grado di vedere le immagini per essere ingannato. Se si è Invisibili o l'attaccante è Accecato, l'incantesimo non ha alcun effetto (anche se si applica la normale probabilità di mancare)."
     },
     {
       "id": "immagine_speculare_mitico",
@@ -20880,6 +21104,39 @@
       "description": "Riferisce un breve messaggio ovunque, all’istante"
     },
     {
+      "id": "invisibilita",
+      "name": "Invisibilità",
+      "school": "Illusion",
+      "subSchool": "mascheramento",
+      "levels": {
+        "adept": 2,
+        "alchemist": 2,
+        "antipaladin": 2,
+        "arcanist": 2,
+        "bard": 2,
+        "summoner": 2,
+        "summoner_revised": 2,
+        "inquisitor": 2,
+        "investigator": 2,
+        "wizard": 2,
+        "magus": 2,
+        "medium": 2,
+        "mesmerist": 2,
+        "occultist": 2,
+        "psychic": 2,
+        "skald": 2,
+        "spiritualist": 2,
+        "sorcerer": 2
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M/FD (un ciglio avvolto in una pallina di gomma arabica)",
+      "range": "personale o contatto",
+      "duration": "1 minuto/livello (I)",
+      "savingThrow": "Volontà nega (innocuo) o Volontà nega (innocuo, oggetto)",
+      "spellResistance": "sì (innocuo) o sì (innocuo, oggetto)",
+      "description": "Bersaglio: se stessi oppure 1 creatura o 1 oggetto che pesi fino a 50 kg/livello. La creatura o l'oggetto toccato diventano Invisibili, sparendo alla vista. Se la creatura bersaglio dell'incantesimo porta con sé dell'Equipaggiamento, anch'esso svanisce. Se l'incantesimo viene lanciato su qualcun altro, né l'incantatore né i suoi compagni sono più in grado di vederlo, a meno che non siano normalmente in grado di vedere cose Invisibili o possiedano mezzi magici che lo consentano. Gli oggetti che cadono o vengono lasciati a terra da una creatura Invisibile tornano immediatamente visibili; gli oggetti che invece vengono raccolti spariscono solo se vengono messi in tasca o nascosti in mezzo ai vestiti. La luce, però, non può essere in alcun modo resa invisibile, nemmeno se la sua fonte lo diventa (l'effetto che ne risulta è quello di una luce diffusa senza alcuna sorgente visibile). Se una parte degli oggetti in possesso di chi è sono l'effetto di questo incantesimo si estende oltre 3 metri dal suo corpo, questa parte torna immediatamente visibile. Naturalmente, il bersaglio dell'incantesimo non è sotto l'effetto di un incantesimo Silenzio ed esistono determinate condizioni che possono rivelare la sua presenza (come mettere il piede in una pozzanghera). Se è richiesta una prova, una creatura immobile Invisibile ha bonus +40 alle sue prove di Furtività. Il bonus si riduce a +20 se la creatura si sta muovendo. L'incantesimo ha termine immediatamente se il soggetto compie un attacco contro una qualsiasi creatura. Ai fini di questo incantesimo, la definizione di “attacco” include qualsiasi incantesimo lanciato contro un bersaglio nemico o la cui area o il cui effetto comprendano un nemico. Il concetto di “nemico” dipende dalla percezione del personaggio Invisibile. Azioni dirette verso oggetti incustoditi non pongono fine all'incantesimo. Ferire in modo indiretto non è considerato un attacco. Un personaggio Invisibile può quindi aprire porte, parlare, mangiare, salire scale, evocare mostri e mandarli all'attacco, tagliare le corde che reggono un ponte sospeso mentre i suoi nemici sono ancora su di esso, attivare trappole a distanza, aprire una saracinesca che tiene rinchiusi dei cani da combattimento e così via. Comunque, nel momento in cui il bersaglio attacca direttamente diventa visibile con tutto il suo Equipaggiamento. Incantesimi come Benedizione, che hanno effetto solo sugli alleati e non sui nemici, non sono considerati attacchi ai fini di questa magia, anche se includono i nemici presenti nell'area. Invisibilità può essere reso permanente (solo sugli oggetti) con un incantesimo Permanenza."
+    },
+    {
       "id": "invisibilita_mitico_p",
       "name": "Invisibilità (Mitico) P",
       "school": "Universal",
@@ -21924,6 +22181,33 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Il legno magico è forte come l’acciaio"
+    },
+    {
+      "id": "lentezza",
+      "name": "Lentezza",
+      "school": "Transmutation",
+      "levels": {
+        "arcanist": 3,
+        "bard": 3,
+        "summoner": 2,
+        "summoner_revised": 3,
+        "bloodrager": 3,
+        "wizard": 3,
+        "magus": 3,
+        "medium": 2,
+        "occultist": 3,
+        "psychic": 3,
+        "skald": 3,
+        "spiritualist": 3,
+        "sorcerer": 3
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M (una goccia di melassa)",
+      "range": "vicino (7,5 m + 1,5 m ogni 2 livelli)",
+      "duration": "1 round/livello",
+      "savingThrow": "Volontà nega",
+      "spellResistance": "sì",
+      "description": "Bersaglio: 1 creatura/livello, due delle quali non possono trovarsi a più di 9 m l'una dall'altra. Le creature influenzate si muovono e attaccano a un ritmo estremamente rallentato. Possono compiere solo una singola azione di movimento o un'azione standard ogni turno, ma non entrambe (né azioni di round completo). Subiscono inoltre penalità -1 ai tiri per colpire, alla CA e ai tiri salvezza su Riflessi. Si muovono a velocità dimezzata (arrotondata per difetto al successivo incremento di 1,5 metri), con le normali conseguenze per la capacità di salto. Molteplici effetti di Lentezza non si sommano. Lentezza contrasta e dissolve Velocità."
     },
     {
       "id": "lentezza_mitico",
@@ -25468,6 +25752,33 @@
       "description": "Un muro immune ai danni"
     },
     {
+      "id": "muro_di_fuoco",
+      "name": "Muro di Fuoco",
+      "school": "Evocation",
+      "descriptor": "fuoco",
+      "levels": {
+        "adept": 4,
+        "arcanist": 4,
+        "hunter": 5,
+        "summoner": 3,
+        "summoner_revised": 4,
+        "druid": 5,
+        "bloodrager": 4,
+        "wizard": 4,
+        "magus": 4,
+        "occultist": 4,
+        "shaman": 5,
+        "sorcerer": 4
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M/FD (un pezzetto di fosforo)",
+      "range": "medio (30 m + 3 m/livello)",
+      "duration": "Concentrazione + 1 round/livello",
+      "savingThrow": "nessuno",
+      "spellResistance": "sì",
+      "description": "Effetto: un velo di fiamme opache lungo fino a 6 m/livello oppure un anello di fuoco con un raggio fino a 1,5 m ogni 2 livelli; entrambe le forme dell'altezza di 6 m. Una barriera immobile di fiamme violacee crepitanti si materializza sul posto. Un lato della barriera, a propria scelta, emana ondate di calore che infliggono 2d4 danni da fuoco alle creature entro 3 metri e 1d4 danni a quelle tra i 3 metri e i 6 metri. Il muro infligge questi danni quando appare e nel proprio turno ad ogni round a tutte le creature nell'area. Inoltre, il muro infligge 2d6 danni +1 danno da fuoco per livello dell'incantatore (massimo +20) a qualsiasi creatura che lo attraversa. Alle creature non morte il muro infligge danni raddoppiati. Se si invoca il muro in modo che compaia in un punto dove sono presenti delle creature, ogni creatura subisce i danni come se stesse tentando di attraversarlo. Se un segmento di 1,5 metri del muro subisce 20 o più danni da freddo in 1 round, quel segmento scompare. (Non si devono dividere i danni da freddo per 2, come si fa normalmente con gli oggetti.) Muro di Fuoco può essere reso permanente con un incantesimo Permanenza. Un Muro di Fuoco permanente che viene estinto a causa dei danni da freddo diventa inattivo per 10 minuti, poi si riforma normalmente."
+    },
+    {
       "id": "muro_di_fuoco_mitico_p",
       "name": "Muro di Fuoco (Mitico) P",
       "school": "Universal",
@@ -27308,6 +27619,27 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Si evoca una singola palla di fango appiccicoso e la si scaglia in faccia al nemico"
+    },
+    {
+      "id": "palla_di_fuoco",
+      "name": "Palla di Fuoco",
+      "school": "Evocation",
+      "descriptor": "fuoco",
+      "levels": {
+        "arcanist": 3,
+        "bloodrager": 3,
+        "wizard": 3,
+        "magus": 3,
+        "occultist": 3,
+        "sorcerer": 3
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M (una pallina di guano di pipistrello e di zolfo)",
+      "range": "lungo (120 m + 12 m/livello)",
+      "duration": "istantaneo",
+      "savingThrow": "Riflessi dimezza",
+      "spellResistance": "sì",
+      "description": "Area: propagazione del raggio di 6 m. Un incantesimo Palla di Fuoco genera una sfera infuocata che esplode con un sordo boato e infligge 1d6 danni da fuoco per livello dell'incantatore (massimo 10d6) a tutte le creature presenti nell'area. Anche gli oggetti incustoditi subiscono questi danni. L'esplosione genera pochissima pressione. Si punta il dito per indicare il raggio di azione (la distanza e l'altezza) in cui la palla di fuoco deve esplodere. Una perla scintillante delle dimensioni di una biglia parte dal dito indice e, a meno che non si scontri con un corpo o con una barriera solida prima di aver raggiunto il punto d'impatto, cresce fino a diventare una Palla di Fuoco in quel punto. Un impatto prematuro dà luogo ad una detonazione anticipata. Se si tenta di far passare la sfera attraverso un passaggio stretto come una feritoia per frecce, bisogna “colpire” il passaggio con un attacco di contatto a distanza, altrimenti la sfera si scontra con la barriera ed esplode prematuramente. La Palla di Fuoco incendia eventuali materiali combustibili e danneggia gli oggetti presenti nell'area. Può fondere dei metalli a basso punto di fusione come il piombo, l'oro, il rame, l'argento o il bronzo. Se i danni causati a una barriera interposta hanno l'effetto di distruggerla o di frammentarla, la Palla di Fuoco può propagarsi oltre, se l'area lo permette, altrimenti si ferma contro la barriera come l'effetto di qualsiasi altro incantesimo."
     },
     {
       "id": "palla_di_fuoco_mitico_p",
@@ -29381,6 +29713,35 @@
       "description": "Crea un portale che permette di entrare e uscire da un Paesaggio Mentale"
     },
     {
+      "id": "porta_dimensionale",
+      "name": "Porta Dimensionale",
+      "school": "Conjuration",
+      "subSchool": "teletrasporto",
+      "levels": {
+        "arcanist": 4,
+        "bard": 4,
+        "summoner": 3,
+        "summoner_revised": 4,
+        "witch": 4,
+        "wizard": 4,
+        "magus": 4,
+        "medium": 3,
+        "mesmerist": 4,
+        "occultist": 4,
+        "psychic": 4,
+        "skald": 4,
+        "spiritualist": 4,
+        "sorcerer": 4
+      },
+      "castingTime": "1 azione standard",
+      "components": "V",
+      "range": "lungo (120 m + 12 m/livello)",
+      "duration": "istantaneo",
+      "savingThrow": "nessuno e Volontà nega (oggetto)",
+      "spellResistance": "no e sì (oggetto)",
+      "description": "Bersaglio: se stessi e oggetti toccati oppure altre creature toccate consenzienti. Ci si trasferisce immediatamente dalla propria attuale posizione a qualsiasi altro luogo entro il raggio di azione. Si arriva sempre con precisione nel punto desiderato, sia semplicemente visualizzando l'area che limitandosi a dichiarare la direzione. Dopo aver utilizzato questo incantesimo non si possono effettuare altre azioni fino al proprio turno seguente. Si possono portare con sé oggetti fintanto che il loro peso non superi il proprio carico massimo. Si può anche trasportare un'altra creatura consenziente di taglia Media o inferiore (che a sua volta può trasportare oggetti o Equipaggiamento fino al suo carico massimo) o il suo equivalente ogni 3 livelli dell'incantatore. Una creatura Grande conta come 2 creature Medie, una creatura Enorme conta come 2 creature Grandi e così via. Tutte le creature da trasportare devono essere in contatto l'una con l'altra, e occorre essere in contatto con almeno una delle creature. Se si arriva in un posto che è già occupato da un corpo solido, si subiscono 1d6 danni e si viene spinti verso uno spazio libero casuale o su una superficie adeguata entro 30 metri dalla locazione indicata. Ciò vale sia per sé che per le creature con cui si sta viaggiando. Se non esiste alcuno spazio libero entro 30 metri, tutti i soggetti coinvolti nel viaggio subiscono 2d6 danni aggiuntivi e vengono spinti verso uno spazio libero entro 300 metri. Se non esiste alcuno spazio libero entro 300 metri, tutti i soggetti coinvolti nel viaggio subiscono 4d6 danni aggiuntivi e l'incantesimo fallisce."
+    },
+    {
       "id": "porta_dimensionale_mitico",
       "name": "Porta Dimensionale (Mitico)",
       "school": "Universal",
@@ -30529,6 +30890,36 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Come Protezione dal Caos , ma si può suddividere la durata tra le creature toccate"
+    },
+    {
+      "id": "protezione_dal_male",
+      "name": "Protezione dal Male",
+      "school": "Abjuration",
+      "descriptor": "bene",
+      "levels": {
+        "adept": 1,
+        "arcanist": 1,
+        "cleric": 1,
+        "summoner": 1,
+        "summoner_revised": 1,
+        "inquisitor": 1,
+        "bloodrager": 1,
+        "wizard": 1,
+        "medium": 1,
+        "oracle": 1,
+        "paladin": 1,
+        "warpriest": 1,
+        "shaman": 1,
+        "spiritualist": 1,
+        "sorcerer": 1
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S, M/FD",
+      "range": "contatto",
+      "duration": "1 minuto/livello (I)",
+      "savingThrow": "Volontà nega (innocuo)",
+      "spellResistance": "no; vedi testo",
+      "description": "Bersaglio: 1 creatura toccata. L'incantesimo protegge una creatura dagli attacchi di creature malvagie, dal controllo mentale e dalle creature evocate. Crea una barriera magica attorno al bersaglio, alla distanza di 30 cm. La barriera si sposta con lui e ha tre effetti principali. • Primo, il bersaglio ottiene Bonus di Deviazione +2 alla CA e Bonus di Resistenza +2 ai Tiri Salvezza. Entrambi questi bonus si applicano contro gli attacchi compiuti da creature malvagie. • Secondo, il soggetto riceve immediatamente un altro Tiro Salvezza (se ne è concesso uno all'inizio) contro qualsiasi incantesimo o effetto in grado di possedere o di esercitare un controllo mentale su una creatura (compresi gli effetti di Ammaliamento [charme] e Ammaliamento [compulsione], come Charme su Persone e Dominare Persone). Questo Tiro Salvezza viene effettuato con Bonus Morale +2, usando la stessa CD dell'effetto originale. Se il tiro ha successo, questi effetti vengono soppressi per la durata dell'incantesimo. Gli effetti ricominciano quando la durata di questo incantesimo ha termine. Mentre si trova sotto l'effetto di questo incantesimo, il bersaglio è immune da qualunque nuovo tentativo di comandarlo mentalmente o di possederlo. Questo incantesimo non ne espelle una forza vitale che controlla (come un Fantasma o un incantatore che usi Giara Magica), ma gli impedisce di controllare il bersaglio. Questo secondo effetto funziona solo contro incantesimi ed effetti create da creature od oggetti malvagi, a discrezione del GM. • Terzo, l'incantesimo impedisce qualunque contatto fisico con creature malvagie evocate. Questo provoca il fallimento degli attacchi da armi naturali di queste creature, e le fa ritrarre se questi attacchi richiedono di toccare la creatura protetta. Le creature non malvagie evocate sono immuni a questo effetto. La protezione dal contatto con creature evocate termina se la creatura protetta compie un attacco o tenta di forzare la barriera contro le creature bloccate. La Resistenza agli Incantesimi può permettere a una creatura di superare questa protezione e toccare la creatura protetta."
     },
     {
       "id": "protezione_dal_male_mitico",
@@ -36101,6 +36492,33 @@
       "description": "Si ottengono bonus alle Abilità quando si interagisce con il bersaglio"
     },
     {
+      "id": "scudo",
+      "name": "Scudo",
+      "school": "Abjuration",
+      "descriptor": "forza",
+      "levels": {
+        "alchemist": 1,
+        "arcanist": 1,
+        "summoner": 1,
+        "summoner_revised": 1,
+        "investigator": 1,
+        "bloodrager": 1,
+        "wizard": 1,
+        "magus": 1,
+        "occultist": 1,
+        "psychic": 1,
+        "spiritualist": 1,
+        "sorcerer": 1
+      },
+      "castingTime": "1 azione standard",
+      "components": "V, S",
+      "range": "personale",
+      "duration": "1 minuto/livello (I)",
+      "savingThrow": "-",
+      "spellResistance": "-",
+      "description": "Bersaglio: se stessi. Scudo crea un disco di forza invisibile delle dimensioni di uno scudo torre, che vi fluttua davanti. Nega gli attacchi di dardo incantato diretti contro di voi. Fornisce inoltre bonus di scudo +4 alla CA, che si applica anche agli attacchi di contatto incorporei, poiché è un effetto di forza. Lo scudo non ha penalità di armatura alla prova né probabilità di fallimento degli incantesimi arcani."
+    },
+    {
       "id": "scudo_ai_pensieri_i",
       "name": "Scudo ai Pensieri I",
       "school": "Universal",
@@ -38464,6 +38882,33 @@
       "savingThrow": "-",
       "spellResistance": "-",
       "description": "Ai soggetti bastano 2 ore per un sonno notturno e possono dormire più a lungo per maggiori benefici"
+    },
+    {
+      "id": "sonno",
+      "name": "Sonno",
+      "school": "Enchantment",
+      "subSchool": "compulsione",
+      "descriptor": "influenza mentale",
+      "levels": {
+        "adept": 1,
+        "arcanist": 1,
+        "bard": 1,
+        "witch": 1,
+        "wizard": 1,
+        "mesmerist": 1,
+        "occultist": 1,
+        "psychic": 1,
+        "skald": 1,
+        "shaman": 1,
+        "sorcerer": 1
+      },
+      "castingTime": "1 round",
+      "components": "V, S, M (sabbia fine, petali di rosa o un grillo vivo)",
+      "range": "medio (30 m + 3 m/livello)",
+      "duration": "1 minuto/livello",
+      "savingThrow": "Volontà nega",
+      "spellResistance": "sì",
+      "description": "Area: 1 o più creature viventi entro un'esplosione del raggio di 3 m. L'incantesimo Sonno fa cadere in un sonno magico 4 DV di creature. Le creature con meno DV vengono colpite per prime. Tra creature con lo stesso numero di DV, vengono colpite per prime quelle più vicine al punto di origine dell'incantesimo. I DV che non sono sufficienti ad influenzare una creatura vanno sprecati. Le creature addormentate sono Indifese. Se vengono ferite o schiaffeggiate si risvegliano, ma i normali rumori non sono sufficienti. Svegliare una creatura è un'azione standard (un'applicazione dell'azione di Aiutare un Altro). Sonno non ha effetto sulle creature Prive di Sensi, i Costrutti o i Non Morti."
     },
     {
       "id": "sonno_mitico_p",

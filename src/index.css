@@ -700,6 +700,8 @@ body {
 
 .effect-form { display: flex; flex-direction: column; gap: 8px; }
 .effect-form label { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+/* Labels of different length wrap differently: keep the inputs on the same baseline */
+.effect-form-row > label { justify-content: flex-end; }
 .effect-form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .modifier-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.4fr) 40px; gap: 6px; align-items: center; }
 
@@ -1183,6 +1185,8 @@ body {
 .equip-actions .pf-btn { flex: 1; min-width: 140px; }
 .equip-slot-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-top: 8px; }
 .equip-row .btn-icon.is-on { color: var(--gold-bright); }
+.use-btn { min-height: 36px; padding: 4px 14px; }
+.use-notice { border-radius: 10px; background: var(--bg-raised, rgba(255,255,255,0.04)); align-items: center; gap: 8px; }
 .coin-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .coin-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .coin-cell .pf-input { text-align: center; }

@@ -6,6 +6,7 @@ import type { ItemInput } from '../../utils/inventory';
 import { defaultSlot } from '../../utils/inventory';
 import { SheetModal } from '../ui/SheetModal';
 import { MagicSection } from './MagicSection';
+import { SpellItemEditor } from './SpellItemEditor';
 import { ModifierRows } from './ModifierRows';
 import { withComputedPrice } from '../../utils/itemEnhancements';
 import {
@@ -21,13 +22,19 @@ const DEFAULT_SHIELD: ArmorStats = { ...DEFAULT_ARMOR, category: 'shield' };
 
 const num = (v: string, fallback = 0) => (v.trim() === '' || !Number.isFinite(Number(v.replace(',', '.'))) ? fallback : Number(v.replace(',', '.')));
 
-/** Create or edit an inventory item, with the statistics of its kind. */
-export function ItemEditor({ title, initial, onSave, onClose }: {
+interface EditorProps {
   title: string;
   initial: ItemInput;
   onSave: (item: ItemInput) => void;
   onClose: () => void;
-}) {
+}
+
+/** Create or edit an inventory item; potions, scrolls and wands get a reduced editor. */
+export function ItemEditor(props: EditorProps) {
+  return props.initial.spellItem ? <SpellItemEditor {...props} /> : <GeneralItemEditor {...props} />;
+}
+
+function GeneralItemEditor({ title, initial, onSave, onClose }: EditorProps) {
   const [item, setItem] = useState<ItemInput>(() => structuredClone(initial));
   const kind: ItemKind = item.kind ?? 'gear';
   const fmt = (n: number | undefined) => String(n ?? 0).replace('.', ',');
@@ -100,7 +107,7 @@ export function ItemEditor({ title, initial, onSave, onClose }: {
           <label>
             <span className="label-rune-soft">Tipo</span>
             <select className="pf-input w-full" value={kind} onChange={e => changeKind(e.target.value as ItemKind)}>
-              {(Object.keys(KIND_LABELS) as ItemKind[]).map(k => <option key={k} value={k}>{KIND_LABELS[k]}</option>)}
+              {(Object.keys(KIND_LABELS) as ItemKind[]).filter(k => k !== 'consumable').map(k => <option key={k} value={k}>{KIND_LABELS[k]}</option>)}
             </select>
           </label>
           <label>

@@ -17,6 +17,7 @@ import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
 import { AttacksPanel } from '../components/sheet/AttacksPanel';
 import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
+import { ConsumablesSection } from '../components/sheet/ConsumablesSection';
 import { StatusChips } from '../components/sheet/StatusChips';
 import { StatusPanel } from '../components/sheet/StatusPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
@@ -296,6 +297,7 @@ export function CharacterSheet() {
             <StatusPanel char={char} />
             <CombatStats char={char} onQuickRoll={handleQuickRoll} />
             <AttacksPanel char={char} onQuickRoll={handleQuickRoll} />
+            <ConsumablesSection char={char} />
           </div>
         )}
         {tab === 'equipment' && <EquipmentPanel char={char} />}

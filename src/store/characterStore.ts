@@ -6,6 +6,8 @@ import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firest
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 import * as status from '../utils/characterStatus';
 import * as inv from '../utils/inventory';
+import * as consumables from '../utils/spellConsumables';
+import type { ConsumableUndo } from '../utils/spellConsumables';
 import { deriveStats } from '../utils/derivedStats';
 import type {
   NegativeLevels,
@@ -136,6 +138,9 @@ interface CharacterState {
   addEquipment: (id: string, item: inv.ItemInput) => void;
   /** Adds the item and pays `paidCp` copper pieces (throws if the coins are not enough). */
   purchaseEquipment: (id: string, item: inv.ItemInput, paidCp: number) => void;
+  /** Uses one dose/charge of a consumable; returns the undo, or null when nothing is left. */
+  useConsumable: (id: string, itemId: string) => ConsumableUndo | null;
+  undoConsumable: (id: string, undo: ConsumableUndo) => void;
   updateEquipment: (id: string, itemId: string, item: inv.ItemInput) => void;
   removeEquipment: (id: string, itemId: string) => void;
   setEquipmentQuantity: (id: string, itemId: string, quantity: number) => void;
@@ -558,6 +563,16 @@ export const useCharacterStore = create<CharacterState>()((set, get) => {
     if (!char) return;
     const patch = inv.purchaseItem(char, item, paidCp); // throws before any change
     patchChar(id, () => patch);
+  },
+  useConsumable: (id, itemId) => {
+    const char = get().characters.find(c => c.id === id);
+    const result = char ? consumables.useConsumable(char, itemId) : null;
+    if (!result) return null;
+    patchChar(id, () => result.patch);
+    return result.undo;
+  },
+  undoConsumable: (id, undo) => {
+    patchChar(id, c => consumables.undoConsumable(c, undo));
   },
   updateEquipment: (id, itemId, item) => {
     patchChar(id, c => inv.updateItem(c, itemId, item, sizeOf(c)));

@@ -12,6 +12,9 @@ import { SheetModal } from '../ui/SheetModal';
 import { ItemPicker } from './ItemPicker';
 import { ItemEditor } from './ItemEditor';
 import { ProficienciesSection } from './ProficienciesSection';
+import { SpellItemCreator } from './SpellItemCreator';
+import { UseButton } from './ConsumableUse';
+import { amountLabel, useConsumableDetail, useConsumableUse } from './consumableHooks';
 import { useDerivedStats } from './statHelpers';
 
 type Editor = { title: string; initial: ItemInput; itemId?: string } | null;
@@ -25,6 +28,9 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
   const store = useCharacterStore();
   const d = useDerivedStats(char);
   const [picker, setPicker] = useState(false);
+  const [creator, setCreator] = useState(false);
+  const detail = useConsumableDetail(char);
+  const { run: useItem, noticeEl } = useConsumableUse(char);
   const [editor, setEditor] = useState<Editor>(null);
   const [confirmRemove, setConfirmRemove] = useState<EquipmentItem | null>(null);
 
@@ -44,21 +50,24 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
     <div key={item.id} className="status-row equip-row">
       <div style={{ minWidth: 0 }}>
         <div className="status-row-name">
-          {displayName(item)}{item.quantity !== 1 ? <span className="status-tag"> ×{item.quantity}</span> : null}
+          {displayName(item)}
+          {item.spellItem ? <span className="status-tag"> {amountLabel(item)}</span>
+            : item.quantity !== 1 ? <span className="status-tag"> ×{item.quantity}</span> : null}
           {inactive.has(item.id) && <span className="status-tag"> · non attivo</span>}
         </div>
         <div className="status-row-detail">
-          {[itemStatsLabel(item, size), isMasterwork(item) && !enhancementOf(item) ? 'perfetto' : '', itemEffectsLabel(item),
+          {[...detail(item), itemStatsLabel(item, size), isMasterwork(item) && !enhancementOf(item) ? 'perfetto' : '', itemEffectsLabel(item),
             item.weightKg ? kgLabel(item.weightKg * item.quantity) : '', item.notes].filter(Boolean).join(' · ')}
         </div>
       </div>
       {!readOnly && (
         <div className="status-row-actions">
-          <button type="button" className={`btn btn-ghost btn-icon${item.equipped ? ' is-on' : ''}`}
+          {item.spellItem && <UseButton item={item} onUse={useItem} />}
+          {!item.spellItem && <button type="button" className={`btn btn-ghost btn-icon${item.equipped ? ' is-on' : ''}`}
             aria-pressed={item.equipped} aria-label={item.equipped ? `Togli ${item.name}` : `Indossa ${item.name}`}
             title={item.equipped ? 'Togli' : 'Indossa / impugna'} onClick={() => store.toggleEquipped(char.id, item.id)}>
             {item.equipped ? '◉' : '○'}
-          </button>
+          </button>}
           <button type="button" className="btn btn-ghost btn-icon" aria-label={`Modifica ${item.name}`} title="Modifica"
             onClick={() => openEdit(item)}>✎</button>
           <button type="button" className="btn btn-ghost btn-icon" aria-label={`Rimuovi ${item.name}`} title="Rimuovi"
@@ -83,6 +92,7 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
         </div>
       </div>
 
+      {noticeEl}
       {warnings.map(w => <div key={w} className="status-warning equip-warning" role="alert">⚠ {w}</div>)}
 
       {!readOnly && (
@@ -90,6 +100,7 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
           <button type="button" className="pf-btn pf-btn-outline" onClick={() => setPicker(true)}>+ Dal catalogo</button>
           <button type="button" className="pf-btn pf-btn-ghost"
             onClick={() => setEditor({ title: 'Oggetto personalizzato', initial: emptyItemInput() })}>+ Personalizzato</button>
+          <button type="button" className="pf-btn pf-btn-ghost" onClick={() => setCreator(true)}>+ Pozione / pergamena / bacchetta</button>
         </div>
       )}
 
@@ -118,6 +129,7 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
 
       <ProficienciesSection char={char} readOnly={readOnly} />
 
+      {creator && <SpellItemCreator char={char} onClose={() => setCreator(false)} />}
       {picker && <ItemPicker char={char} onClose={() => setPicker(false)} />}
 
       {editor && (

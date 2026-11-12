@@ -206,7 +206,24 @@ export interface WeaponAttack {
 
 // ── Items ────────────────────────────────────────────────────────────────────
 
-export type ItemKind = 'weapon' | 'armor' | 'shield' | 'ammo' | 'gear' | 'magic';
+export type ItemKind = 'weapon' | 'armor' | 'shield' | 'ammo' | 'gear' | 'magic' | 'consumable';
+
+export type ConsumableForm = 'potion' | 'scroll' | 'wand';
+
+/** A potion, scroll or wand made from a spell. */
+export interface SpellItem {
+  form: ConsumableForm;
+  spellId: string;
+  /** Snapshot of the spell name, kept if the spell is later renamed or removed. */
+  spellName: string;
+  /** Class list chosen for the spell (sets the spell level). */
+  classId: string;
+  spellLevel: number;
+  casterLevel: number;
+  /** Wands only. */
+  charges?: number;
+  maxCharges?: number;
+}
 
 export type MaterialId = 'mithral' | 'adamantine' | 'cold-iron' | 'alchemical-silver' | 'darkwood';
 
@@ -294,6 +311,8 @@ export interface EquipmentItem {
   modifiers?: Modifier[];
   /** Price before masterwork/material/enhancement, used to recompute the list price. */
   basePriceGp?: number;
+  /** Potion, scroll or wand: the spell and its parameters. */
+  spellItem?: SpellItem;
   /** @deprecated legacy format */
   type?: 'weapon' | 'armor' | 'gear' | 'magic' | 'wondrous';
   /** @deprecated legacy format (weight) */

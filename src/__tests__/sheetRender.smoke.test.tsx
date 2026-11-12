@@ -15,6 +15,8 @@ import { ModifierRows } from '../components/sheet/ModifierRows';
 import { ItemEditor } from '../components/sheet/ItemEditor';
 import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
 import { getEffectPreset } from '../data/effectPresets';
+import { ConsumablesSection } from '../components/sheet/ConsumablesSection';
+import { createSpellItem, refreshSpellItem } from '../utils/spellConsumables';
 
 const p = getEffectPreset('ingrandire-persona')!;
 const char = {
@@ -172,5 +174,49 @@ describe('magic weapon in the attacks panel', () => {
     expect(html).toContain('Ferro freddo: supera la RD/ferro freddo');
     expect(html).toContain('Spada Lunga +1 Infuocata in Ferro freddo');
     expect(html).toContain('1d8+5'); // Str 18 (+4) with Ingrandire persona, +1 enhancement
+  });
+});
+
+describe('spell consumables render', () => {
+  const potion = createSpellItem({ id: 'scudo_della_fede', name: 'Scudo della Fede' }, 'potion', 'cleric', 1, 6, 2);
+  const wand = createSpellItem({ id: 'cura_ferite_leggere', name: 'Cura Ferite Leggere' }, 'wand', 'cleric', 1, 1, 37);
+  const spent = refreshSpellItem(wand, { charges: 0 });
+  const withItems = (...inputs: Array<ReturnType<typeof createSpellItem>>) => ({
+    ...char, equipment: inputs.map((i, n) => ({ ...i, id: `c${n}` })),
+  }) as unknown as Character;
+  const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
+
+  it('shows charges, usability and the item DC in the inventory', () => {
+    const out = html(<EquipmentPanel char={withItems(wand)} />);
+    expect(out).toContain('37/50');
+    expect(out).toContain('Utilizzare Congegni Magici CD 20');
+    expect(out).toContain('CD oggetto 11');
+    expect(out).toContain('+ Pozione / pergamena / bacchetta');
+  });
+
+  it('marks an empty wand as scarica with a disabled Usa', () => {
+    const out = html(<ConsumablesSection char={withItems(spent)} />);
+    expect(out).toContain('scarica');
+    expect(out).toMatch(/<button[^>]*disabled[^>]*>Usa<\/button>/);
+  });
+
+  it('the combat section lists consumables with a Usa button, and is hidden without them', () => {
+    const out = html(<ConsumablesSection char={withItems(potion)} />);
+    expect(out).toContain('Pozione di Scudo della Fede (LI 6)');
+    expect(out).toContain('×2');
+    expect(out).toContain('>Usa</button>');
+    expect(html(<ConsumablesSection char={withItems()} />)).toBe('');
+  });
+
+  it('read-only views list consumables without Usa', () => {
+    expect(html(<ConsumablesSection char={withItems(potion)} readOnly />)).not.toContain('>Usa<');
+    expect(html(<EquipmentPanel char={withItems(potion)} readOnly />)).not.toContain('>Usa<');
+  });
+
+  it('the editor of a consumable is the reduced one', () => {
+    const out = html(<ItemEditor title="Modifica" initial={wand} onSave={() => {}} onClose={() => {}} />);
+    expect(out).toContain('Livello incantatore');
+    expect(out).toContain('Cariche');
+    expect(out).not.toContain('Slot');
   });
 });

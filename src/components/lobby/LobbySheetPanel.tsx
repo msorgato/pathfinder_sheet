@@ -5,6 +5,7 @@ import { CombatStats, HitPointsPanel } from '../sheet/CombatStats';
 import { SkillsPanel } from '../sheet/SkillsPanel';
 import { AttacksPanel } from '../sheet/AttacksPanel';
 import { EquipmentPanel } from '../sheet/EquipmentPanel';
+import { ConsumablesSection } from '../sheet/ConsumablesSection';
 import { DiceRoller } from '../sheet/DiceRoller';
 import type { RollRequest } from '../sheet/DiceRoller';
 
@@ -96,6 +97,7 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
           <div className="space-y-4">
             <HitPointsPanel char={character} />
             <CombatStats char={character} onQuickRoll={handleQuickRoll} />
+            <ConsumablesSection char={character} readOnly />
           </div>
         )}
         {activeTab === 'skills'    && <SkillsPanel   char={character} onQuickRoll={handleQuickRoll} />}

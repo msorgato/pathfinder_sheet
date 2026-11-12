@@ -7,6 +7,7 @@ vi.mock('../lib/firestoreSync', () => ({ saveCharacter, deleteCharacterDoc: vi.f
 import type { Character, ItemDefinition } from '../types';
 import { useCharacterStore } from '../store/characterStore';
 import { itemFromCatalog } from '../utils/inventory';
+import { createSpellItem } from '../utils/spellConsumables';
 
 const SWORD: ItemDefinition = {
   id: 'spada-lunga', name: 'Spada Lunga', kind: 'weapon', category: 'x', priceGp: 15, weightKg: 2, url: 'u',
@@ -58,5 +59,21 @@ describe('inventory store actions', () => {
     setFeatChoice(id, 'competenza_nelle_armi_esotiche', 1, 'frusta');
     setFeatChoice(id, 'competenza_nelle_armi_esotiche', 0, null);
     expect(char().featChoices).toEqual([{ featId: 'competenza_nelle_armi_esotiche', index: 1, choice: 'frusta' }]);
+  });
+
+  it('uses and undoes a consumable, syncing a clean document', () => {
+    const { addEquipment, useConsumable, undoConsumable } = useCharacterStore.getState();
+    addEquipment(id, createSpellItem({ id: 'scudo_della_fede', name: 'Scudo della Fede' }, 'potion', 'cleric', 1, 6, 1));
+    const itemId = char().equipment[0].id;
+    const undo = useConsumable(id, itemId);
+    expect(undo).not.toBeNull();
+    expect(char().equipment).toHaveLength(0);
+    expect(char().effects?.[0].name).toBe('Scudo della Fede (LI 6)');
+    assertNoUndefined(saveCharacter.mock.calls.at(-1)?.[1]);
+    undoConsumable(id, undo!);
+    expect(char().equipment.map(i => i.id)).toEqual([itemId]);
+    expect(char().effects).toHaveLength(0);
+    assertNoUndefined(saveCharacter.mock.calls.at(-1)?.[1]);
+    expect(useConsumable(id, 'nope')).toBeNull();
   });
 });
