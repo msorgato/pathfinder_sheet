@@ -12,8 +12,8 @@ export const DRUID: ClassDefinition = {
   saves: { fort: 'good', ref: 'poor', will: 'good' },
   skillsPerLevel: 4,
   classSkills: ['climb','craft_alchemy','fly','handle_animal','heal','knowledge_geography','knowledge_nature','perception','profession','ride','spellcraft','survival','swim'],
-  armorProficiencies: ['Leggera', 'Media', 'Scudi (non metallo)'],
-  weaponProficiencies: 'Bastone ferrato, coltello da caccia, dardo, falce, fionda, giavellotto, lancia, mazza, randello, scimitarra',
+  armorProficiencies: ['light', 'medium', 'shield'],
+  weaponProficiencies: { groups: [], weapons: ['randello', 'pugnale', 'dardo', 'bastone-ferrato', 'scimitarra', 'falce', 'falcetto', 'lancia-corta', 'fionda', 'lancia'], note: 'Armi naturali di ogni forma assunta. Non può indossare armature o scudi di metallo.' },
   spellcasting: {
     type: 'prepared',
     ability: 'wis',

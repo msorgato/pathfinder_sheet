@@ -19,8 +19,8 @@ export const BARBARIAN: ClassDefinition = {
   saves: { fort: 'good', ref: 'poor', will: 'poor' },
   skillsPerLevel: 4,
   classSkills: ['acrobatics','climb','craft_weapons','handle_animal','intimidate','knowledge_nature','perception','ride','survival','swim'],
-  armorProficiencies: ['Leggera', 'Media', 'Scudi'],
-  weaponProficiencies: 'Semplici e Marziali',
+  armorProficiencies: ['light', 'medium', 'shield'],
+  weaponProficiencies: { groups: ['simple', 'martial'], weapons: [] },
   features: [
     { level: 1, name: 'Movimento Veloce', description: '+10 piedi alla velocità base (non in armatura pesante).', type: 'Ex' },
     { level: 1, name: 'Furia', description: 'Entra in furia come azione libera. Durata: 4 + mod COS round al livello 1, +2 round per ogni livello successivo. Bonus: +4 FOR, +4 COS, +2 TS Volontà, −2 CA. Non può usare abilità che richiedono concentrazione. Al termine della furia è affaticato.', type: 'Ex' },

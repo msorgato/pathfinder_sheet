@@ -5,11 +5,12 @@ import { auth } from '../lib/firebase';
 import { saveCharacter, deleteCharacterDoc, loadCharacters } from '../lib/firestoreSync';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
 import * as status from '../utils/characterStatus';
+import * as inv from '../utils/inventory';
 import { deriveStats } from '../utils/derivedStats';
 import type {
   NegativeLevels,
   Character, CharacterClassEntry, SkillRank,
-  KnownSpell, PreparedSpell, EquipmentItem, AbilityKey, Alignment, WeaponAttack, ClassFeatureChoice,
+  KnownSpell, PreparedSpell, AbilityKey, ExtraProficiencies, Alignment, WeaponAttack, ClassFeatureChoice,
 } from '../types';
 
 function newId(): string {
@@ -69,6 +70,8 @@ export function emptyCharacter(id?: string): Character {
 function uid(): string | null {
   return auth.currentUser?.uid ?? null;
 }
+
+const sizeOf = (c: Character): inv.CreatureSize => getRace(c.race)?.size ?? 'Medium';
 
 function syncChar(char: Character): void {
   const u = uid();
@@ -130,9 +133,19 @@ interface CharacterState {
   addWeaponAttack: (charId: string, weapon: WeaponAttack) => void;
   removeWeaponAttack: (charId: string, weaponId: string) => void;
 
-  addEquipment: (id: string, item: EquipmentItem) => void;
+  addEquipment: (id: string, item: inv.ItemInput) => void;
+  /** Adds the item and pays `paidCp` copper pieces (throws if the coins are not enough). */
+  purchaseEquipment: (id: string, item: inv.ItemInput, paidCp: number) => void;
+  updateEquipment: (id: string, itemId: string, item: inv.ItemInput) => void;
   removeEquipment: (id: string, itemId: string) => void;
-  updateEquipment: (id: string, itemId: string, patch: Partial<EquipmentItem>) => void;
+  setEquipmentQuantity: (id: string, itemId: string, quantity: number) => void;
+  toggleEquipped: (id: string, itemId: string) => void;
+  /** Creates an attack linked to an inventory weapon. */
+  addAttackFromItem: (id: string, itemId: string) => void;
+
+  setFeatChoice: (id: string, featId: string, index: number, choice: string | null) => void;
+  setExtraProficiencies: (id: string, extra: ExtraProficiencies) => void;
+  setDeityWeapon: (id: string, weaponId: string | null) => void;
 
   importCharacters: (incoming: Character[]) => void;
 
@@ -538,31 +551,46 @@ export const useCharacterStore = create<CharacterState>()((set, get) => {
   },
 
   addEquipment: (id, item) => {
-    set(s => ({ characters: s.characters.map(c => c.id === id ? { ...c, equipment: [...c.equipment, item] } : c) }));
-    const updated = get().characters.find(c => c.id === id);
-    if (updated) syncChar(updated);
+    patchChar(id, c => inv.addItem(c, item));
   },
-
+  purchaseEquipment: (id, item, paidCp) => {
+    const char = get().characters.find(c => c.id === id);
+    if (!char) return;
+    const patch = inv.purchaseItem(char, item, paidCp); // throws before any change
+    patchChar(id, () => patch);
+  },
+  updateEquipment: (id, itemId, item) => {
+    patchChar(id, c => inv.updateItem(c, itemId, item, sizeOf(c)));
+  },
   removeEquipment: (id, itemId) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id ? { ...c, equipment: c.equipment.filter(i => i.id !== itemId) } : c,
-      ),
-    }));
-    const updated = get().characters.find(c => c.id === id);
-    if (updated) syncChar(updated);
+    patchChar(id, c => inv.removeItem(c, itemId));
+  },
+  setEquipmentQuantity: (id, itemId, quantity) => {
+    patchChar(id, c => inv.setQuantity(c, itemId, quantity));
+  },
+  toggleEquipped: (id, itemId) => {
+    patchChar(id, c => inv.toggleEquipped(c, itemId));
+  },
+  addAttackFromItem: (id, itemId) => {
+    patchChar(id, c => {
+      const item = (c.equipment ?? []).find(i => i.id === itemId);
+      return item ? { weaponAttacks: [...(c.weaponAttacks ?? []), inv.attackFromItem(item, sizeOf(c))] } : {};
+    });
   },
 
-  updateEquipment: (id, itemId, patch) => {
-    set(s => ({
-      characters: s.characters.map(c =>
-        c.id === id
-          ? { ...c, equipment: c.equipment.map(i => i.id === itemId ? { ...i, ...patch } : i) }
-          : c,
-      ),
+  setFeatChoice: (id, featId, index, choice) => {
+    patchChar(id, c => {
+      const rest = (c.featChoices ?? []).filter(fc => !(fc.featId === featId && fc.index === index));
+      return { featChoices: choice ? [...rest, { featId, index, choice }] : rest };
+    });
+  },
+  setExtraProficiencies: (id, extra) => {
+    patchChar(id, () => ({
+      extraProficiencies: { armor: [...new Set(extra.armor ?? [])], weapons: [...new Set(extra.weapons ?? [])] },
     }));
-    const updated = get().characters.find(c => c.id === id);
-    if (updated) syncChar(updated);
+  },
+  setDeityWeapon: (id, weaponId) => {
+    patchChar(id, () => ({ deityWeaponId: weaponId ?? undefined }));
   },
 
   importCharacters: (incoming) => {

@@ -16,13 +16,14 @@ import { SkillsPanel } from '../components/sheet/SkillsPanel';
 import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
 import { AttacksPanel } from '../components/sheet/AttacksPanel';
+import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
 import { StatusChips } from '../components/sheet/StatusChips';
 import { StatusPanel } from '../components/sheet/StatusPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import type { RollRequest } from '../components/sheet/DiceRoller';
 
-type Tab = 'overview' | 'skills' | 'spells' | 'features' | 'notes';
+type Tab = 'overview' | 'equipment' | 'skills' | 'spells' | 'features' | 'notes';
 
 export function CharacterSheet() {
   const { id } = useParams<{ id: string }>();
@@ -59,8 +60,9 @@ export function CharacterSheet() {
   const maxHp = derived.maxHp.total;
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
 
-  const TABS: { id: Tab; label: string }[] = [
+  const TABS: { id: Tab; label: string; short?: string }[] = [
     { id: 'overview',  label: 'Combattimento' },
+    { id: 'equipment', label: 'Equipaggiamento', short: 'Equip' },
     { id: 'skills',    label: 'Abilità' },
     { id: 'spells',    label: 'Incantesimi' },
     { id: 'features',  label: 'Capacità' },
@@ -278,7 +280,9 @@ export function CharacterSheet() {
               transition: 'color 0.15s, border-color 0.15s',
             }}
           >
-            {t.label}
+            {t.short
+              ? <><span className="tab-label-long">{t.label}</span><span className="tab-label-short">{t.short}</span></>
+              : t.label}
           </button>
         ))}
       </div>
@@ -294,6 +298,7 @@ export function CharacterSheet() {
             <AttacksPanel char={char} onQuickRoll={handleQuickRoll} />
           </div>
         )}
+        {tab === 'equipment' && <EquipmentPanel char={char} />}
         {tab === 'skills' && <SkillsPanel char={char} onQuickRoll={handleQuickRoll} />}
         {tab === 'spells' && <SpellsPanel char={char} />}
         {tab === 'features' && <FeaturesPanel char={char} />}

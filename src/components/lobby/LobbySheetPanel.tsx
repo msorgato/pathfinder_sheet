@@ -4,6 +4,7 @@ import { AbilityPanel } from '../sheet/AbilityPanel';
 import { CombatStats, HitPointsPanel } from '../sheet/CombatStats';
 import { SkillsPanel } from '../sheet/SkillsPanel';
 import { AttacksPanel } from '../sheet/AttacksPanel';
+import { EquipmentPanel } from '../sheet/EquipmentPanel';
 import { DiceRoller } from '../sheet/DiceRoller';
 import type { RollRequest } from '../sheet/DiceRoller';
 
@@ -13,7 +14,7 @@ interface Props {
   onRollResult: (result: RollResultData) => void;
 }
 
-type SheetTab = 'abilities' | 'combat' | 'skills' | 'attacks';
+type SheetTab = 'abilities' | 'combat' | 'skills' | 'attacks' | 'equipment';
 
 export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
   const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
@@ -49,6 +50,7 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
     { id: 'combat',    label: 'Combattimento' },
     { id: 'skills',    label: 'Abilità' },
     { id: 'attacks',   label: 'Attacchi' },
+    { id: 'equipment', label: 'Equip' },
   ];
 
   return (
@@ -98,6 +100,8 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
         )}
         {activeTab === 'skills'    && <SkillsPanel   char={character} onQuickRoll={handleQuickRoll} />}
         {activeTab === 'attacks'   && <AttacksPanel  char={character} onQuickRoll={handleQuickRoll} />}
+        {/* Read-only here: the inventory is managed from the character sheet by its owner. */}
+        {activeTab === 'equipment' && <EquipmentPanel char={character} readOnly />}
       </div>
 
       {/* DiceRoller floating over the panel */}

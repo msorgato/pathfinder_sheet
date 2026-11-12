@@ -1,0 +1,13 @@
+{
+  "exclude": ["tenda", "tacco-a-incastro-complessita"],
+  "alias": {},
+  "patch": {
+    "buckler": { "armor": { "metal": true } },
+    "armatura-a-dischi": { "armor": { "metal": true } },
+    "kusari-gusoku": { "armor": { "metal": true } },
+    "armatura-della-fanciulla-grigia": { "armor": { "metal": true } },
+    "armatura-della-montagna": { "armor": { "metal": true } },
+    "tatami-do": { "armor": { "metal": true } },
+    "armatura-di-cuoio-borchiato-del-cavaliere-infernale": { "armor": { "metal": false } }
+  }
+}

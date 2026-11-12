@@ -3,11 +3,13 @@ import { FEATS } from '../data/feats';
 import { SPELLS } from '../data/spells';
 import { auth } from '../lib/firebase';
 import { saveDataStore, loadDataStore } from '../lib/firestoreSync';
-import type { FeatDefinition, SpellDefinition, CustomClassDefinition } from '../types';
+import type { FeatDefinition, SpellDefinition, CustomClassDefinition, ItemDefinition } from '../types';
 
 interface DataState {
   builtinFeats: FeatDefinition[];
   builtinSpells: SpellDefinition[];
+  /** Mundane item catalogue (public/data/items.json). */
+  builtinItems: ItemDefinition[];
   builtinLoaded: boolean;
 
   featPatches: Record<string, Partial<Omit<FeatDefinition, 'id'>>>;
@@ -72,23 +74,27 @@ function sync(s: typeof empty) {
 export const useDataStore = create<DataState>()((set, get) => ({
   builtinFeats: [...FEATS],
   builtinSpells: [...SPELLS],
+  builtinItems: [],
   builtinLoaded: false,
   ...empty,
   customClasses: [],
   publishedCustomClasses: [],
 
   loadBuiltinData: async () => {
-    const [spellsRes, featsRes] = await Promise.all([
+    const [spellsRes, featsRes, itemsRes] = await Promise.all([
       fetch('/data/spells.json'),
       fetch('/data/feats.json'),
+      fetch('/data/items.json'),
     ]);
-    const [spellsData, featsData] = await Promise.all([
+    const [spellsData, featsData, itemsData] = await Promise.all([
       spellsRes.json() as Promise<{ spells: SpellDefinition[] }>,
       featsRes.json() as Promise<{ feats: FeatDefinition[] }>,
+      itemsRes.json() as Promise<{ items: ItemDefinition[] }>,
     ]);
     set({
       builtinSpells: spellsData.spells ?? [],
       builtinFeats: featsData.feats ?? [],
+      builtinItems: itemsData.items ?? [],
       builtinLoaded: true,
     });
   },
@@ -280,3 +286,7 @@ export function useMergedSpells(): SpellDefinition[] {
     ...extraSpells,
   ];
 }
+
+/** Catalogue entry by id (undefined until the built-in data is loaded). */
+export const getCatalogItem = (id: string): ItemDefinition | undefined =>
+  useDataStore.getState().builtinItems.find(i => i.id === id);

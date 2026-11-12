@@ -17,8 +17,8 @@ export const MONK: ClassDefinition = {
   saves: { fort: 'good', ref: 'good', will: 'good' },
   skillsPerLevel: 4,
   classSkills: ['acrobatics','climb','craft_alchemy','escape_artist','intimidate','knowledge_history','knowledge_religion','perception','perform_dance','profession','ride','sense_motive','stealth','swim'],
-  armorProficiencies: ['Nessuna'],
-  weaponProficiencies: 'Bastone ferrato, grappling hook, sai, shuriken, siangham, spada corta',
+  armorProficiencies: [],
+  weaponProficiencies: { groups: [], weapons: ['randello', 'balestra-leggera', 'balestra-pesante', 'pugnale', 'ascia', 'giavellotto', 'kama', 'nunchaku', 'bastone-ferrato', 'sai', 'lancia-corta', 'spada-corta', 'shuriken', 'siangham', 'fionda', 'lancia'] },
   features: [
     { level: 1, name: 'Bonus CA', description: 'Aggiunge mod SAG (se ≥0) alla CA quando non in armatura. Aumenta ogni 4 livelli: +1 al livello 4, 8, 12, 16, 20.', type: 'Ex' },
     { level: 1, name: 'Attacco Senz\'Arma', description: 'Danno 1d6 (taglia M). Le mani sono trattate come armi naturali. Danni: 1d8 (lv 4), 1d10 (lv 8), 2d6 (lv 12), 2d8 (lv 16), 2d10 (lv 20).', type: 'Ex' },

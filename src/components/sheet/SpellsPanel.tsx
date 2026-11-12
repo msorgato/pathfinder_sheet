@@ -73,6 +73,14 @@ export function SpellsPanel({ char }: Props) {
 
   return (
     <div className="space-y-4">
+      {derived.arcaneSpellFailure > 0 && casterClasses.some(e => {
+        const c = getClass(e.classId);
+        return !!c && 'spellcasting' in c && (c.spellcasting as { school?: string } | undefined)?.school === 'arcane';
+      }) && (
+        <div className="status-warning" role="alert" style={{ margin: 0 }}>
+          ⚠ Fallimento incantesimi arcani {derived.arcaneSpellFailure}% per armatura e scudo (incantesimi con componenti somatiche).
+        </div>
+      )}
       {/* Class selector */}
       {casterClasses.length > 1 && (
         <div className="flex gap-2 flex-wrap">

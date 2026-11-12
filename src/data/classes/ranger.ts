@@ -28,8 +28,8 @@ export const RANGER: ClassDefinition = {
   saves: { fort: 'good', ref: 'good', will: 'poor' },
   skillsPerLevel: 6,
   classSkills: ['climb','craft_alchemy','handle_animal','heal','intimidate','knowledge_dungeoneering','knowledge_geography','knowledge_nature','perception','profession','ride','spellcraft','stealth','survival','swim'],
-  armorProficiencies: ['Leggera', 'Media', 'Scudi'],
-  weaponProficiencies: 'Semplici e Marziali',
+  armorProficiencies: ['light', 'medium', 'shield'],
+  weaponProficiencies: { groups: ['simple', 'martial'], weapons: [] },
   spellcasting: {
     type: 'prepared',
     ability: 'wis',

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CLASSES, isBuiltinClass } from '../../data/classes';
 import { useDataStore } from '../../store/dataStore';
 import { WizardLayout } from './WizardLayout';
+import { proficiencySummary } from '../../utils/proficiencies';
 
 interface Props {
   selectedClassId: string;
@@ -24,6 +25,8 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
   const publishedCustomClasses = useDataStore(s => s.publishedCustomClasses);
   const allClasses = [...CLASSES, ...publishedCustomClasses];
   const cls = allClasses.find(c => c.id === classId);
+  const items = useDataStore(s => s.builtinItems);
+  const profs = cls ? proficiencySummary(cls, id => items.find(i => i.id === id)?.name ?? id) : null;
 
   const handleCommit = () => {
     onSelect(classId);
@@ -135,8 +138,8 @@ export function Step2_Class({ selectedClassId, onSelect, onNext, onBack }: Props
           </div>
 
           <div className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>
-            <strong>Competenze armature:</strong> {cls.armorProficiencies.join(', ')} ·{' '}
-            <strong>Armi:</strong> {cls.weaponProficiencies}
+            <strong>Competenze armature:</strong> {profs?.armor} ·{' '}
+            <strong>Armi:</strong> {profs?.weapons}
           </div>
         </div>
       )}
