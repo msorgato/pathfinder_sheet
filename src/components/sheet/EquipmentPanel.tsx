@@ -4,7 +4,9 @@ import { useCharacterStore } from '../../store/characterStore';
 import { getRace } from '../../data/races';
 import { emptyItemInput, formatCopper, inventoryOf, totalCopper, totalWeight } from '../../utils/inventory';
 import type { ItemInput } from '../../utils/inventory';
-import { gpLabel, itemStatsLabel, kgLabel } from '../../data/itemLabels';
+import { gpLabel, itemEffectsLabel, itemStatsLabel, kgLabel } from '../../data/itemLabels';
+import { displayName, isMasterwork, enhancementOf } from '../../utils/itemEnhancements';
+import { inactiveItemIds } from '../../utils/activeItems';
 import { EquipmentSlots } from './EquipmentSlots';
 import { SheetModal } from '../ui/SheetModal';
 import { ItemPicker } from './ItemPicker';
@@ -28,6 +30,7 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
 
   const size = getRace(char.race)?.size ?? 'Medium';
   const items = inventoryOf(char);
+  const inactive = inactiveItemIds(char);
   const carried = items.filter(i => !i.equipped);
   const weight = totalWeight(char);
   const warnings = d.warnings.filter(w => /armatura|scud|metallo|incantesimi arcani/i.test(w));
@@ -41,10 +44,12 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
     <div key={item.id} className="status-row equip-row">
       <div style={{ minWidth: 0 }}>
         <div className="status-row-name">
-          {item.name}{item.quantity !== 1 ? <span className="status-tag"> ×{item.quantity}</span> : null}
+          {displayName(item)}{item.quantity !== 1 ? <span className="status-tag"> ×{item.quantity}</span> : null}
+          {inactive.has(item.id) && <span className="status-tag"> · non attivo</span>}
         </div>
         <div className="status-row-detail">
-          {[itemStatsLabel(item, size), item.weightKg ? kgLabel(item.weightKg * item.quantity) : '', item.notes].filter(Boolean).join(' · ')}
+          {[itemStatsLabel(item, size), isMasterwork(item) && !enhancementOf(item) ? 'perfetto' : '', itemEffectsLabel(item),
+            item.weightKg ? kgLabel(item.weightKg * item.quantity) : '', item.notes].filter(Boolean).join(' · ')}
         </div>
       </div>
       {!readOnly && (

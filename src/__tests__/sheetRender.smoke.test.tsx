@@ -11,6 +11,8 @@ import { CombatStats, HitPointsPanel } from '../components/sheet/CombatStats';
 import { AttacksPanel } from '../components/sheet/AttacksPanel';
 import { AbilityPanel } from '../components/sheet/AbilityPanel';
 import { SkillsPanel } from '../components/sheet/SkillsPanel';
+import { ModifierRows } from '../components/sheet/ModifierRows';
+import { ItemEditor } from '../components/sheet/ItemEditor';
 import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
 import { getEffectPreset } from '../data/effectPresets';
 
@@ -80,12 +82,95 @@ describe('equipment renders', () => {
     const c = { ...char, equipment: [amulet('n1', 'Amuleto A'), amulet('n2', 'Amuleto B')] } as unknown as Character;
     const html = renderToString(<EquipmentPanel char={c} />).replace(/<!-- -->/g, '');
     expect(html).toContain('Amuleto A');
-    expect(html).toContain('in eccesso per lo slot');
+    expect(html).toContain('non attivo');
+  });
+
+  it('shows enhancement in the name, effects, and the third ring as inactive', () => {
+    const ring = (id: string, n: number) => ({
+      id, name: 'Anello ' + id, quantity: 1, notes: '', equipped: true, kind: 'magic', slot: 'ring',
+      modifiers: [{ target: { kind: 'ac' }, type: 'deflection', value: n }],
+    });
+    const blade = {
+      id: 'b', name: 'Spada Lunga', quantity: 1, notes: '', equipped: false, kind: 'weapon', slot: 'none', weightKg: 2,
+      enhancement: 1, abilities: ['infuocata', 'affilata'],
+      weapon: { group: 'martial', handedness: 'one-handed', damage: { small: { count: 1, die: 6 }, medium: { count: 1, die: 8 } },
+        critRange: 19, critMult: 2, damageTypes: ['T'], special: [] },
+    };
+    const c = { ...char, equipment: [ring('a', 1), ring('b', 2), ring('c', 3), blade] } as unknown as Character;
+    const html = renderToString(<EquipmentPanel char={c} />).replace(/<!-- -->/g, '');
+    expect(html).toContain('Spada Lunga +1 Infuocata Affilata');
+    expect(html).toContain('17–20/×2');
+    expect(html).toContain('+2 deviazione');
+    expect(html).not.toContain('+3 deviazione'); // the third ring is inactive: its effects are not listed
+    expect(html).toContain('non attivo');
   });
 
   it('read-only hides editing controls', () => {
     const html = renderToString(<EquipmentPanel char={equipped} readOnly />);
     expect(html).not.toContain('Dal catalogo');
     expect(html).not.toContain('aria-label="Rimuovi');
+  });
+});
+
+describe('shared modifier rows', () => {
+  it('renders value, type and target for each modifier', () => {
+    const html = renderToString(
+      <ModifierRows
+        value={[{ target: { kind: 'save', save: 'all' }, type: 'resistance', value: 2 }]}
+        onChange={() => undefined}
+      />,
+    ).replace(/<!-- -->/g, '');
+    expect(html).toContain('aria-label="Valore"');
+    expect(html).toContain('resistenza');
+    expect(html).toContain('Tutti i tiri salvezza');
+    expect(html).toContain('+ Modificatore');
+  });
+});
+
+describe('item editor magic section', () => {
+  const longsword = {
+    name: 'Spada Lunga', quantity: 1, notes: '', equipped: false, kind: 'weapon', slot: 'none', priceGp: 2315, basePriceGp: 15, weightKg: 2,
+    enhancement: 1, abilities: ['infuocata'],
+    weapon: { group: 'martial', handedness: 'one-handed', damage: { small: { count: 1, die: 6 }, medium: { count: 1, die: 8 } },
+      critRange: 19, critMult: 2, damageTypes: ['T'], special: [] },
+  } as unknown as Parameters<typeof ItemEditor>[0]['initial'];
+  const rope = { name: 'Corda', quantity: 1, notes: '', equipped: false, kind: 'gear', slot: 'none', priceGp: 1, weightKg: 5 };
+
+  it('shows enhancement, material, abilities and the computed price for a weapon', () => {
+    const html = renderToString(<ItemEditor title="Modifica" initial={longsword} onSave={() => undefined} onClose={() => undefined} />)
+      .replace(/<!-- -->/g, '');
+    expect(html).toContain('Magia e materiali');
+    expect(html).toContain('Potenziamento');
+    expect(html).toContain('Infuocata');
+    expect(html).toContain('bonus totale +2 / +10');
+    expect(html).toContain('value="2315"');
+    expect(html).toContain('Effetti quando indossato');
+  });
+
+  it('has no magic section for plain gear, but still allows effects', () => {
+    const html = renderToString(<ItemEditor title="Modifica" initial={rope as never} onSave={() => undefined} onClose={() => undefined} />);
+    expect(html).not.toContain('Magia e materiali');
+    expect(html).toContain('Effetti quando indossato');
+  });
+});
+
+describe('magic weapon in the attacks panel', () => {
+  const flaming = {
+    id: 'f1', name: 'Spada Lunga', quantity: 1, notes: '', equipped: true, kind: 'weapon', slot: 'none', weightKg: 2,
+    enhancement: 1, abilities: ['infuocata'], material: 'cold-iron',
+    weapon: { group: 'martial', handedness: 'one-handed', damage: { small: { count: 1, die: 6 }, medium: { count: 1, die: 8 } },
+      critRange: 19, critMult: 2, damageTypes: ['T'], special: [] },
+  };
+  const c = {
+    ...char, equipment: [flaming],
+    weaponAttacks: [{ id: 'a1', name: 'old', damageDiceCount: 1, damageDieType: 4, abilityKey: 'str', attackType: 'melee', itemId: 'f1' }],
+  } as unknown as Character;
+
+  it('shows the extra dice as a separate badge, the notes and the enhanced damage', () => {
+    const html = renderToString(<AttacksPanel char={c} onQuickRoll={() => undefined} />).replace(/<!-- -->/g, '');
+    expect(html).toContain('+1d6 fuoco');
+    expect(html).toContain('Ferro freddo: supera la RD/ferro freddo');
+    expect(html).toContain('Spada Lunga +1 Infuocata in Ferro freddo');
+    expect(html).toContain('1d8+5'); // Str 18 (+4) with Ingrandire persona, +1 enhancement
   });
 });

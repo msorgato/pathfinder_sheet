@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type {
-  ArmorCategory, ArmorStats, DamageType, Dice, ItemDefinition, ItemKind, WeaponGroup, WeaponHandedness, WeaponStats,
+  ArmorCategory, ArmorStats, BodySlot, DamageType, Dice, ItemDefinition, ItemKind, WeaponGroup, WeaponHandedness, WeaponStats,
 } from '../src/types/index.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -46,6 +46,30 @@ async function wikitext(page: string): Promise<string> {
   mkdirSync(CACHE, { recursive: true });
   writeFileSync(file, json.parse.wikitext, 'utf-8');
   return json.parse.wikitext;
+}
+
+/**
+ * The magic item database is a page that transcludes about ninety tables
+ * (`{{:Tabella ...}}`): one `expandtemplates` request returns them all.
+ */
+async function expandedMagicDatabase(): Promise<string> {
+  const file = join(CACHE, 'Database_Oggetti_Magici_espanso.wikitext');
+  if (!REFRESH && existsSync(file)) return readFileSync(file, 'utf-8');
+  const source = await wikitext('Database_Oggetti_Magici_e_Meravigliosi');
+  const wait = lastRequest + REQUEST_DELAY_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastRequest = Date.now();
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { 'User-Agent': 'pathfinder-sheet-item-import/1.0' },
+    body: new URLSearchParams({ action: 'expandtemplates', prop: 'wikitext', format: 'json', formatversion: '2', text: source }),
+  });
+  if (!res.ok) throw new Error(`expandtemplates: HTTP ${res.status}`);
+  const json = await res.json() as { expandtemplates?: { wikitext: string } };
+  if (!json.expandtemplates) throw new Error('expandtemplates: no content');
+  mkdirSync(CACHE, { recursive: true });
+  writeFileSync(file, json.expandtemplates.wikitext, 'utf-8');
+  return json.expandtemplates.wikitext;
 }
 
 // ── Wikitext table parsing ──────────────────────────────────────────────────
@@ -361,6 +385,62 @@ function gearFrom(page: string, label: string, wt: string, log: string[]): ItemD
   return items;
 }
 
+// ── Magic items (Nascosto | Nome | Tipo | Slot | Prezzo | Peso | Fonte) ─────
+
+const SLOT_BY_NAME: Record<string, BodySlot> = {
+  armatura: 'armor', scudo: 'shield', anello: 'ring', cintura: 'belt', collo: 'neck', corpo: 'body', fronte: 'headband',
+  mani: 'hands', occhi: 'eyes', piedi: 'feet', polsi: 'wrists', polso: 'wrists', spalle: 'shoulders', testa: 'head',
+  torace: 'chest', nessuno: 'none',
+};
+
+const SLOT_IT: Partial<Record<BodySlot, string>> = {
+  none: 'senza slot', neck: 'collo', shoulders: 'spalle', head: 'testa', belt: 'cintura', feet: 'piedi',
+  headband: 'fronte', hands: 'mani', wrists: 'polsi', eyes: 'occhi', body: 'corpo', chest: 'torace',
+};
+const PLURAL: Record<string, string> = {
+  arma: 'Armi magiche', armatura: 'Armature magiche', scudo: 'Scudi magici', anello: 'Anelli', bastone: 'Bastoni', verga: 'Verghe',
+};
+
+/** "Anello minore inferiore" → "Anelli"; "Oggetto Slot Collo" → "Oggetti meravigliosi (collo)". Tiers are dropped. */
+export function magicCategory(type: string, slot: BodySlot): string {
+  if (/^Oggetto\s+Scalare/i.test(type)) return 'Oggetti scalari';
+  if (/^Oggetto/i.test(type)) return `Oggetti meravigliosi (${SLOT_IT[slot] ?? 'senza slot'})`;
+  const base = type.replace(/\b(infimi?|minor[ei]|medi[aeo]|maggior[ei]|inferior[ei]|superior[ei])\b/gi, '').replace(/\s+/g, ' ').trim();
+  return PLURAL[base.toLowerCase()] ?? (base || type);
+}
+
+export function magicFrom(expanded: string, log: string[]): ItemDefinition[] {
+  const items: ItemDefinition[] = [];
+  for (const table of parseTables(expanded)) {
+    for (const row of table) {
+      if (row.length < 7 || row.some(c => c.header) || !row[1].raw) continue;
+      const [, nameC, typeC, slotC, priceC, weightC, sourceC] = row;
+      // Variants are written outside the link ("Lama della Fortuna (1 Desiderio)"): keep the whole cell text.
+      const name = nameC.text.trim();
+      const page = nameCell(nameC).page;
+      if (!name) continue;
+      // "Nessuno o Collo": works without a slot, so it counts as slotless.
+      const slotText = slotC.text.toLowerCase();
+      const slot = SLOT_BY_NAME[slotText] ?? (slotText.startsWith('nessuno') ? 'none' : undefined);
+      if (!slot) { log.push(`Magici: slot sconosciuto "${slotC.text}" per "${name}"`); continue; }
+      if (!parsePrice(priceC.text) && !isEmpty(priceC.text)) log.push(`Magici: prezzo non letto per "${name}": ${priceC.text}`);
+      items.push({
+        id: slug(name),
+        name,
+        kind: 'magic',
+        category: magicCategory(typeC.text, slot),
+        priceGp: parsePrice(priceC.text),
+        weightKg: parseWeight(weightC.text),
+        url: page ? pageUrl(page) : `${WIKI}/wiki/${encodeURI(name.replace(/ /g, '_'))}`,
+        slot,
+        tier: typeC.text,
+        ...(sourceC.text && !isEmpty(sourceC.text) ? { source: sourceC.text } : {}),
+      });
+    }
+  }
+  return items;
+}
+
 // ── Overrides, ids, output ──────────────────────────────────────────────────
 
 interface Overrides {
@@ -389,14 +469,18 @@ function applyOverrides(items: ItemDefinition[], ov: Overrides): ItemDefinition[
 
 /** Weapons/armor win over gear; other duplicates get a category suffix; leftovers are an error. */
 function uniqueIds(items: ItemDefinition[], log: string[]): ItemDefinition[] {
-  const rank = (k: ItemKind) => (k === 'gear' ? 1 : 0);
+  const rank = (k: ItemKind) => (k === 'magic' ? 2 : k === 'gear' ? 1 : 0);
   const seen = new Map<string, ItemDefinition>();
   const out: ItemDefinition[] = [];
   for (const it of [...items].sort((a, b) => rank(a.kind) - rank(b.kind))) {
     const prev = seen.get(it.id);
     if (!prev) { seen.set(it.id, it); out.push(it); continue; }
     if (prev.name === it.name && prev.priceGp === it.priceGp) { log.push(`duplicato ignorato: ${it.id}`); continue; }
-    const id = `${it.id}-${slug(it.category)}`;
+    if (it.kind === 'magic' && prev.kind === 'magic' && prev.name !== it.name) throw new Error(`stesso id, nomi diversi: ${it.id}`);
+    // Magic items get an "m-" prefix against common ones; between magic items the tier tells them apart.
+    const id = it.kind === 'magic'
+      ? (seen.has(`m-${it.id}`) ? `m-${it.id}-${slug(it.tier ?? it.category)}` : `m-${it.id}`)
+      : `${it.id}-${slug(it.category)}`;
     if (seen.has(id)) throw new Error(`id duplicato non risolvibile: ${id}`);
     log.push(`id rinominato: ${it.id} → ${id}`);
     const renamed = { ...it, id };
@@ -416,6 +500,7 @@ async function main() {
     ...gearFrom("Oggetti_d'Avventura", "Oggetti d'avventura", await wikitext("Oggetti_d'Avventura"), log),
     ...gearFrom('Attrezzi_di_Classe_e_Abilità', 'Attrezzi di classe e abilità', await wikitext('Attrezzi_di_Classe_e_Abilità'), log),
     ...gearFrom('Vestiario', 'Vestiario', await wikitext('Vestiario'), log),
+    ...magicFrom(await expandedMagicDatabase(), log),
   ];
   const overrides: Overrides = existsSync(OVERRIDES) ? JSON.parse(readFileSync(OVERRIDES, 'utf-8')) : {};
   const final = uniqueIds(applyOverrides(items, overrides), log)

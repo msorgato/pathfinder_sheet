@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { BodySlot, Character } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
 import { inventoryOf } from '../../utils/inventory';
-import { itemStatsLabel, SLOT_CAPACITY, SLOT_LABELS, SLOT_ORDER } from '../../data/itemLabels';
+import { itemEffectsLabel, itemStatsLabel, SLOT_CAPACITY, SLOT_LABELS, SLOT_ORDER } from '../../data/itemLabels';
+import { displayName } from '../../utils/itemEnhancements';
 import { SheetModal } from '../ui/SheetModal';
 
 type Item = ReturnType<typeof inventoryOf>[number];
@@ -24,6 +25,7 @@ export function EquipmentSlots({ char, readOnly = false, onOpenCatalog }: {
   const inSlot = (slot: BodySlot) => worn.filter(i => i.slot === slot);
   const slotless = inSlot('none');
   const candidates = picking ? items.filter(i => !i.equipped && i.slot === picking) : [];
+  const detail = (i: Item) => [itemStatsLabel(i), itemEffectsLabel(i)].filter(Boolean).join(' · ');
 
   const cellLabel = (slot: BodySlot, index: number) =>
     (SLOT_CAPACITY[slot] ?? 1) > 1 ? `${SLOT_LABELS[slot]} ${index + 1}` : SLOT_LABELS[slot];
@@ -55,17 +57,17 @@ export function EquipmentSlots({ char, readOnly = false, onOpenCatalog }: {
               ) : (
                 <div className="slot-item">
                   <div style={{ minWidth: 0 }}>
-                    <div className="slot-item-name">{item.name}</div>
-                    {itemStatsLabel(item) && <div className="slot-item-detail">{itemStatsLabel(item)}</div>}
+                    <div className="slot-item-name">{displayName(item)}</div>
+                    {detail(item) && <div className="slot-item-detail">{detail(item)}</div>}
                   </div>
                   {unequip(item)}
                 </div>
               )}
               {extra.map(x => (
-                <div key={x.id} className="slot-item is-extra" title="Lo slot è già occupato: questo oggetto è in eccesso">
+                <div key={x.id} className="slot-item is-extra" title="Lo slot è già occupato: questo oggetto è equipaggiato ma non ha effetto">
                   <div style={{ minWidth: 0 }}>
-                    <div className="slot-item-name">{x.name}</div>
-                    <div className="slot-item-detail">⚠ in eccesso per lo slot</div>
+                    <div className="slot-item-name">{displayName(x)}</div>
+                    <div className="slot-item-detail">⚠ non attivo: lo slot è già occupato</div>
                   </div>
                   {unequip(x)}
                 </div>
@@ -80,8 +82,8 @@ export function EquipmentSlots({ char, readOnly = false, onOpenCatalog }: {
       {slotless.map(item => (
         <div key={item.id} className="slot-item slot-slotless">
           <div style={{ minWidth: 0 }}>
-            <div className="slot-item-name">{item.name}{item.quantity !== 1 ? ` ×${item.quantity}` : ''}</div>
-            {itemStatsLabel(item) && <div className="slot-item-detail">{itemStatsLabel(item)}</div>}
+            <div className="slot-item-name">{displayName(item)}{item.quantity !== 1 ? ` ×${item.quantity}` : ''}</div>
+            {detail(item) && <div className="slot-item-detail">{detail(item)}</div>}
           </div>
           {unequip(item)}
         </div>
@@ -96,8 +98,8 @@ export function EquipmentSlots({ char, readOnly = false, onOpenCatalog }: {
             {candidates.map(i => (
               <button key={i.id} type="button" className="picker-item"
                 onClick={() => { store.toggleEquipped(char.id, i.id); setPicking(null); }}>
-                <span className="picker-item-name">{i.name}</span>
-                {itemStatsLabel(i) && <span className="picker-item-detail">{itemStatsLabel(i)}</span>}
+                <span className="picker-item-name">{displayName(i)}</span>
+                {detail(i) && <span className="picker-item-detail">{detail(i)}</span>}
               </button>
             ))}
           </div>

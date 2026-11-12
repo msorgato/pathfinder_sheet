@@ -1,9 +1,13 @@
-import type { AbilityKey, ArmorStats, BonusType, Character, EquipmentItem, Modifier, SaveKey, WeaponAttack } from '../types';
+import type { AbilityKey, BonusType, Character, EquipmentItem, Modifier, SaveKey, WeaponAttack } from '../types';
 import { getCondition } from '../data/conditions';
 import { SKILLS } from '../data/skills';
 import { getClass, isBuiltinClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { attackFieldsFromItem, inventoryOf } from './inventory';
+import { activeItems } from './activeItems';
+import { armorAbilityModifiers, displayName, effectiveArmor, effectiveWeapon } from './itemEnhancements';
+import type { EffectiveArmor } from './itemEnhancements';
+import type { ExtraDice } from '../data/itemAbilities';
 import { computeProficiencies, isProficientArmor, isProficientWeapon, type ProficiencySet } from './proficiencies';
 import { ABILITY_SHORT } from '../data/modifierLabels';
 import {
@@ -44,6 +48,10 @@ export interface ResolvedAttack {
   proficient: boolean;
   /** The linked inventory item still exists. */
   linked: boolean;
+  /** Extra damage dice of the weapon's special abilities, rolled apart. */
+  extraDice: ExtraDice[];
+  /** Effects of abilities and materials that are not automated. */
+  notes: string[];
 }
 
 export interface DerivedStats {
@@ -138,14 +146,17 @@ const sumStack = (mods: SourcedModifier[]) => stack(mods).applied.reduce((s, e) 
 
 // ── Sources ──────────────────────────────────────────────────────────────────
 
-export interface WornArmor { item: EquipmentItem; armor: ArmorStats; proficient: boolean }
+/** A worn armor or shield; `armor` already has enhancement, masterwork and material applied. */
+export interface WornArmor { item: EquipmentItem; armor: EffectiveArmor; proficient: boolean }
 
-/** Equipped armor and shield (at most one of each counts: the first equipped). */
+/** Active armor and shield (at most one of each counts: the first active one). */
 export function wornArmor(char: Character, profs: ProficiencySet = computeProficiencies(char)): WornArmor[] {
   const out: WornArmor[] = [];
+  const active = activeItems(char);
   for (const kind of ['armor', 'shield'] as const) {
-    const item = inventoryOf(char).find(i => i.equipped && i.kind === kind && i.armor);
-    if (item?.armor) out.push({ item, armor: item.armor, proficient: isProficientArmor(profs, item.armor, item) });
+    const item = active.find(i => i.kind === kind && i.armor);
+    const armor = item && effectiveArmor(item);
+    if (item && armor) out.push({ item, armor, proficient: isProficientArmor(profs, armor, item) });
   }
   return out;
 }
@@ -157,7 +168,7 @@ const ARMOR_CHECK_SKILLS = SKILLS.filter(sk => sk.armorCheckPenalty);
 function armorModifiers(worn: WornArmor[]): SourcedModifier[] {
   const out: SourcedModifier[] = [];
   for (const { item, armor, proficient } of worn) {
-    const source = item.name;
+    const source = displayName(item);
     if (armor.bonus) {
       out.push({ source, type: item.kind === 'shield' ? 'shield' : 'armor', value: armor.bonus, target: { kind: 'ac' } });
     }
@@ -168,6 +179,10 @@ function armorModifiers(worn: WornArmor[]): SourcedModifier[] {
     if (!proficient) {
       out.push({ source: `${source} (non competente)`, type: 'untyped', value: acp, target: { kind: 'attack', scope: 'all' } });
     }
+  }
+  // Abilities of the worn armor and shield (e.g. Ombra: +5 Furtività)
+  for (const { item } of worn) {
+    armorAbilityModifiers(item).forEach(m => out.push({ ...m, source: displayName(item) }));
   }
   return out;
 }
@@ -180,6 +195,10 @@ export function totalNegativeLevels(char: Pick<Character, 'negativeLevels'>): nu
 /** All active modifiers with their source name (conditions, enabled effects, negative levels). */
 export function collectModifiers(char: Character, worn: WornArmor[] = wornArmor(char)): SourcedModifier[] {
   const out: SourcedModifier[] = [...armorModifiers(worn)];
+  // Modifiers of equipped items; items beyond the capacity of their slot are inactive.
+  for (const item of activeItems(char)) {
+    item.modifiers?.forEach(m => out.push({ ...m, source: displayName(item) }));
+  }
   const seen = new Set<string>();
   let fearApplied = false;
 
@@ -398,32 +417,41 @@ export function deriveStats(char: Character): DerivedStats {
   const toMeters = (ft: number) => Math.round(ft * 0.3 * 2) / 2;
   const baseSpeed = toMeters(feet);
   const bodyArmor = worn.find(w => w.item.kind === 'armor');
-  const slowed = !!bodyArmor && (bodyArmor.armor.category === 'medium' || bodyArmor.armor.category === 'heavy')
+  const slowed = !!bodyArmor && (bodyArmor.armor.speedCategory === 'medium' || bodyArmor.armor.speedCategory === 'heavy')
     && !race?.armorSpeedUnaffected;
   // PF1 armor speed table (feet): 20→15, 30→20, 40→30, 50→35, 60→40…
   const ARMOR_SPEED_FT: Record<number, number> = { 20: 15, 30: 20, 40: 30, 50: 35, 60: 40, 70: 50, 80: 55, 90: 60, 100: 70, 110: 75, 120: 80 };
   const reducedSpeed = toMeters(ARMOR_SPEED_FT[feet] ?? Math.round((feet * 2) / 3 / 5) * 5);
-  const speed = makeStat(baseSpeed, slowed && bodyArmor ? [{ source: bodyArmor.item.name, value: reducedSpeed - baseSpeed }] : [], []);
+  const speed = makeStat(baseSpeed, slowed && bodyArmor ? [{ source: displayName(bodyArmor.item), value: reducedSpeed - baseSpeed }] : [], []);
 
   // Weapon attacks
   const items = inventoryOf(char);
   const size = race?.size ?? 'Medium';
   const weaponAttack = (stored: WeaponAttack): ResolvedAttack => {
     const item = stored.itemId ? items.find(i => i.id === stored.itemId) : undefined;
-    const atk: WeaponAttack = item ? { ...stored, ...attackFieldsFromItem(item, size), name: item.name } : stored;
+    const atk: WeaponAttack = item ? { ...stored, ...attackFieldsFromItem(item, size), name: displayName(item) } : stored;
     const proficient = item ? isProficientWeapon(proficiencies, item) : true;
     const key = atk.abilityKey;
     const scope = atk.attackType;
+    const ew = item ? effectiveWeapon(item) : null;
+    // Enhancement (or masterwork) is a typed bonus, so it competes with other enhancement bonuses.
+    const weaponAttackMods: SourcedModifier[] = item && ew && ew.attackBonus
+      ? [{ source: displayName(item), type: 'enhancement', value: ew.attackBonus, target: { kind: 'attack', scope: 'all' } }] : [];
+    const weaponDamageMods: SourcedModifier[] = item && ew ? [
+      ...(ew.damageBonus ? [{ source: displayName(item), type: 'enhancement' as const, value: ew.damageBonus, target: { kind: 'damage' as const, scope: 'all' as const } }] : []),
+      ...(ew.materialDamage ? [{ source: 'Materiale', type: 'untyped' as const, value: ew.materialDamage, target: { kind: 'damage' as const, scope: 'all' as const } }] : []),
+    ] : [];
     const toHit = makeStat(
       bab + rawMod(key),
       [abilityDelta(key), ...(proficient ? [] : [{ source: 'Non competente', value: -4 }])],
-      scopeMods('attack', scope),
+      [...scopeMods('attack', scope), ...weaponAttackMods],
     );
     const twoHandedBonus = atk.twoHanded && key === 'str' && mods.str > 0 ? Math.floor(mods.str * 1.5) - mods.str : 0;
     const damage = makeStat(rawMod(key), [abilityDelta(key), { source: 'Due mani (×1,5 FOR)', value: twoHandedBonus }],
-      scopeMods('damage', scope));
+      [...scopeMods('damage', scope), ...weaponDamageMods]);
     return {
       attack: atk, toHit, damage, critRange: atk.critRange ?? 20, critMult: atk.critMult ?? 2, proficient, linked: !!item,
+      extraDice: ew?.extraDice ?? [], notes: ew?.notes ?? [],
     };
   };
 

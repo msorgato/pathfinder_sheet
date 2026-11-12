@@ -206,7 +206,9 @@ export interface WeaponAttack {
 
 // ── Items ────────────────────────────────────────────────────────────────────
 
-export type ItemKind = 'weapon' | 'armor' | 'shield' | 'ammo' | 'gear';
+export type ItemKind = 'weapon' | 'armor' | 'shield' | 'ammo' | 'gear' | 'magic';
+
+export type MaterialId = 'mithral' | 'adamantine' | 'cold-iron' | 'alchemical-silver' | 'darkwood';
 
 export type BodySlot =
   | 'armor' | 'shield' | 'head' | 'headband' | 'eyes' | 'neck' | 'shoulders' | 'chest'
@@ -259,6 +261,10 @@ export interface ItemDefinition {
   url: string;
   weapon?: WeaponStats;
   armor?: ArmorStats;
+  /** Magic items: body slot, tier (e.g. "Anello minore inferiore") and source book. */
+  slot?: BodySlot;
+  tier?: string;
+  source?: string;
 }
 
 /** An item owned by a character (a copy of the catalogue data, freely editable). */
@@ -277,6 +283,17 @@ export interface EquipmentItem {
   armor?: ArmorStats;
   /** Owner-set: treat as non-proficient regardless of computed proficiencies. */
   nonProficient?: boolean;
+  /** Masterwork quality (implied by enhancement and by special materials). */
+  masterwork?: boolean;
+  /** Enhancement bonus, 0 to 5. */
+  enhancement?: number;
+  material?: MaterialId;
+  /** Special ability ids (see data/itemAbilities). */
+  abilities?: string[];
+  /** Modifiers applied while the item is equipped and active. */
+  modifiers?: Modifier[];
+  /** Price before masterwork/material/enhancement, used to recompute the list price. */
+  basePriceGp?: number;
   /** @deprecated legacy format */
   type?: 'weapon' | 'armor' | 'gear' | 'magic' | 'wondrous';
   /** @deprecated legacy format (weight) */

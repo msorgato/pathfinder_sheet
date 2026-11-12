@@ -372,7 +372,28 @@ function WeaponRow({
         >
           {damageLabel}
         </button>
+        {resolved.extraDice.map(x => {
+          const label = `+${x.count}d${x.die} ${x.label}`;
+          return (
+            <button
+              key={label}
+              type="button"
+              className="extra-dice-badge rounded px-2 py-1 text-xs font-bold transition-colors"
+              title={onQuickRoll ? `Tira ${x.count}d${x.die} di danni da ${x.label}` : undefined}
+              style={{ cursor: onQuickRoll ? 'pointer' : 'default' }}
+              onClick={() => onQuickRoll?.({ label: `${weapon.name} ${x.label}`, numDice: x.count, dieType: x.die, modifier: 0 })}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
+
+      {resolved.notes.length > 0 && (
+        <div className="mt-1.5 text-xs" style={{ color: 'var(--theme-text-faint)' }}>
+          {resolved.notes.map(n => <div key={n}>{n}</div>)}
+        </div>
+      )}
 
       {weapon.notes && (
         <div className="mt-1.5 text-xs" style={{ color: 'var(--theme-text-faint)' }}>{weapon.notes}</div>

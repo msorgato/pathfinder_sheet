@@ -4,20 +4,28 @@ import { useDataStore } from '../../store/dataStore';
 import { useCharacterStore } from '../../store/characterStore';
 import { SheetModal } from '../ui/SheetModal';
 import { formatCopper, gpToCopper, itemFromCatalog, totalCopper } from '../../utils/inventory';
-import { gpLabel, itemStatsLabel, kgLabel } from '../../data/itemLabels';
+import { gpLabel, itemStatsLabel, kgLabel, magicInfoLabel } from '../../data/itemLabels';
+
+type Scope = 'all' | 'common' | 'magic';
+const SCOPES: { id: Scope; label: string }[] = [{ id: 'all', label: 'Tutti' }, { id: 'common', label: 'Comuni' }, { id: 'magic', label: 'Magici' }];
+const LIMIT = 80;
 
 /** Catalogue search and add/purchase dialog. */
 export function ItemPicker({ char, onClose }: { char: Character; onClose: () => void }) {
   const items = useDataStore(s => s.builtinItems);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
+  const [scope, setScope] = useState<Scope>('all');
   const [chosen, setChosen] = useState<ItemDefinition | null>(null);
 
-  const categories = useMemo(() => [...new Set(items.map(i => i.category))].sort((a, b) => a.localeCompare(b, 'it')), [items]);
+  const inScope = useMemo(
+    () => items.filter(i => scope === 'all' || (scope === 'magic') === (i.kind === 'magic')),
+    [items, scope],
+  );
+  const categories = useMemo(() => [...new Set(inScope.map(i => i.category))].sort((a, b) => a.localeCompare(b, 'it')), [inScope]);
   const q = query.trim().toLowerCase();
-  const list = items
-    .filter(i => (!category || i.category === category) && (!q || i.name.toLowerCase().includes(q)))
-    .slice(0, 80);
+  const matching = inScope.filter(i => (!category || i.category === category) && (!q || i.name.toLowerCase().includes(q)));
+  const list = matching.slice(0, LIMIT);
 
   if (chosen) return <AddItem char={char} def={chosen} onBack={() => setChosen(null)} onDone={onClose} />;
 
@@ -27,7 +35,13 @@ export function ItemPicker({ char, onClose }: { char: Character; onClose: () => 
         <p className="status-empty">Catalogo in caricamento…</p>
       ) : (
         <>
-          <input className="pf-input w-full" placeholder="Cerca oggetto…" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          <div className="scope-toggle" role="group" aria-label="Tipo di oggetti">
+            {SCOPES.map(s => (
+              <button key={s.id} type="button" className={`pf-btn ${scope === s.id ? 'pf-btn-gold' : 'pf-btn-ghost'}`} aria-pressed={scope === s.id}
+                onClick={() => { setScope(s.id); setCategory(''); }}>{s.label}</button>
+            ))}
+          </div>
+          <input className="pf-input w-full" style={{ marginTop: 8 }} placeholder="Cerca oggetto…" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
           <select className="pf-input w-full" style={{ marginTop: 8 }} value={category} onChange={e => setCategory(e.target.value)}
             aria-label="Categoria">
             <option value="">Tutte le categorie</option>
@@ -38,11 +52,12 @@ export function ItemPicker({ char, onClose }: { char: Character; onClose: () => 
               <button key={i.id} type="button" className="picker-item" onClick={() => setChosen(i)}>
                 <span className="picker-item-name">{i.name}</span>
                 <span className="picker-item-detail">
-                  {[i.category, itemStatsLabel(i), gpLabel(i.priceGp), i.weightKg ? kgLabel(i.weightKg) : ''].filter(Boolean).join(' · ')}
+                  {[i.category, magicInfoLabel(i), itemStatsLabel(i), gpLabel(i.priceGp), i.weightKg ? kgLabel(i.weightKg) : ''].filter(Boolean).join(' · ')}
                 </span>
               </button>
             ))}
             {list.length === 0 && <p className="status-empty">Nessun oggetto trovato.</p>}
+            {matching.length > LIMIT && <p className="status-empty">Primi {LIMIT} di {matching.length}: affina la ricerca.</p>}
           </div>
         </>
       )}
@@ -82,7 +97,7 @@ function AddItem({ char, def, onBack, onDone }: { char: Character; def: ItemDefi
   return (
     <SheetModal title={def.name} onClose={onDone} maxWidth={440}>
       <p className="status-empty" style={{ marginBottom: 8 }}>
-        {[def.category, itemStatsLabel(def), `listino ${gpLabel(def.priceGp)}`, def.weightKg ? kgLabel(def.weightKg) : ''].filter(Boolean).join(' · ')}
+        {[def.category, magicInfoLabel(def), itemStatsLabel(def), `listino ${gpLabel(def.priceGp)}`, def.weightKg ? kgLabel(def.weightKg) : ''].filter(Boolean).join(' · ')}
       </p>
       <a href={def.url} target="_blank" rel="noreferrer" className="item-wiki-link">Scheda sul wiki ↗</a>
 

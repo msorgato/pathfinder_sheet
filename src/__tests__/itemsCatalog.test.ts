@@ -25,7 +25,7 @@ describe('item catalogue (public/data/items.json)', () => {
 
   it('contains every category', () => {
     const kinds = new Set(catalogue.items.map(i => i.kind));
-    expect([...kinds].sort()).toEqual(['ammo', 'armor', 'gear', 'shield', 'weapon']);
+    expect([...kinds].sort()).toEqual(['ammo', 'armor', 'gear', 'magic', 'shield', 'weapon']);
     const groups = new Set(catalogue.items.flatMap(i => (i.weapon ? [i.weapon.group] : [])));
     expect([...groups].sort()).toEqual(['exotic', 'martial', 'simple']);
   });
@@ -61,6 +61,39 @@ describe('item catalogue (public/data/items.json)', () => {
     expect(get('corda')).toMatchObject({ kind: 'gear' });
     expect(get('frecce')).toMatchObject({ kind: 'ammo', name: 'Frecce (20)', priceGp: 1 });
     expect(get('serratura-o-lucchetto-media')).toMatchObject({ priceGp: 40 });
+  });
+});
+
+describe('magic items', () => {
+  const magic = catalogue.items.filter(i => i.kind === 'magic');
+
+  it('has hundreds of entries, each with a slot', () => {
+    expect(magic.length).toBeGreaterThan(700);
+    expect(magic.every(i => i.slot && i.tier && i.url.startsWith('https://golarion.altervista.org/wiki/'))).toBe(true);
+  });
+
+  it('Anello di Protezione +1', () => {
+    expect(get('anello-di-protezione-1')).toMatchObject({
+      kind: 'magic', slot: 'ring', priceGp: 2000, category: 'Anelli', tier: 'Anello minore inferiore',
+    });
+    expect(get('anello-di-protezione-1').url).toContain('/wiki/Anello_di_Protezione');
+  });
+
+  it('big six variants, by slot', () => {
+    expect(get('mantello-della-resistenza-3')).toMatchObject({ slot: 'shoulders', priceGp: 9000 });
+    expect(get('cintura-della-forza-del-gigante-4')).toMatchObject({ slot: 'belt', priceGp: 16000 });
+    expect(magic.some(i => i.slot === 'neck')).toBe(true);
+    expect(magic.some(i => i.slot === 'none')).toBe(true);
+  });
+
+  it('keeps variants written outside the link', () => {
+    expect(magic.filter(i => i.name.startsWith('Lama della Fortuna')).length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('does not collide with common items and stores no descriptions', () => {
+    expect(get('spada-lunga').kind).toBe('weapon');
+    const allowed = new Set(['id', 'name', 'kind', 'category', 'priceGp', 'weightKg', 'url', 'slot', 'tier', 'source', 'weapon', 'armor']);
+    expect(catalogue.items.flatMap(i => Object.keys(i)).filter(k => !allowed.has(k))).toEqual([]);
   });
 });
 

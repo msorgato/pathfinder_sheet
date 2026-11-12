@@ -5,6 +5,9 @@ import type {
 import type { ItemInput } from '../../utils/inventory';
 import { defaultSlot } from '../../utils/inventory';
 import { SheetModal } from '../ui/SheetModal';
+import { MagicSection } from './MagicSection';
+import { ModifierRows } from './ModifierRows';
+import { withComputedPrice } from '../../utils/itemEnhancements';
 import {
   ARMOR_CATEGORY_LABELS, HANDEDNESS_LABELS, KIND_LABELS, SLOT_LABELS, SLOT_ORDER, WEAPON_GROUP_LABELS,
 } from '../../data/itemLabels';
@@ -27,24 +30,53 @@ export function ItemEditor({ title, initial, onSave, onClose }: {
 }) {
   const [item, setItem] = useState<ItemInput>(() => structuredClone(initial));
   const kind: ItemKind = item.kind ?? 'gear';
+  const fmt = (n: number | undefined) => String(n ?? 0).replace('.', ',');
+  // Price and weight are text fields; magical properties recompute them, so both are controlled.
+  const [priceText, setPriceText] = useState(() => fmt(initial.priceGp));
+  const [weightText, setWeightText] = useState(() => fmt(initial.weightKg));
   const set = (patch: Partial<ItemInput>) => setItem(i => ({ ...i, ...patch }));
+  /** Applies a change to the magical properties and recomputes the list price (and weight). */
+  const applyMagic = (patch: Partial<ItemInput>) => {
+    const next = withComputedPrice({ ...item, ...patch });
+    setItem(next);
+    setPriceText(fmt(next.priceGp));
+    setWeightText(fmt(next.weightKg));
+  };
   const setWeapon = (patch: Partial<WeaponStats>) => setItem(i => ({ ...i, weapon: { ...(i.weapon ?? DEFAULT_WEAPON), ...patch } }));
   const setArmor = (patch: Partial<ArmorStats>) => setItem(i => ({ ...i, armor: { ...(i.armor ?? DEFAULT_ARMOR), ...patch } }));
 
-  const changeKind = (k: ItemKind) => setItem(i => ({
-    ...i,
-    kind: k,
-    slot: i.slot && i.slot !== defaultSlot(i.kind ?? 'gear') ? i.slot : defaultSlot(k),
-    weapon: k === 'weapon' ? (i.weapon ?? DEFAULT_WEAPON) : undefined,
-    armor: k === 'armor' ? (i.armor && i.armor.category !== 'shield' && i.armor.category !== 'tower' ? i.armor : DEFAULT_ARMOR)
-      : k === 'shield' ? (i.armor && (i.armor.category === 'shield' || i.armor.category === 'tower') ? i.armor : DEFAULT_SHIELD)
-      : undefined,
-  }));
+  const changeKind = (k: ItemKind) => {
+    const i = item;
+    const next: ItemInput = {
+      ...i,
+      kind: k,
+      slot: i.slot && i.slot !== defaultSlot(i.kind ?? 'gear') ? i.slot : defaultSlot(k),
+      weapon: k === 'weapon' ? (i.weapon ?? DEFAULT_WEAPON) : undefined,
+      armor: k === 'armor' ? (i.armor && i.armor.category !== 'shield' && i.armor.category !== 'tower' ? i.armor : DEFAULT_ARMOR)
+        : k === 'shield' ? (i.armor && (i.armor.category === 'shield' || i.armor.category === 'tower') ? i.armor : DEFAULT_SHIELD)
+        : undefined,
+    };
+    // Masterwork, enhancement and materials only make sense for weapons, armor and shields.
+    if (k !== 'weapon' && k !== 'armor' && k !== 'shield') {
+      delete next.masterwork; delete next.enhancement; delete next.material; delete next.abilities;
+    }
+    const priced = withComputedPrice(next);
+    setItem(priced);
+    setPriceText(fmt(priced.priceGp));
+    setWeightText(fmt(priced.weightKg));
+  };
 
   const save = () => {
     const out: ItemInput = { ...item };
     if (kind !== 'weapon') delete out.weapon;
     if (kind !== 'armor' && kind !== 'shield') delete out.armor;
+    // Keep the stored item free of empty magical fields.
+    const modifiers = (out.modifiers ?? []).filter(m => Number.isFinite(m.value) && m.value !== 0);
+    if (modifiers.length) out.modifiers = modifiers; else delete out.modifiers;
+    if (!out.masterwork) delete out.masterwork;
+    if (!out.enhancement) delete out.enhancement;
+    if (!out.material) delete out.material;
+    if (!out.abilities?.length) delete out.abilities;
     onSave(out);
     onClose();
   };
@@ -86,13 +118,13 @@ export function ItemEditor({ title, initial, onSave, onClose }: {
           </label>
           <label>
             <span className="label-rune-soft">Prezzo (mo)</span>
-            <input className="pf-input w-full" inputMode="decimal" defaultValue={String(item.priceGp ?? 0).replace('.', ',')}
-              onChange={e => set({ priceGp: Math.max(0, num(e.target.value)) })} />
+            <input className="pf-input w-full" inputMode="decimal" value={priceText}
+              onChange={e => { setPriceText(e.target.value); set({ priceGp: Math.max(0, num(e.target.value)) }); }} />
           </label>
           <label>
             <span className="label-rune-soft">Peso (kg)</span>
-            <input className="pf-input w-full" inputMode="decimal" defaultValue={String(item.weightKg ?? 0).replace('.', ',')}
-              onChange={e => set({ weightKg: Math.max(0, num(e.target.value)) })} />
+            <input className="pf-input w-full" inputMode="decimal" value={weightText}
+              onChange={e => { setWeightText(e.target.value); set({ weightKg: Math.max(0, num(e.target.value)) }); }} />
           </label>
         </div>
 
@@ -192,6 +224,16 @@ export function ItemEditor({ title, initial, onSave, onClose }: {
             </div>
           </>
         )}
+
+        <MagicSection item={item} onChange={applyMagic} />
+
+        <details className="magic-section" open={!!item.modifiers?.length}>
+          <summary>Effetti quando indossato</summary>
+          <div className="effect-form">
+            <p className="status-empty">Si applicano solo quando l'oggetto è indossato e il suo slot non è già pieno.</p>
+            <ModifierRows value={item.modifiers ?? []} onChange={modifiers => set({ modifiers })} />
+          </div>
+        </details>
 
         {(kind === 'weapon' || kind === 'armor' || kind === 'shield') && (
           <label className="checkbox-inline">

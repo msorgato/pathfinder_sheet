@@ -1,5 +1,7 @@
+import { modifierLabel } from './modifierLabels';
+import { effectiveArmor, effectiveWeapon } from '../utils/itemEnhancements';
 import type {
-  ArmorCategory, BodySlot, DamageType, Dice, EquipmentItem, ItemKind, WeaponGroup, WeaponHandedness,
+  ArmorCategory, BodySlot, DamageType, Dice, EquipmentItem, ItemDefinition, ItemKind, WeaponGroup, WeaponHandedness,
 } from '../types';
 
 export const SLOT_LABELS: Record<BodySlot, string> = {
@@ -17,7 +19,7 @@ export const SLOT_ORDER: BodySlot[] = [
 export const SLOT_CAPACITY: Partial<Record<BodySlot, number>> = { ring: 2 };
 
 export const KIND_LABELS: Record<ItemKind, string> = {
-  weapon: 'Arma', armor: 'Armatura', shield: 'Scudo', ammo: 'Munizioni', gear: 'Equipaggiamento',
+  weapon: 'Arma', armor: 'Armatura', shield: 'Scudo', ammo: 'Munizioni', gear: 'Equipaggiamento', magic: 'Oggetto magico',
 };
 
 export const WEAPON_GROUP_LABELS: Record<WeaponGroup, string> = { simple: 'Semplice', martial: 'Da guerra', exotic: 'Esotica' };
@@ -42,10 +44,22 @@ export const kgLabel = (kg: number) => `${kg.toLocaleString('it-IT', { maximumFr
 /** Price in gold pieces with Italian decimals. */
 export const gpLabel = (gp: number) => `${gp.toLocaleString('it-IT', { maximumFractionDigits: 2 })} mo`;
 
-/** One-line summary of an item's game statistics. */
-export function itemStatsLabel(item: Pick<EquipmentItem, 'weapon' | 'armor'>, size: 'Small' | 'Medium' | 'Large' = 'Medium'): string {
+/** "Collo · Oggetto minore inferiore · Manuale di Gioco" for magic items, empty for the others. */
+export function magicInfoLabel(item: Pick<ItemDefinition, 'kind' | 'slot' | 'tier' | 'source'>): string {
+  if (item.kind !== 'magic') return '';
+  return [item.slot ? SLOT_LABELS[item.slot] : '', item.tier ?? '', item.source ?? ''].filter(Boolean).join(' · ');
+}
+
+type StatsSource = Pick<EquipmentItem, 'kind' | 'weapon' | 'armor' | 'masterwork' | 'enhancement' | 'material' | 'abilities'>;
+
+/** "+2 resistenza · Tutti i tiri salvezza, …" for the modifiers an item grants when worn. */
+export const itemEffectsLabel = (item: Pick<EquipmentItem, 'modifiers'>): string =>
+  (item.modifiers ?? []).map(modifierLabel).join(', ');
+
+/** One-line summary of an item's game statistics, with enhancement, abilities and material applied. */
+export function itemStatsLabel(item: StatsSource, size: 'Small' | 'Medium' | 'Large' = 'Medium'): string {
   if (item.weapon) {
-    const w = item.weapon;
+    const w = effectiveWeapon(item)?.stats ?? item.weapon;
     const dice = size === 'Small' ? w.damage.small : w.damage.medium;
     return [
       diceLabel(dice ?? w.damage.medium),
@@ -56,7 +70,7 @@ export function itemStatsLabel(item: Pick<EquipmentItem, 'weapon' | 'armor'>, si
     ].filter(Boolean).join(' · ');
   }
   if (item.armor) {
-    const a = item.armor;
+    const a = effectiveArmor(item) ?? item.armor;
     return [
       `${signed(a.bonus)} ${a.category === 'shield' || a.category === 'tower' ? 'scudo' : 'armatura'}`,
       a.maxDex === null ? '' : `Des max ${signed(a.maxDex)}`,

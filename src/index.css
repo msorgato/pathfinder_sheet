@@ -1248,3 +1248,16 @@ body {
 .char-card .corner.bl { border-bottom-left-radius: 14px; }
 .char-card .corner.br { border-bottom-right-radius: 14px; }
 .char-portrait { border-radius: 16px; }
+
+/* Magical properties in the item editor */
+.magic-section { margin-top: 8px; border: 1px solid var(--line-soft); border-radius: 12px; padding: 8px 12px; }
+.magic-section > summary { cursor: pointer; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); }
+.magic-section[open] > summary { margin-bottom: 8px; }
+.ability-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; padding: 4px 2px; }
+.ability-list .checkbox-inline.is-disabled { opacity: 0.45; }
+
+.scope-toggle { display: flex; gap: 6px; }
+.scope-toggle .pf-btn { flex: 1; }
+
+.extra-dice-badge { background: color-mix(in oklab, var(--ember, var(--gold)) 16%, transparent); color: var(--ember, var(--gold-bright)); border: 1px solid color-mix(in oklab, var(--ember, var(--gold)) 45%, transparent); }
+.extra-dice-badge:hover { filter: brightness(1.2); }

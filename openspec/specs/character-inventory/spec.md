@@ -61,7 +61,7 @@ Items SHALL be assignable to one of these slots: armor, shield, head, headband, 
 - **THEN** its slot is armor
 
 ### Requirement: Slot overview
-The equipment tab SHALL show a fixed list of all body slots, in the order of the classic character sheet (armor, shield, head, headband, eyes, neck, shoulders, chest, body, belt, wrists, hands, two rings, feet), each with the equipped item or marked as free. Equipped items with no slot (e.g. wielded weapons) SHALL be listed after the slots. The owner SHALL be able to equip a carried item by choosing a free slot.
+The equipment tab SHALL show a fixed list of all body slots, in the order of the classic character sheet (armor, shield, head, headband, eyes, neck, shoulders, chest, body, belt, wrists, hands, two rings, feet), each with the equipped item or marked as free. Equipped items with no slot (e.g. wielded weapons) SHALL be listed after the slots. The owner SHALL be able to equip a carried item by choosing a free slot. Items beyond a slot's capacity SHALL be shown as inactive.
 
 #### Scenario: Free and occupied slots
 - **WHEN** a character wears "Cotta di maglia" and nothing else
@@ -73,7 +73,7 @@ The equipment tab SHALL show a fixed list of all body slots, in the order of the
 
 #### Scenario: More items than the slot holds
 - **WHEN** two items are equipped in the neck slot
-- **THEN** both are shown in the slot and the extra one is marked as exceeding the slot
+- **THEN** both are shown in the slot and the second is marked "non attivo" because its effects do not apply
 
 ### Requirement: Equipped state
 Each item SHALL be either equipped (worn or wielded) or carried. Only equipped armor and shields SHALL affect statistics. Equipping an armor while another armor is equipped SHALL unequip the previous one; the same SHALL apply to shields.

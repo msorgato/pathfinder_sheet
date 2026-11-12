@@ -1,4 +1,6 @@
 import type { BodySlot, Character, Dice, EquipmentItem, ItemDefinition, ItemKind, WeaponAttack } from '../types';
+import { presetModifiers } from '../data/magicItemEffects';
+import { displayName, effectiveWeapon } from './itemEnhancements';
 
 /** Pure state transitions for the inventory, coins and weapon-linked attacks. */
 
@@ -103,6 +105,8 @@ export function payCoins(char: Character, priceCp: number): Pick<Character, Coin
 
 /** A new inventory item copied from a catalogue entry. */
 export function itemFromCatalog(def: ItemDefinition, quantity = 1): EquipmentItem {
+  // Preset effects (cloaks, belts, headbands...) are copied, so the owner can edit them freely.
+  const modifiers = presetModifiers(def.id);
   return {
     id: newId(),
     name: def.name,
@@ -111,11 +115,12 @@ export function itemFromCatalog(def: ItemDefinition, quantity = 1): EquipmentIte
     equipped: false,
     catalogId: def.id,
     kind: def.kind,
-    slot: defaultSlot(def.kind),
+    slot: def.slot ?? defaultSlot(def.kind),
     priceGp: def.priceGp,
     weightKg: def.weightKg,
     ...(def.weapon ? { weapon: structuredClone(def.weapon) } : {}),
     ...(def.armor ? { armor: structuredClone(def.armor) } : {}),
+    ...(modifiers ? { modifiers } : {}),
   };
 }
 
@@ -148,12 +153,12 @@ export function purchaseItem(char: Character, input: ItemInput, paidCp: number):
 
 /** Attack fields derived from a weapon, for the given wielder size. */
 export function attackFieldsFromItem(item: EquipmentItem, size: CreatureSize = 'Medium'): Partial<WeaponAttack> {
-  const w = item.weapon;
+  const w = effectiveWeapon(item)?.stats;
   if (!w) return { name: item.name };
   const dice: Dice = (size === 'Small' ? w.damage.small : w.damage.medium) ?? w.damage.medium ?? { count: 1, die: 1 };
   const ranged = w.handedness === 'ranged';
   return {
-    name: item.name,
+    name: displayName(item),
     damageDiceCount: dice.count,
     damageDieType: dice.die,
     critRange: w.critRange,
@@ -169,7 +174,7 @@ export function attackFromItem(item: EquipmentItem, size: CreatureSize = 'Medium
   return {
     id: newId(), damageDiceCount: 1, damageDieType: 4, abilityKey: 'str', attackType: 'melee',
     ...attackFieldsFromItem(item, size),
-    name: item.name,
+    name: displayName(item),
     itemId: item.id,
   } as WeaponAttack;
 }
