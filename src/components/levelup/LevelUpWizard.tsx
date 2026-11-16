@@ -3,13 +3,14 @@ import { CLASSES } from '../../data/classes';
 import { useDataStore } from '../../store/dataStore';
 import { SKILLS } from '../../data/skills';
 import { useMergedFeats, useMergedSpells } from '../../store/dataStore';
-import { getClass, isBuiltinClass } from '../../data/classes';
+import { getClass } from '../../data/classes';
+import { resolveSpellcasting, spellLevelFor } from '../../utils/spellcasting';
 import { getRace } from '../../data/races';
 import {
-  effectiveAbilityScores, abilityMod, featLevels, abilityIncreaseLevels, computeSpellSlots,
+  permanentAbilityScores, abilityMod, featLevels, abilityIncreaseLevels, computeSpellSlots,
 } from '../../utils/calculations';
 import { useCharacterStore } from '../../store/characterStore';
-import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice, ClassFeature, CustomClassFeature } from '../../types';
+import type { Character, AbilityKey, KnownSpell, ClassFeatureChoice, ClassFeature, CustomClassFeature, SpellDefinition } from '../../types';
 
 function isBuiltinFeature(f: ClassFeature | CustomClassFeature): f is ClassFeature {
   return 'choiceType' in f;
@@ -36,7 +37,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const FEATS = useMergedFeats();
   const mergedSpells = useMergedSpells();
   const nextLevel = char.totalLevel + 1;
-  const scores = effectiveAbilityScores(char);
+  const scores = permanentAbilityScores(char);
 
   const [step, setStep] = useState<'class' | 'hp' | 'skills' | 'classfeature' | 'feat' | 'ability' | 'spells' | 'confirm'>('class');
   const [selectedClassId, setSelectedClassId] = useState(char.classes[0]?.classId ?? '');
@@ -59,9 +60,11 @@ export function LevelUpWizard({ char, onClose }: Props) {
   const needsAbility = abilityIncreaseLevels().includes(nextLevel);
 
   const selectedCls = getClass(selectedClassId);
-  const builtinCls = selectedCls && isBuiltinClass(selectedCls) ? selectedCls : undefined;
+  // Built-in or custom class: how it casts, if it does
+  const spellcasting = resolveSpellcasting(selectedCls) ?? undefined;
+  const levelOf = (spell: SpellDefinition) => (spellcasting ? spellLevelFor(spellcasting, spell) : undefined);
   const maxHpRoll = selectedCls?.hitDie ?? 6;
-  const isSpellbookCaster = !!builtinCls?.spellcasting?.usesSpellbook;
+  const isSpellbookCaster = !!spellcasting?.usesSpellbook;
 
   const race = getRace(char.race);
   const intMod = abilityMod(scores.int);
@@ -88,28 +91,26 @@ export function LevelUpWizard({ char, onClose }: Props) {
 
   // Spells available to learn at this level-up
   const newClassLevel = (char.classes.find(e => e.classId === selectedClassId)?.level ?? 0) + 1;
-  const spellcasting = builtinCls?.spellcasting;
   const abilityScore = spellcasting ? scores[spellcasting.ability] : 10;
   const accessibleLevels = isSpellbookCaster
-    ? computeSpellSlots(selectedClassId, newClassLevel, abilityScore).map(s => s.level)
+    ? computeSpellSlots(spellcasting!, newClassLevel, abilityScore).map(s => s.level)
     : [];
   const accessibleSet = new Set(accessibleLevels);
   const alreadyKnownIds = new Set(
     char.knownSpells.filter(ks => ks.classId === selectedClassId).map(ks => ks.spellId),
   );
   const learnableSpells = isSpellbookCaster
-    ? mergedSpells.filter(s =>
-        selectedClassId in s.levels &&
-        accessibleSet.has(s.levels[selectedClassId]) &&
-        !alreadyKnownIds.has(s.id),
-      )
+    ? mergedSpells.filter(s => {
+        const lv = levelOf(s);
+        return lv !== undefined && accessibleSet.has(lv) && !alreadyKnownIds.has(s.id);
+      })
     : [];
   const SPELLS_PER_LEVELUP = 2;
   const maxToLearn = Math.min(SPELLS_PER_LEVELUP, learnableSpells.length);
 
   const filteredLearnableSpells = learnableSpells
     .filter(s => {
-      if (spellFilterLevel !== 'all' && s.levels[selectedClassId] !== spellFilterLevel) return false;
+      if (spellFilterLevel !== 'all' && levelOf(s) !== spellFilterLevel) return false;
       const q = spellSearch.toLowerCase();
       return !q || s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
     })
@@ -156,7 +157,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
     const spellsToAdd: KnownSpell[] = newSpellIds.map(spellId => ({
       spellId,
       classId: selectedClassId,
-      spellLevel: mergedSpells.find(s => s.id === spellId)?.levels[selectedClassId] ?? 0,
+      spellLevel: (() => { const sp = mergedSpells.find(s => s.id === spellId); return sp ? levelOf(sp) ?? 0 : 0; })(),
     }));
 
     const bonusFeats: string[] = [];
@@ -603,7 +604,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {filteredLearnableSpells.map(spell => {
-                    const spellLevel = spell.levels[selectedClassId] ?? 0;
+                    const spellLevel = levelOf(spell) ?? 0;
                     const isSelected = newSpellIds.includes(spell.id);
                     const isDisabled = !isSelected && newSpellIds.length >= maxToLearn;
                     return (

@@ -18,6 +18,7 @@ export const BARD: ClassDefinition = {
     type: 'spontaneous',
     ability: 'cha',
     school: 'arcane',
+    progression: 'medium',
     slots: Object.fromEntries(BARD_SLOTS.map((s, i) => [i + 1, s])),
     spellsKnown: Object.fromEntries(BARD_KNOWN.map((s, i) => [i + 1, s])),
     spellList: BARD_SPELLS,

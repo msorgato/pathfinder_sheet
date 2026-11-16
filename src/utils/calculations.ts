@@ -1,5 +1,6 @@
 import type { Character, CharacterClassEntry, AbilityKey } from '../types';
-import { getClass, isBuiltinClass } from '../data/classes';
+import { getClass } from '../data/classes';
+import type { ResolvedSpellcasting } from './spellcasting';
 import { getRace } from '../data/races';
 import { getBonusSpells } from '../data/spellSlots';
 import { getAgeCategory, AGE_MODIFIERS } from '../data/ageModifiers';
@@ -14,7 +15,11 @@ export function modStr(mod: number): string {
 }
 
 // ── Effective ability scores (base + fixed racial + selectable racial + increases + age) ─
-export function effectiveAbilityScores(char: Character): Record<AbilityKey, number> {
+/**
+ * Base ability scores: starting scores plus race, level increases and age. Items, effects, conditions,
+ * ability damage and drain are NOT included. This is what feat prerequisites and level-up use.
+ */
+export function permanentAbilityScores(char: Character): Record<AbilityKey, number> {
   const result = { ...char.baseAbilityScores };
 
   // Fixed racial modifiers (e.g. Elf: DEX+2, INT+2, CON-2)
@@ -126,15 +131,13 @@ export function skillTotal(
 }
 
 // ── Spell slots ────────────────────────────────────────────────────────────────
+/** Spell slots per day of a class at a class level (base from the progression, plus bonus spells from the ability score). */
 export function computeSpellSlots(
-  classId: string,
+  sc: ResolvedSpellcasting,
   classLevel: number,
   abilityScore: number,
 ): { level: number; base: number; bonus: number; total: number }[] {
-  const cls = getClass(classId);
-  if (!cls || !isBuiltinClass(cls) || !cls.spellcasting) return [];
-
-  const slotTable = cls.spellcasting.slots[classLevel];
+  const slotTable = sc.slots[classLevel];
   if (!slotTable) return [];
 
   const bonusArr = getBonusSpells(abilityScore);
@@ -143,16 +146,10 @@ export function computeSpellSlots(
   for (let sl = 0; sl <= 9; sl++) {
     const base = slotTable[sl] ?? -1;
     if (base < 0) continue;
-    const bonus = cls.spellcasting.bonusSpellsFromAbility ? (bonusArr[sl] ?? 0) : 0;
+    const bonus = sc.bonusSpellsFromAbility ? (bonusArr[sl] ?? 0) : 0;
     results.push({ level: sl, base, bonus, total: base + bonus });
   }
   return results;
-}
-
-// ── Caster level ─────────────────────────────────────────────────────────────
-export function casterLevel(classId: string, classes: CharacterClassEntry[]): number {
-  const entry = classes.find(e => e.classId === classId);
-  return entry?.level ?? 0;
 }
 
 // ── Ability increase levels ───────────────────────────────────────────────────
@@ -164,19 +161,12 @@ export function featLevels(): number[] {
   return [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 }
 
-// ── Armor class ──────────────────────────────────────────────────────────────
-export function armorClass(dexScore: number, armorBonus = 0, shieldBonus = 0, naturalArmor = 0, deflection = 0, misc = 0): number {
-  return 10 + abilityMod(dexScore) + armorBonus + shieldBonus + naturalArmor + deflection + misc;
-}
-
 // ── Spell DC ─────────────────────────────────────────────────────────────────
 export function spellDC(spellLevel: number, abilityScore: number): number {
   return 10 + spellLevel + abilityMod(abilityScore);
 }
 
 // ── Spells known for spontaneous casters ─────────────────────────────────────
-export function spellsKnownAtLevel(classId: string, classLevel: number): number[] {
-  const cls = getClass(classId);
-  if (!cls || !isBuiltinClass(cls) || !cls.spellcasting?.spellsKnown) return [];
-  return cls.spellcasting.spellsKnown[classLevel] ?? [];
+export function spellsKnownAtLevel(sc: ResolvedSpellcasting, classLevel: number): number[] {
+  return sc.spellsKnown?.[classLevel] ?? [];
 }

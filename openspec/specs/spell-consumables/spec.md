@@ -43,7 +43,7 @@ The list price SHALL be base × spell level × caster level, with base 50 mo for
 - **THEN** its DC is 14, whatever the character's ability scores
 
 ### Requirement: Usability
-Potions SHALL be usable by anyone. Scrolls and wands SHALL be usable without checks when the spell is on the list of one of the character's classes; otherwise the item SHALL show the Utilizzare Congegni Magici check required: DC 20 for wands, DC 20 + caster level for scrolls. For a scroll on the character's list whose caster level is higher than the character's, the item SHALL show the caster level check required (DC caster level + 1).
+Potions SHALL be usable by anyone. Scrolls and wands SHALL be usable without checks when the spell is on a list the character casts from; otherwise the item SHALL show the Utilizzare Congegni Magici check (DC 20 for wands, DC 20 + caster level for scrolls). A scroll whose caster level is above the character's for that list SHALL show the caster level check (DC caster level + 1).
 
 #### Scenario: Wizard reads a wizard scroll
 - **WHEN** a 5th-level wizard holds a scroll of Armatura Magica (wizard list, caster level 1)
@@ -56,6 +56,10 @@ Potions SHALL be usable by anyone. Scrolls and wands SHALL be usable without che
 #### Scenario: Scroll above the caster level
 - **WHEN** a 1st-level wizard holds a scroll of a 1st-level spell at caster level 5
 - **THEN** the scroll shows "prova di livello dell'incantatore CD 6"
+
+#### Scenario: Paladin caster level
+- **WHEN** a 5th-level paladin holds a paladin scroll at caster level 4
+- **THEN** the scroll shows "prova di livello dell'incantatore CD 5", because the paladin's caster level is 2
 
 ### Requirement: Use a consumable
 Using a potion or scroll SHALL remove one from its quantity; using a wand SHALL remove one charge. Using an item with no charges or quantity SHALL not be possible.

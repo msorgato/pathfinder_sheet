@@ -5,6 +5,7 @@ import { getEffectPreset, presetModifiersAt } from '../data/effectPresets';
 import { SPELL_EFFECT_LINKS } from '../data/spellEffectLinks';
 import { addEffect, removeEffect } from './characterStatus';
 import { normalizeItem, type ItemInput } from './inventory';
+import { casterLevelsByList } from './spellcasting';
 
 /** Highest spell level each form can hold. */
 export const FORM_LIMITS: Record<ConsumableForm, number> = { potion: 3, wand: 4, scroll: 9 };
@@ -95,23 +96,12 @@ export type Usability =
   | { ok: true; check: 'casterLevel'; dc: number }
   | { ok: false; check: 'umd'; dc: number };
 
-/** Class lists the character can cast from: its classes, plus the source list of custom classes. */
-function characterLists(char: Character, customClasses: CustomClassDefinition[]): Map<string, number> {
-  const lists = new Map<string, number>();
-  const add = (id: string | undefined, level: number) => { if (id) lists.set(id, Math.max(lists.get(id) ?? 0, level)); };
-  char.classes.forEach(c => {
-    add(c.classId, c.level);
-    const custom = customClasses.find(x => x.id === c.classId);
-    if (custom?.spellcasting?.enabled) add(custom.spellcasting.sourceList, c.level);
-  });
-  return lists;
-}
-
 /** Whether (and how) the character can use a scroll, wand or potion. Checks are shown, not rolled. */
 export function usability(char: Character, item: EquipmentItem, customClasses: CustomClassDefinition[] = []): Usability {
   const si = item.spellItem;
   if (!si || si.form === 'potion') return { ok: true };
-  const charLevel = characterLists(char, customClasses).get(si.classId);
+  // Spell lists the character casts from, with its caster level on each (reduced casters lag behind their class level).
+  const charLevel = casterLevelsByList(char, customClasses).get(si.classId);
   if (charLevel === undefined) return { ok: false, check: 'umd', dc: si.form === 'wand' ? 20 : 20 + si.casterLevel };
   if (si.form === 'scroll' && si.casterLevel > charLevel) return { ok: true, check: 'casterLevel', dc: si.casterLevel + 1 };
   return { ok: true };

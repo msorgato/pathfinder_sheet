@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import type { ArmorProficiency, CustomClassDefinition, CustomClassFeature, CustomClassFeatureType, WeaponProficiencies } from '../../types';
+import type {
+  AbilityKey, ArmorProficiency, CustomClassDefinition, CustomClassFeature, CustomClassFeatureType, SpellcastingSchool,
+  SpellcastingType, SpellProgression, WeaponProficiencies,
+} from '../../types';
+import { CLASSES } from '../../data/classes';
+import { PROGRESSION_LABELS, PROGRESSION_TABLES, progressionAllows } from '../../data/spellProgressions';
+import { defaultCustomSpellLevel } from '../../utils/spellcasting';
 import { BAB_PRESETS, SAVES_PRESETS, EMPTY_20 } from '../../data/classPresets';
 import { SKILLS } from '../../data/skills';
 import { useDataStore, useMergedSpells } from '../../store/dataStore';
@@ -14,6 +20,10 @@ interface Props {
 }
 
 const HIT_DICE = [4, 6, 8, 10, 12] as const;
+const CASTING_ABILITIES: { value: AbilityKey; label: string }[] = [
+  { value: 'int', label: 'Intelligenza' }, { value: 'wis', label: 'Saggezza' }, { value: 'cha', label: 'Carisma' },
+];
+const PROGRESSIONS = Object.keys(PROGRESSION_LABELS) as SpellProgression[];
 const FEATURE_TYPES: CustomClassFeatureType[] = ['Ex', 'Su', 'Sp', 'special'];
 const SPELL_SOURCE_LISTS = [
   { value: '', label: 'Nessuna' },
@@ -249,13 +259,62 @@ export function CustomClassEditor({ cls, onSave, onDelete, onPublish, onWithdraw
     update('spellcasting', { ...draft.spellcasting, enabled: spellEnabled, [k]: v });
   }
 
+  /** Setting a source list fills ability, type, tradition and progression from that class (still editable). */
+  function changeSourceList(value: string) {
+    const b = CLASSES.find(c => c.id === value)?.spellcasting;
+    update('spellcasting', {
+      ...draft.spellcasting, enabled: true, sourceList: value || undefined,
+      ...(b ? { ability: b.ability, type: b.type, school: b.school, progression: b.progression, usesSpellbook: !!b.usesSpellbook } : {}),
+    });
+  }
+
+  function changeProgression(progression: SpellProgression) {
+    // Reduced casters are always prepared.
+    const type = progressionAllows(progression, spellType ?? 'prepared') ? spellType : 'prepared';
+    update('spellcasting', { ...draft.spellcasting, enabled: true, progression, ...(type ? { type } : {}) });
+  }
+
+  /** Additional spells carry their own level, proposed as the lowest among the spell's lists. */
   function toggleCustomSpell(id: string) {
-    const current = draft.spellcasting?.customSpells ?? [];
-    const next = current.includes(id) ? current.filter(s => s !== id) : [...current, id];
-    updateSpellField('customSpells', next.length ? next : undefined);
+    const sc = draft.spellcasting ?? { enabled: true };
+    const current = sc.customSpells ?? [];
+    const levels = { ...(sc.customSpellLevels ?? {}) };
+    let next: string[];
+    if (current.includes(id)) {
+      next = current.filter(x => x !== id);
+      delete levels[id];
+    } else {
+      next = [...current, id];
+      const spell = mergedSpells.find(x => x.id === id);
+      levels[id] = spell ? defaultCustomSpellLevel(spell) : 1;
+    }
+    update('spellcasting', {
+      ...sc, enabled: true,
+      customSpells: next.length ? next : undefined,
+      customSpellLevels: Object.keys(levels).length ? levels : undefined,
+    });
+  }
+
+  function setCustomSpellLevel(id: string, level: number) {
+    const sc = draft.spellcasting ?? { enabled: true };
+    update('spellcasting', {
+      ...sc, enabled: true,
+      customSpellLevels: { ...(sc.customSpellLevels ?? {}), [id]: Math.max(0, Math.min(maxSpellLevel, Math.floor(level) || 0)) },
+    });
   }
 
   const selectedSpells = new Set(draft.spellcasting?.customSpells ?? []);
+  // Effective values: the class's own, or inherited from the source list's built-in class
+  const baseCasting = CLASSES.find(c => c.id === draft.spellcasting?.sourceList)?.spellcasting;
+  const spellAbility: AbilityKey | undefined = draft.spellcasting?.ability ?? baseCasting?.ability;
+  const spellType: SpellcastingType | undefined = draft.spellcasting?.type ?? baseCasting?.type;
+  const spellSchool: SpellcastingSchool | undefined = draft.spellcasting?.school ?? baseCasting?.school;
+  const spellProgression: SpellProgression | undefined = draft.spellcasting?.progression ?? baseCasting?.progression;
+  const spellbook = draft.spellcasting?.usesSpellbook ?? baseCasting?.usesSpellbook ?? false;
+  const maxSpellLevel = (spellProgression && spellType ? PROGRESSION_TABLES[spellProgression][spellType]?.maxSpellLevel : undefined) ?? 9;
+  const missingSpellFields = [
+    !spellAbility && 'caratteristica', !spellType && 'tipo', !spellProgression && 'progressione',
+  ].filter(Boolean) as string[];
 
   // ── Skills helpers ────────────────────────────────────────────────────────
   function toggleSkill(skillId: string) {
@@ -479,11 +538,67 @@ export function CustomClassEditor({ cls, onSave, onDelete, onPublish, onWithdraw
                 className="pf-input"
                 style={{ maxWidth: 200 }}
                 value={draft.spellcasting?.sourceList ?? ''}
-                onChange={e => updateSpellField('sourceList', e.target.value || undefined)}
+                onChange={e => changeSourceList(e.target.value)}
               >
                 {SPELL_SOURCE_LISTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
+
+            <div className="grid grid-cols-2 gap-3" style={{ maxWidth: 460 }}>
+              <label>
+                <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Caratteristica</div>
+                <select className="pf-input w-full" value={spellAbility ?? ''} aria-label="Caratteristica di lancio"
+                  onChange={e => updateSpellField('ability', (e.target.value || undefined) as AbilityKey | undefined)}>
+                  <option value="">—</option>
+                  {CASTING_ABILITIES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                </select>
+              </label>
+              <label>
+                <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Tradizione</div>
+                <select className="pf-input w-full" value={spellSchool ?? ''} aria-label="Tradizione"
+                  onChange={e => updateSpellField('school', (e.target.value || undefined) as SpellcastingSchool | undefined)}>
+                  <option value="">—</option>
+                  <option value="arcane">Arcana</option>
+                  <option value="divine">Divina</option>
+                </select>
+              </label>
+              <label>
+                <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Progressione</div>
+                <select className="pf-input w-full" value={spellProgression ?? ''} aria-label="Progressione"
+                  onChange={e => e.target.value && changeProgression(e.target.value as SpellProgression)}>
+                  <option value="">—</option>
+                  {PROGRESSIONS.map(p => <option key={p} value={p}>{PROGRESSION_LABELS[p]}</option>)}
+                </select>
+              </label>
+              <div>
+                <div className="mb-1" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>Tipo</div>
+                <div className="flex gap-3 items-center" style={{ minHeight: 38 }}>
+                  {(['prepared', 'spontaneous'] as SpellcastingType[]).map(t => {
+                    const disabled = !!spellProgression && !progressionAllows(spellProgression, t);
+                    return (
+                      <label key={t} className="flex items-center gap-1" style={{ opacity: disabled ? 0.45 : 1 }}
+                        title={disabled ? 'Non disponibile con la progressione ridotta' : undefined}>
+                        <input type="radio" name="spell-type" checked={spellType === t} disabled={disabled}
+                          onChange={() => updateSpellField('type', t)} className="accent-[var(--theme-accent)]" />
+                        {t === 'prepared' ? 'Preparati' : 'Spontanei'}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            {spellType === 'prepared' && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={spellbook} onChange={e => updateSpellField('usesSpellbook', e.target.checked)}
+                  className="accent-[var(--theme-accent)]" />
+                <span style={{ color: 'var(--theme-text-neutral)' }}>Usa un libro degli incantesimi</span>
+              </label>
+            )}
+            {missingSpellFields.length > 0 && (
+              <div className="status-warning" role="alert" style={{ margin: 0 }}>
+                ⚠ Manca: {missingSpellFields.join(', ')}. Finché non è completa, la classe non lancia incantesimi.
+              </div>
+            )}
 
             <div>
               <div className="mb-2" style={{ color: 'var(--theme-text-muted)', fontSize: 15 }}>
@@ -503,6 +618,17 @@ export function CustomClassEditor({ cls, onSave, onDelete, onPublish, onWithdraw
                     />
                     <span>{sp.name}</span>
                     <span style={{ color: 'var(--theme-text-faint)' }}>{sp.school}</span>
+                    {selectedSpells.has(sp.id) && (
+                      <span className="ml-auto flex items-center gap-1" onClick={e => e.preventDefault()}>
+                        <span style={{ color: 'var(--theme-text-faint)' }}>Livello</span>
+                        <input
+                          type="number" min={0} max={maxSpellLevel} className="pf-input" style={{ width: 56, padding: '2px 6px' }}
+                          aria-label={`Livello di ${sp.name}`}
+                          value={draft.spellcasting?.customSpellLevels?.[sp.id] ?? defaultCustomSpellLevel(sp)}
+                          onChange={e => setCustomSpellLevel(sp.id, Number(e.target.value))}
+                        />
+                      </span>
+                    )}
                   </label>
                 ))}
               </div>

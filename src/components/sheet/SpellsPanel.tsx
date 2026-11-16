@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { getClass, isBuiltinClass } from '../../data/classes';
+import { getClass } from '../../data/classes';
 import { useMergedSpells } from '../../store/dataStore';
 import { computeSpellSlots } from '../../utils/calculations';
+import { resolveSpellcasting, spellLevelFor } from '../../utils/spellcasting';
+import type { SpellDefinition } from '../../types';
 import { useDerivedStats } from './statHelpers';
 import type { Character, PreparedSpell } from '../../types';
 import { useCharacterStore } from '../../store/characterStore';
@@ -32,15 +34,12 @@ export function SpellsPanel({ char }: Props) {
   };
   const mergedSpells = useMergedSpells();
   const getSpell = (id: string) => mergedSpells.find(s => s.id === id);
-  const getSpellsForClass = (classId: string) => mergedSpells.filter(s => classId in s.levels);
 
   const derived = useDerivedStats(char);
   const scores = derived.scores;
 
-  const casterClasses = char.classes.filter(e => {
-    const cls = getClass(e.classId);
-    return cls && isBuiltinClass(cls) && !!cls.spellcasting;
-  });
+  // Built-in casters and custom classes with a complete spellcasting configuration.
+  const casterClasses = char.classes.filter(e => !!resolveSpellcasting(getClass(e.classId)));
   if (casterClasses.length === 0) {
     return (
       <div className="pf-panel p-8 text-center">
@@ -53,13 +52,14 @@ export function SpellsPanel({ char }: Props) {
   const currentClassId = activeClassId ?? casterClasses[0].classId;
   const currentClassEntry = char.classes.find(e => e.classId === currentClassId)!;
   const currentCls = getClass(currentClassId)!;
-  if (!isBuiltinClass(currentCls)) return null; // casterClasses already filtered to builtins
-  const spellcasting = currentCls.spellcasting!;
+  const spellcasting = resolveSpellcasting(currentCls)!;
+  /** Level of a spell for the current class (source list or additional spell), undefined if not on its list. */
+  const levelOf = (spell: Pick<SpellDefinition, 'id' | 'levels'>) => spellLevelFor(spellcasting, spell);
   const abilityScore = scores[spellcasting.ability];
   /** Effective casting modifier (ability damage included). */
   const castingMod = derived.mods[spellcasting.ability];
   const spellDC = (level: number) => 10 + level + castingMod;
-  const slots = computeSpellSlots(currentClassId, currentClassEntry.level, abilityScore);
+  const slots = computeSpellSlots(spellcasting, currentClassEntry.level, abilityScore);
   const isSpontaneous = spellcasting.type === 'spontaneous';
   const isSpellbook = !!spellcasting.usesSpellbook;
 
@@ -73,10 +73,7 @@ export function SpellsPanel({ char }: Props) {
 
   return (
     <div className="space-y-4">
-      {derived.arcaneSpellFailure > 0 && casterClasses.some(e => {
-        const c = getClass(e.classId);
-        return !!c && 'spellcasting' in c && (c.spellcasting as { school?: string } | undefined)?.school === 'arcane';
-      }) && (
+      {derived.arcaneSpellFailure > 0 && casterClasses.some(e => resolveSpellcasting(getClass(e.classId))?.school === 'arcane') && (
         <div className="status-warning" role="alert" style={{ margin: 0 }}>
           ⚠ Fallimento incantesimi arcani {derived.arcaneSpellFailure}% per armatura e scudo (incantesimi con componenti somatiche).
         </div>
@@ -310,9 +307,9 @@ export function SpellsPanel({ char }: Props) {
             const accessibleLevels = slots.map(s => s.level);
             const accessibleSet = new Set(accessibleLevels);
             const lq = listSearch.toLowerCase();
-            const listSpells = getSpellsForClass(currentClassId)
-              .filter(s => accessibleSet.has(s.levels[currentClassId]))
-              .filter(s => listLevel === 'all' || s.levels[currentClassId] === listLevel)
+            const listSpells = mergedSpells
+              .filter(s => { const lv = levelOf(s); return lv !== undefined && accessibleSet.has(lv); })
+              .filter(s => listLevel === 'all' || levelOf(s) === listLevel)
               .filter(s => !lq || s.name.toLowerCase().includes(lq) || s.description.toLowerCase().includes(lq))
               .sort((a, b) => a.name.localeCompare(b.name));
             return (
@@ -351,7 +348,7 @@ export function SpellsPanel({ char }: Props) {
                       className="text-xs px-1 rounded font-bold shrink-0"
                       style={{ background: (SCHOOL_COLORS[spell.school] ?? '#9ca3af') + '33', color: SCHOOL_COLORS[spell.school] ?? '#9ca3af' }}
                     >
-                      {spell.levels[currentClassId]}°
+                      {levelOf(spell)}°
                     </span>
                     <div>
                       <div className="font-semibold text-sm" style={{ color: 'var(--theme-accent)' }}>{spell.name}</div>
@@ -361,7 +358,7 @@ export function SpellsPanel({ char }: Props) {
                     <button
                       className={`ml-auto text-xs pf-btn pf-btn-ghost px-2 py-0.5 shrink-0${listPrepAnim === spell.id ? ' btn-confirm' : ''}`}
                       onClick={() => {
-                        prepareSpell(char.id, { spellId: spell.id, classId: currentClassId, spellLevel: spell.levels[currentClassId], slot: Date.now(), used: false });
+                        prepareSpell(char.id, { spellId: spell.id, classId: currentClassId, spellLevel: levelOf(spell) ?? 0, slot: Date.now(), used: false });
                         setListPrepAnim(spell.id);
                         setTimeout(() => setListPrepAnim(null), 400);
                       }}
@@ -425,13 +422,13 @@ export function SpellsPanel({ char }: Props) {
       {/* BROWSE TAB */}
       {tab === 'browse' && (
         <BrowseSpells
-          classId={currentClassId}
+          levelOf={levelOf}
           char={char}
           slots={slots}
           isSpontaneous={isSpontaneous}
           isSpellbook={isSpellbook}
           knownForClass={knownForClass}
-          onAddKnown={spellId => addKnownSpell(char.id, { spellId, classId: currentClassId, spellLevel: getSpell(spellId)?.levels[currentClassId] ?? 0 })}
+          onAddKnown={spellId => addKnownSpell(char.id, { spellId, classId: currentClassId, spellLevel: (() => { const sp = getSpell(spellId); return sp ? levelOf(sp) ?? 0 : 0; })() })}
           onPrepare={(spellId, lv) => {
             const used = usedAtLevel(lv);
             const total = totalSlotsAtLevel(lv);
@@ -451,8 +448,8 @@ export function SpellsPanel({ char }: Props) {
   );
 }
 
-function BrowseSpells({ classId, char, slots, isSpontaneous, isSpellbook, knownForClass, onAddKnown, onPrepare }: {
-  classId: string;
+function BrowseSpells({ levelOf, char, slots, isSpontaneous, isSpellbook, knownForClass, onAddKnown, onPrepare }: {
+  levelOf: (spell: SpellDefinition) => number | undefined;
   char: Character;
   slots: { level: number; total: number }[];
   isSpontaneous: boolean;
@@ -470,12 +467,12 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, isSpellbook, knownF
   const accessibleLevels = slots.map(s => s.level);
   const accessibleSet = new Set(accessibleLevels);
   const classSpells = mergedSpells
-    .filter(s => classId in s.levels && accessibleSet.has(s.levels[classId]));
+    .filter(s => { const lv = levelOf(s); return lv !== undefined && accessibleSet.has(lv); });
 
   const q = search.toLowerCase();
   const filtered = classSpells
     .filter(s => {
-      if (filterLevel !== 'all' && s.levels[classId] !== filterLevel) return false;
+      if (filterLevel !== 'all' && levelOf(s) !== filterLevel) return false;
       if (q && !s.name.toLowerCase().includes(q) && !s.description.toLowerCase().includes(q)) return false;
       return true;
     })
@@ -515,7 +512,7 @@ function BrowseSpells({ classId, char, slots, isSpontaneous, isSpellbook, knownF
       </div>
       <div className="space-y-2">
         {filtered.map(spell => {
-          const spellLevel = spell.levels[classId] ?? 0;
+          const spellLevel = levelOf(spell) ?? 0;
           const isKnown = !!knownForClass.find(ks => ks.spellId === spell.id);
           return (
             <div key={spell.id} className="pf-panel p-3">

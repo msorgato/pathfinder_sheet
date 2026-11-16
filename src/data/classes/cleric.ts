@@ -18,6 +18,7 @@ export const CLERIC: ClassDefinition = {
     type: 'prepared',
     ability: 'wis',
     school: 'divine',
+    progression: 'full',
     slots: Object.fromEntries(CLERIC_SLOTS.map((s, i) => [i + 1, s])),
     spellList: CLERIC_SPELLS,
     maxSpellLevel: 9,

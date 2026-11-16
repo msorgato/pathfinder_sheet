@@ -27,6 +27,7 @@ export const WIZARD: ClassDefinition = {
     type: 'prepared',
     ability: 'int',
     school: 'arcane',
+    progression: 'full',
     slots: Object.fromEntries(WIZARD_SLOTS.map((s, i) => [i + 1, s])),
     spellList: WIZARD_SPELLS,
     maxSpellLevel: 9,

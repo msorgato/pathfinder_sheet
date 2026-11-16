@@ -24,6 +24,7 @@ export const PALADIN: ClassDefinition = {
     type: 'prepared',
     ability: 'cha',
     school: 'divine',
+    progression: 'reduced',
     slots: Object.fromEntries(PALADIN_SLOTS.map((s, i) => [i + 1, s])),
     spellList: PALADIN_SPELLS,
     maxSpellLevel: 4,

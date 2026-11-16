@@ -1,6 +1,6 @@
 import type { Character, FeatDefinition, AbilityKey } from '../types';
 import { RACES } from '../data/races';
-import { effectiveAbilityScores, totalBAB } from './calculations';
+import { permanentAbilityScores, totalBAB } from './calculations';
 
 const ABILITY_MAP: Record<string, AbilityKey> = {
   forza: 'str', destrezza: 'dex', costituzione: 'con',
@@ -143,7 +143,7 @@ export function checkPrerequisites(
 ): PrerequisiteResult {
   if (!feat.prerequisites?.trim()) return { met: true, unmetTerms: [] };
 
-  const scores = effectiveAbilityScores(char);
+  const scores = permanentAbilityScores(char);
   const bab = totalBAB(char.classes);
 
   // Each comma-separated clause must be satisfied (AND)

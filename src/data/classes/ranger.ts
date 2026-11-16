@@ -34,6 +34,7 @@ export const RANGER: ClassDefinition = {
     type: 'prepared',
     ability: 'wis',
     school: 'divine',
+    progression: 'reduced',
     slots: Object.fromEntries(RANGER_SLOTS.map((s, i) => [i + 1, s])),
     spellList: RANGER_SPELLS,
     maxSpellLevel: 4,
