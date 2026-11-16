@@ -114,6 +114,7 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
         onPendingHandled={() => setPendingRoll(undefined)}
         characterName={character.name}
         onRollResult={onRollResult}
+        animate={character.diceAnimations !== false}
       />
     </div>
   );

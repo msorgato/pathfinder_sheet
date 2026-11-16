@@ -10,11 +10,14 @@ interface Props {
   /** Icon shown when no icon is chosen (primary class icon), if any. */
   autoIcon?: string;
   onChangeIcon: (id: string | undefined) => void;
+  /** Animated reveal of dice rolls; absent means enabled. */
+  diceAnimations?: boolean;
+  onChangeDiceAnimations: (enabled: boolean) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export function CharacterCustomizationPanel({ accentColor, onChangeColor, portraitIcon, autoIcon, onChangeIcon, onDelete, onClose }: Props) {
+export function CharacterCustomizationPanel({ accentColor, onChangeColor, portraitIcon, autoIcon, onChangeIcon, diceAnimations, onChangeDiceAnimations, onDelete, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -99,6 +102,12 @@ export function CharacterCustomizationPanel({ accentColor, onChangeColor, portra
             </button>
           </div>
         )}
+
+        <div className="label-rune-soft" style={{ marginTop: 20, marginBottom: 10 }}>Tiri di dado</div>
+        <label className="checkbox-inline">
+          <input type="checkbox" checked={diceAnimations !== false} onChange={e => onChangeDiceAnimations(e.target.checked)} />
+          Animazioni dei dadi
+        </label>
 
         <div style={{ marginTop: 20, borderTop: '1px solid var(--line-soft)', paddingTop: 14 }}>
           <div className="label-rune-soft" style={{ marginBottom: 10 }}>Pericolo</div>

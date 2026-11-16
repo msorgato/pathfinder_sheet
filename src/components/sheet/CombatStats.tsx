@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Character } from '../../types';
 import { modStr } from '../../utils/calculations';
+import { statRoll } from '../../utils/rollReveal';
 import type { Stat } from '../../utils/derivedStats';
 import { StatBreakdown } from './StatBreakdown';
 import { statTone, useDerivedStats } from './statHelpers';
@@ -87,7 +88,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         <RollableStat
           label="BAB"
           value={modStr(bab)}
-          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab }) : undefined}
+          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab, parts: bab ? [{ label: 'BAB', value: bab }] : [] }) : undefined}
           extra={bab >= 6 ? (
             <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
               {modStr(bab)}/{modStr(bab - 5)}
@@ -99,7 +100,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         <RollableStat
           label="Iniziativa"
           stat={d.initiative}
-          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'Iniziativa', numDice: 1, dieType: 20, modifier: d.initiative.total }) : undefined}
+          onRoll={onQuickRoll ? () => onQuickRoll(statRoll('Iniziativa', d.initiative)) : undefined}
         />
         <div className="stat-tile py-3">
           <div className="label-rune-soft" style={{ marginBottom: 4 }}>Velocità</div>
@@ -123,7 +124,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
             stat={stat}
             detail={detail}
             valueColor={stat.total >= 0 ? 'var(--vital)' : 'var(--blood)'}
-            onRoll={onQuickRoll ? () => onQuickRoll({ label, numDice: 1, dieType: 20, modifier: stat.total }) : undefined}
+            onRoll={onQuickRoll ? () => onQuickRoll(statRoll(label, stat)) : undefined}
           />
         ))}
       </div>
@@ -133,7 +134,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
         <RollableStat
           label="CMB"
           stat={d.cmb}
-          onRoll={onQuickRoll ? () => onQuickRoll({ label: 'CMB', numDice: 1, dieType: 20, modifier: d.cmb.total }) : undefined}
+          onRoll={onQuickRoll ? () => onQuickRoll(statRoll('CMB', d.cmb)) : undefined}
         />
         <div className="stat-tile py-3">
           <div className="label-rune-soft" style={{ marginBottom: 4 }}>CMD</div>
