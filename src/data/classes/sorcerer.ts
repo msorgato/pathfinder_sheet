@@ -18,6 +18,7 @@ export const SORCERER: ClassDefinition = {
     type: 'spontaneous',
     ability: 'cha',
     school: 'arcane',
+    progression: 'full',
     slots: Object.fromEntries(SORCERER_SLOTS.map((s, i) => [i + 1, s])),
     spellsKnown: Object.fromEntries(SORCERER_KNOWN.map((s, i) => [i + 1, s])),
     spellList: SORCERER_SPELLS,

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { ActiveEffect, Character, Modifier } from '../types';
 import { deriveStats, stack } from '../utils/derivedStats';
 import {
-  abilityMod, effectiveAbilityScores, maxHP, skillTotal, totalBAB, totalSave,
+  abilityMod, permanentAbilityScores, maxHP, skillTotal, totalBAB, totalSave,
 } from '../utils/calculations';
 import { getEffectPreset } from '../data/effectPresets';
 
@@ -48,7 +48,7 @@ const cond = (conditionId: string) => ({ id: conditionId, conditionId });
 describe('deriveStats — no modifiers matches the existing calculations', () => {
   const char = fighter();
   const d = deriveStats(char);
-  const scores = effectiveAbilityScores(char);
+  const scores = permanentAbilityScores(char);
   const bab = totalBAB(char.classes);
   const m = (k: keyof typeof scores) => abilityMod(scores[k]);
 

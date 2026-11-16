@@ -18,6 +18,7 @@ export const DRUID: ClassDefinition = {
     type: 'prepared',
     ability: 'wis',
     school: 'divine',
+    progression: 'full',
     slots: Object.fromEntries(DRUID_SLOTS.map((s, i) => [i + 1, s])),
     spellList: DRUID_SPELLS,
     maxSpellLevel: 9,

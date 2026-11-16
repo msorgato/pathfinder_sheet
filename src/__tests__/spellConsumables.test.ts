@@ -187,3 +187,15 @@ describe('using consumables', () => {
     expect(c2.effects).toHaveLength(0);
   });
 });
+
+describe('usability with the caster level of the progression', () => {
+  it('a 5th-level paladin has caster level 2, so a LI 4 paladin scroll needs a check at CD 5', () => {
+    const scroll = asItem(createSpellItem(spell('cura_ferite_leggere'), 'scroll', 'paladin', 1, 4, 1));
+    expect(usability(hero('paladin', 5), scroll)).toEqual({ ok: true, check: 'casterLevel', dc: 5 });
+    expect(usability(hero('paladin', 7), scroll)).toEqual({ ok: true });
+  });
+  it('a 2nd-level paladin has caster level 0', () => {
+    const scroll = asItem(createSpellItem(spell('cura_ferite_leggere'), 'scroll', 'paladin', 1, 1, 1));
+    expect(usability(hero('paladin', 2), scroll)).toEqual({ ok: true, check: 'casterLevel', dc: 2 });
+  });
+});

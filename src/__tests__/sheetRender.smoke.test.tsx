@@ -2,6 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 
 vi.mock('../lib/firebase', () => ({ auth: { currentUser: null }, db: {} }));
+// Server rendering reads the initial store state, so the merged spells are provided here.
+const { mockSpells } = vi.hoisted(() => ({ mockSpells: [] as unknown[] }));
+vi.mock('../store/dataStore', async importActual => ({
+  ...(await importActual<typeof import('../store/dataStore')>()),
+  useMergedSpells: () => mockSpells,
+}));
 vi.mock('../lib/firestoreSync', () => ({ saveCharacter: vi.fn(), deleteCharacterDoc: vi.fn(), loadCharacters: vi.fn() }));
 
 import type { Character } from '../types';
@@ -17,6 +23,10 @@ import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
 import { getEffectPreset } from '../data/effectPresets';
 import { ConsumablesSection } from '../components/sheet/ConsumablesSection';
 import { createSpellItem, refreshSpellItem } from '../utils/spellConsumables';
+import { SpellsPanel } from '../components/sheet/SpellsPanel';
+import { Step6_Spells } from '../components/wizard/Step6_Spells';
+import { useDataStore } from '../store/dataStore';
+import { CustomClassEditor } from '../components/admin/CustomClassEditor';
 import { RollReveal } from '../components/sheet/RollReveal';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import { CharacterCustomizationPanel } from '../components/sheet/CharacterCustomizationPanel';
@@ -279,5 +289,98 @@ describe('dice animations setting', () => {
   it('is checked by default and unchecked when disabled', () => {
     expect(html(<CharacterCustomizationPanel {...props} />)).toMatch(/<input type="checkbox" checked=""[^>]*\/>\s*Animazioni dei dadi/);
     expect(html(<CharacterCustomizationPanel {...props} diceAnimations={false} />)).not.toMatch(/checked=""[^>]*\/>\s*Animazioni dei dadi/);
+  });
+});
+
+describe('custom spellcasting classes render like built-in ones', () => {
+  const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
+  const spell = (id: string, name: string, levels: Record<string, number>) => ({
+    id, name, school: 'Abjuration', levels, castingTime: '1 azione standard', components: 'V, S', range: 'personale',
+    duration: '-', savingThrow: '-', spellResistance: '-', description: `Descrizione di ${name}`,
+  }) as import('../types').SpellDefinition;
+  const mistico = {
+    id: 'mistico', name: 'Mistico', description: '', hitDie: 8, status: 'published', armorProficiencies: [], weaponProficiencies: '',
+    skillsPerLevel: 2, classSkills: [], bab: [], saves: { fort: [], ref: [], will: [] }, features: [], createdAt: 0, updatedAt: 0,
+    spellcasting: { enabled: true, sourceList: 'wizard', customSpells: ['luce_sacra'], customSpellLevels: { luce_sacra: 2 } },
+  } as unknown as import('../types').CustomClassDefinition;
+  const withClass = (classId: string, level = 3) => ({
+    ...char, classes: [{ classId, level, favoredClassBonus: [] }], totalLevel: level, preparedSpells: [], knownSpells: [], spellSlots: [],
+  }) as unknown as Character;
+
+  const setup = () => {
+    mockSpells.splice(0, mockSpells.length,
+      spell('armatura_magica', 'Armatura Magica', { wizard: 1 }),
+      spell('palla_di_fuoco', 'Palla di Fuoco', { wizard: 3 }),
+      spell('luce_sacra', 'Luce Sacra', { cleric: 5 }));
+    useDataStore.setState({ publishedCustomClasses: [mistico] });
+  };
+  const reset = () => { mockSpells.splice(0); useDataStore.setState({ publishedCustomClasses: [] }); };
+
+  it('the spells section shows a custom caster, and a built-in wizard is unchanged', () => {
+    setup();
+    try {
+      const custom = html(<SpellsPanel char={withClass('mistico')} />);
+      expect(custom).not.toContain('Nessuna classe incantatore');
+      expect(custom).toContain('Mistico');
+      expect(custom).toContain('Max: 9° livello');
+      expect(html(<SpellsPanel char={withClass('wizard')} />)).toContain('Max: 9° livello');
+      expect(html(<SpellsPanel char={withClass('fighter')} />)).toContain('Nessuna classe incantatore');
+    } finally { reset(); }
+  });
+
+  it('a custom class without a complete spellcasting configuration is not a caster', () => {
+    setup();
+    try {
+      useDataStore.setState({ publishedCustomClasses: [{ ...mistico, spellcasting: { enabled: true, customSpells: ['luce_sacra'] } }] });
+      expect(html(<SpellsPanel char={withClass('mistico')} />)).toContain('Nessuna classe incantatore');
+    } finally { reset(); }
+  });
+
+  it('the creation step lists the source list and the additional spells at their level', () => {
+    setup();
+    try {
+      const step = () => html(<Step6_Spells classId="mistico" abilityScores={{ str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 }}
+        knownSpells={[]} onChange={() => {}} onNext={() => {}} onBack={() => {}} />);
+      const out = step();
+      expect(out).toContain('Mistico');
+      expect(out).toContain('Armatura Magica');
+      expect(out).not.toContain('Palla di Fuoco'); // 3rd level: not accessible at 1st level
+      expect(out).not.toContain('Luce Sacra');
+      expect(out).not.toContain('Classe non incantatore');
+    } finally { reset(); }
+  });
+
+  const editor = (spellcasting: unknown) => html(<CustomClassEditor
+    cls={{ ...mistico, spellcasting } as unknown as import('../types').CustomClassDefinition}
+    onSave={() => {}} onDelete={() => {}} onPublish={() => {}} onWithdraw={() => {}} />);
+
+  it('the editor shows the configuration inherited from the source list', () => {
+    setup();
+    try {
+      const out = editor({ enabled: true, sourceList: 'wizard' });
+      expect(out).toContain('<option value="int" selected="">Intelligenza');
+      expect(out).toContain('<option value="full" selected="">Piena');
+      expect(out).toContain('<option value="arcane" selected="">Arcana');
+      expect(out).toContain('Usa un libro degli incantesimi');
+      expect(out).not.toContain('Manca:');
+    } finally { reset(); }
+  });
+
+  it('the editor proposes the lowest level for an additional spell, and warns about missing fields', () => {
+    setup();
+    try {
+      const out = editor({ enabled: true, customSpells: ['palla_di_fuoco'] });
+      expect(out).toMatch(/aria-label="Livello di Palla di Fuoco"[^>]*value="3"/);
+      expect(out).toContain('Manca: caratteristica, tipo, progressione');
+    } finally { reset(); }
+  });
+
+  it('reduced progression disables spontaneous', () => {
+    setup();
+    try {
+      const out = editor({ enabled: true, ability: 'wis', type: 'prepared', progression: 'reduced' });
+      expect(out).toMatch(/<input type="radio"[^>]*disabled=""[^>]*\/>Spontanei/);
+      expect(out).not.toMatch(/<input type="radio"[^>]*disabled=""[^>]*\/>Preparati/);
+    } finally { reset(); }
   });
 });

@@ -11,6 +11,8 @@ export type BabProgression = 'full' | 'three-quarters' | 'half';
 export type SaveProgression = 'good' | 'poor';
 export type SpellcastingType = 'prepared' | 'spontaneous';
 export type SpellcastingSchool = 'arcane' | 'divine';
+/** How far and how fast a class gains spell levels: up to 9th, 6th or 4th. */
+export type SpellProgression = 'full' | 'medium' | 'reduced';
 export type SpellSchool =
   | 'Abjuration' | 'Conjuration' | 'Divination' | 'Enchantment'
   | 'Evocation' | 'Illusion' | 'Necromancy' | 'Transmutation' | 'Universal';
@@ -51,6 +53,7 @@ export interface ClassDefinition {
     type: SpellcastingType;
     ability: AbilityKey;
     school: SpellcastingSchool;
+    progression: SpellProgression;
     slots: SpellSlotTable;
     spellsKnown?: SpellsKnownTable;
     spellList: string[];
@@ -465,6 +468,14 @@ export interface CustomClassSpellcasting {
   enabled: boolean;
   sourceList?: string;
   customSpells?: string[];
+  /** Spell level of each additional spell (default: lowest level among its lists). */
+  customSpellLevels?: Record<string, number>;
+  /** Missing fields are inherited from the built-in class of `sourceList`. */
+  ability?: AbilityKey;
+  type?: SpellcastingType;
+  school?: SpellcastingSchool;
+  progression?: SpellProgression;
+  usesSpellbook?: boolean;
 }
 
 export interface CustomClassDefinition {

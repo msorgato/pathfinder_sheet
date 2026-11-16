@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getClass, isBuiltinClass } from '../../data/classes';
+import { getClass } from '../../data/classes';
+import { resolveSpellcasting, spellLevelFor } from '../../utils/spellcasting';
 import { useMergedSpells } from '../../store/dataStore';
 import { computeSpellSlots, spellsKnownAtLevel, abilityMod } from '../../utils/calculations';
-import type { AbilityScores, KnownSpell } from '../../types';
+import type { AbilityScores, KnownSpell, SpellDefinition } from '../../types';
 import { WizardLayout } from './WizardLayout';
 
 const SCHOOL_COLORS: Record<string, string> = {
@@ -23,15 +24,18 @@ interface Props {
 export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, onNext, onBack }: Props) {
   const [selectedLevel, setSelectedLevel] = useState(0);
   const mergedSpells = useMergedSpells();
-  const getSpellsForClassAndLevel = (cid: string, lv: number) => mergedSpells.filter(s => s.levels[cid] === lv);
-  const getSpellsForClass = (cid: string) => mergedSpells.filter(s => cid in s.levels);
 
   const cls = getClass(classId);
+  // Built-in or custom class: how it casts, if it does
+  const spellcasting = resolveSpellcasting(cls);
+  const levelOf = (spell: SpellDefinition) => (spellcasting ? spellLevelFor(spellcasting, spell) : undefined);
+  const getSpellsForClassAndLevel = (lv: number) => mergedSpells.filter(s => levelOf(s) === lv);
+  const getSpellsForClass = () => mergedSpells.filter(s => levelOf(s) !== undefined);
 
   // For spellbook casters: auto-add all cantrips on mount
   useEffect(() => {
-    if (!cls || !isBuiltinClass(cls) || !cls.spellcasting?.usesSpellbook) return;
-    const cantrips = getSpellsForClassAndLevel(classId, 0);
+    if (!spellcasting?.usesSpellbook) return;
+    const cantrips = getSpellsForClassAndLevel(0);
     const alreadyHasAny = knownSpells.some(ks => ks.classId === classId);
     if (!alreadyHasAny && cantrips.length > 0) {
       onChange([
@@ -42,7 +46,7 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
-  if (!cls?.spellcasting || !isBuiltinClass(cls)) {
+  if (!cls || !spellcasting) {
     return (
       <WizardLayout
         step={6} totalSteps={7}
@@ -62,17 +66,16 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
     );
   }
 
-  const spellcasting = cls.spellcasting;
   const abilityScore = abilityScores[spellcasting.ability];
-  const slots = computeSpellSlots(classId, 1, abilityScore);
+  const slots = computeSpellSlots(spellcasting, 1, abilityScore);
   const accessibleLevels = slots.map(s => s.level);
 
-  const knownAtLevel = spellsKnownAtLevel(classId, 1);
+  const knownAtLevel = spellsKnownAtLevel(spellcasting, 1);
   const isSpontaneous = spellcasting.type === 'spontaneous';
   const isSpellbook = !!spellcasting.usesSpellbook;
 
   const maxKnown = isSpontaneous ? (knownAtLevel[selectedLevel] ?? 0) : Infinity;
-  const spellsAtLevel = getSpellsForClassAndLevel(classId, selectedLevel).sort((a, b) => a.name.localeCompare(b.name));
+  const spellsAtLevel = getSpellsForClassAndLevel(selectedLevel).sort((a, b) => a.name.localeCompare(b.name));
   const selectedAtLevel = knownSpells.filter(ks => ks.spellLevel === selectedLevel && ks.classId === classId);
 
   const toggle = (spellId: string) => {
@@ -91,10 +94,10 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
   const intMod = abilityMod(abilityScores.int);
   const firstLevelSlots = 3 + intMod;
   const selected1stLevel = knownSpells.filter(ks => ks.classId === classId && ks.spellLevel === 1);
-  const spells1stLevel = getSpellsForClassAndLevel(classId, 1).sort((a, b) => a.name.localeCompare(b.name));
+  const spells1stLevel = getSpellsForClassAndLevel(1).sort((a, b) => a.name.localeCompare(b.name));
   const canProceedSpellbook = selected1stLevel.length >= firstLevelSlots;
 
-  const spellsCantrips = getSpellsForClassAndLevel(classId, 0).sort((a, b) => a.name.localeCompare(b.name));
+  const spellsCantrips = getSpellsForClassAndLevel(0).sort((a, b) => a.name.localeCompare(b.name));
   const selectedCantrips = knownSpells.filter(ks => ks.classId === classId && ks.spellLevel === 0);
 
   const toggle0th = (spellId: string) => {
@@ -352,7 +355,7 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
           <p className="text-sm mb-3" style={{ color: 'var(--theme-text-muted)' }}>
             Tutti gli incantesimi disponibili per la tua classe. Potrai selezionare quali preparare ogni giorno dalla scheda personaggio.
           </p>
-          {getSpellsForClass(classId).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 20).map(spell => (
+          {getSpellsForClass().sort((a, b) => a.name.localeCompare(b.name)).slice(0, 20).map(spell => (
             <div key={spell.id} className="pf-panel p-3">
               <div className="flex items-center gap-2">
                 <span
@@ -363,7 +366,7 @@ export function Step6_Spells({ classId, abilityScores, knownSpells, onChange, on
                 </span>
                 <span className="font-semibold text-sm" style={{ color: 'var(--theme-text)' }}>{spell.name}</span>
                 <span className="text-xs" style={{ color: 'var(--theme-border-strong)' }}>
-                  {spell.levels[classId]}° livello
+                  {levelOf(spell)}° livello
                 </span>
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--theme-text-neutral)' }}>{spell.description}</div>

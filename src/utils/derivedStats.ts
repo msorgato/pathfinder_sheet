@@ -11,7 +11,7 @@ import type { ExtraDice } from '../data/itemAbilities';
 import { computeProficiencies, isProficientArmor, isProficientWeapon, type ProficiencySet } from './proficiencies';
 import { ABILITY_SHORT } from '../data/modifierLabels';
 import {
-  abilityMod, effectiveAbilityScores, maxHP, skillTotal, totalBAB, totalSave,
+  abilityMod, permanentAbilityScores, maxHP, skillTotal, totalBAB, totalSave,
 } from './calculations';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -246,7 +246,7 @@ export function deriveStats(char: Character): DerivedStats {
   const pick = (pred: (m: SourcedModifier) => boolean) => all.filter(pred);
 
   // Ability scores
-  const rawScores = effectiveAbilityScores(char);
+  const rawScores = permanentAbilityScores(char);
   const abilityDamage = {} as Record<AbilityKey, number>;
   const abilityDrain = {} as Record<AbilityKey, number>;
   const scores = {} as Record<AbilityKey, number>;

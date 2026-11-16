@@ -84,7 +84,7 @@ L'admin SHALL poter aggiungere, modificare e rimuovere capacità speciali. Ogni 
 - **THEN** la capacità viene rimossa dalla lista (senza conferma aggiuntiva, essendo solo una bozza)
 
 ### Requirement: Admin configura il sistema di magia della classe
-L'admin SHALL poter abilitare o disabilitare il casting. Se abilitato, SHALL poter specificare: lista sorgente esistente (select tra Wizard, Sorcerer, Cleric, Druid, Bard, Paladin, Ranger, nessuna) e/o una lista di ID incantesimi custom selezionabili dalla libreria condivisa.
+L'admin SHALL poter abilitare o disabilitare il casting. Se abilitato, SHALL configurare caratteristica, tipo (preparati o spontanei, con o senza libro), tradizione (arcana o divina), progressione (piena, media, ridotta), lista sorgente e incantesimi aggiuntivi, ciascuno con il proprio livello.
 
 #### Scenario: Classe non incantatore
 - **WHEN** l'admin lascia il toggle "Incantesimi" disabilitato
@@ -92,11 +92,19 @@ L'admin SHALL poter abilitare o disabilitare il casting. Se abilitato, SHALL pot
 
 #### Scenario: Classe con lista sorgente
 - **WHEN** l'admin abilita gli incantesimi e seleziona "Wizard" come lista sorgente
-- **THEN** il campo `spellcasting.sourceList` viene impostato a `'wizard'`
+- **THEN** il campo `spellcasting.sourceList` viene impostato a `'wizard'` e caratteristica, tipo, tradizione e progressione sono proposti come quelli del mago
 
 #### Scenario: Classe con incantesimi custom
-- **WHEN** l'admin abilita gli incantesimi e seleziona incantesimi dalla libreria condivisa
-- **THEN** gli ID degli incantesimi selezionati vengono salvati in `spellcasting.customSpells`
+- **WHEN** l'admin abilita gli incantesimi e seleziona Palla di Fuoco dalla libreria condivisa
+- **THEN** l'incantesimo viene salvato in `spellcasting.customSpells` con livello proposto 3, modificabile
+
+#### Scenario: Progressione ridotta spontanea
+- **WHEN** l'admin sceglie la progressione ridotta
+- **THEN** il tipo spontaneo non è selezionabile
+
+#### Scenario: Configurazione incompleta
+- **WHEN** l'admin abilita gli incantesimi senza lista sorgente e senza caratteristica
+- **THEN** l'editor segnala i campi mancanti e la classe non viene trattata come incantatrice finché non sono completi
 
 ### Requirement: Admin può eliminare una bozza
 L'admin SHALL poter eliminare una classe in stato draft. Le classi pubblicate non possono essere eliminate direttamente (devono prima essere ritirate).
