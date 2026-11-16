@@ -366,6 +366,8 @@ export interface Character {
   experience: number;
   notes: string;
   accentColor?: string;
+  /** Animated reveal of dice rolls; absent means enabled. */
+  diceAnimations?: boolean;
   /** Id of the chosen portrait icon (file name in public/icons/classi without extension). */
   portraitIcon?: string;
   classFeatureChoices?: ClassFeatureChoice[];

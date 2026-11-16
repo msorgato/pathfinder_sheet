@@ -6,6 +6,7 @@ import type { Character, EquipmentItem, ItemDefinition } from '../types';
 import { deriveStats } from '../utils/derivedStats';
 import { attackFromItem, itemFromCatalog } from '../utils/inventory';
 import { getEffectPreset } from '../data/effectPresets';
+import { attackRoll, statRoll } from '../utils/rollReveal';
 
 const catalogue = JSON.parse(readFileSync(join(__dirname, '../../public/data/items.json'), 'utf-8')) as { items: ItemDefinition[] };
 const defs = new Map(catalogue.items.map(i => [i.id, i]));
@@ -209,5 +210,44 @@ describe('enhanced weapons', () => {
     })).weaponAttack(atk);
     expect(withEffect.toHit.total - base.toHit.total).toBe(3);
     expect(withEffect.toHit.suppressed).toHaveLength(1);
+  });
+});
+
+describe('roll requests carry a consistent breakdown', () => {
+  const sum = (r: { parts?: { value: number }[] }) => (r.parts ?? []).reduce((s, p) => s + p.value, 0);
+
+  it('a save with a worn cloak: named entries add up to the modifier', () => {
+    const d = deriveStats(hero({ equipment: [worn('mantello-della-resistenza-2')] }));
+    const req = statRoll('Tempra', d.saves.fort);
+    expect(req.modifier).toBe(d.saves.fort.total);
+    expect(sum(req)).toBe(req.modifier);
+    expect(req.parts?.some(p => p.value === 2 && /Mantello/.test(p.label))).toBe(true);
+  });
+
+  it('skills, ability checks, initiative and CMB add up too', () => {
+    const c = hero({ equipment: [worn('mantello-della-resistenza-2')], effects: [{ id: 'e', name: 'Eroismo', modifiers: getEffectPreset('eroismo')!.modifiers }] });
+    const d = deriveStats(c);
+    const stats = [d.skills.climb, d.abilityChecks.str, d.initiative, d.cmb, d.saves.ref, d.saves.will];
+    stats.forEach(s => expect(sum(statRoll('x', s))).toBe(statRoll('x', s).modifier));
+  });
+
+  it('a keen longsword +1: threat range 17, enhancement entry, iterative penalty', () => {
+    const item = make('spada-lunga', { enhancement: 1, abilities: ['affilata'] }, 'sword');
+    const atk = attackFromItem(item);
+    const r = deriveStats(hero({ equipment: [item], weaponAttacks: [atk] })).weaponAttack(atk);
+    const first = attackRoll('Spada', r.toHit, 0, r.critRange);
+    const second = attackRoll('Spada', r.toHit, -5, r.critRange);
+    expect(first.critRange).toBe(17);
+    expect(first.parts?.some(p => p.value === 1 && /\+1/.test(p.label))).toBe(true);
+    expect(sum(first)).toBe(first.modifier);
+    expect(second.modifier).toBe(first.modifier - 5);
+    expect(second.parts).toContainEqual({ label: 'Attacco iterativo', value: -5 });
+    expect(sum(second)).toBe(second.modifier);
+  });
+
+  it('the global chain adds up too', () => {
+    const d = deriveStats(hero());
+    const r = attackRoll('Mischia att. 2', d.attack.melee, -5);
+    expect(sum(r)).toBe(r.modifier);
   });
 });

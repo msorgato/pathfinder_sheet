@@ -372,6 +372,8 @@ export function CharacterSheet() {
           portraitIcon={char.portraitIcon}
           autoIcon={defaultPortraitIcon(char)}
           onChangeIcon={id => updateCharacter(char.id, { portraitIcon: id })}
+          diceAnimations={char.diceAnimations}
+          onChangeDiceAnimations={enabled => updateCharacter(char.id, { diceAnimations: enabled })}
           onDelete={() => { setShowCustomize(false); setShowDeleteConfirm(true); }}
           onClose={() => setShowCustomize(false)}
         />
@@ -429,6 +431,7 @@ export function CharacterSheet() {
         onClose={() => setDiceOpen(false)}
         pendingRoll={pendingRoll}
         onPendingHandled={() => setPendingRoll(undefined)}
+        animate={char.diceAnimations !== false}
       />
     </div>
   );

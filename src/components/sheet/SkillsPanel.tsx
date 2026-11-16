@@ -3,6 +3,7 @@ import { SKILLS } from '../../data/skills';
 import { getClass } from '../../data/classes';
 import type { Character, AbilityKey } from '../../types';
 import { abilityMod } from '../../utils/calculations';
+import { statRoll } from '../../utils/rollReveal';
 import { StatBreakdown } from './StatBreakdown';
 import { statTone, useDerivedStats } from './statHelpers';
 import { useCharacterStore } from '../../store/characterStore';
@@ -180,7 +181,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                     border: 'none',
                   }}
                   title={onQuickRoll ? `Tira 1d20${total >= 0 ? '+' : ''}${total} (${skill.name})` : undefined}
-                  onClick={() => onQuickRoll?.({ label: skill.name, numDice: 1, dieType: 20, modifier: total })}
+                  onClick={() => onQuickRoll?.(statRoll(skill.name, stat))}
                 >
                   {total >= 0 ? '+' : ''}{total}
                 </button>

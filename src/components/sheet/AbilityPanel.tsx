@@ -1,5 +1,6 @@
 import type { Character, AbilityKey } from '../../types';
 import { modStr } from '../../utils/calculations';
+import { statRoll } from '../../utils/rollReveal';
 import { StatBreakdown } from './StatBreakdown';
 import { statTone, useDerivedStats } from './statHelpers';
 import { getRace } from '../../data/races';
@@ -64,7 +65,7 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                   transition: 'box-shadow 0.15s',
                 }}
                 title={onQuickRoll ? `Prova di caratteristica: 1d20${modStr(check.total)}` : undefined}
-                onClick={() => onQuickRoll?.({ label: ABILITY_LABELS[key], numDice: 1, dieType: 20, modifier: check.total })}
+                onClick={() => onQuickRoll?.(statRoll(ABILITY_LABELS[key], check))}
               >
                 {modStr(mod)}
               </button>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Character } from '../../types';
 import { modStr, attackChain } from '../../utils/calculations';
+import { attackRoll } from '../../utils/rollReveal';
 import type { ResolvedAttack } from '../../utils/derivedStats';
 import { inventoryOf } from '../../utils/inventory';
 import { critLabel } from '../../data/itemLabels';
@@ -104,7 +105,7 @@ export function AttacksPanel({ char, onQuickRoll }: Props) {
                       margin: 'auto',
                     }}
                     title={onQuickRoll ? `Tira d20 ${modStr(bonus)} — ${label} att. ${i + 1}` : undefined}
-                    onClick={() => onQuickRoll?.({ label: `${label} att. ${i + 1}${noteSuffix}`, numDice: 1, dieType: 20, modifier: bonus })}
+                    onClick={() => onQuickRoll?.(attackRoll(`${label} att. ${i + 1}${noteSuffix}`, stat, b - bab))}
                   >
                     {icon} {modStr(bonus)}{noteSuffix ? ' ⚠' : ''}
                   </button>
@@ -352,7 +353,7 @@ function WeaponRow({
                 cursor: onQuickRoll ? 'pointer' : 'default',
               }}
               title={onQuickRoll ? `Tira d20 ${modStr(toHit)} — ${weapon.name} attacco ${i + 1} (critico ${crit})` : undefined}
-              onClick={() => onQuickRoll?.({ label: `${weapon.name} att. ${i + 1} (${crit})${noteSuffix}`, numDice: 1, dieType: 20, modifier: toHit })}
+              onClick={() => onQuickRoll?.(attackRoll(`${weapon.name} att. ${i + 1} (${crit})${noteSuffix}`, resolved.toHit, b - bab, resolved.critRange))}
             >
               {icon} {modStr(toHit)}{noteSuffix ? ' ⚠' : ''}
             </button>

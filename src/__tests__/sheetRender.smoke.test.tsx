@@ -17,6 +17,10 @@ import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
 import { getEffectPreset } from '../data/effectPresets';
 import { ConsumablesSection } from '../components/sheet/ConsumablesSection';
 import { createSpellItem, refreshSpellItem } from '../utils/spellConsumables';
+import { RollReveal } from '../components/sheet/RollReveal';
+import { DiceRoller } from '../components/sheet/DiceRoller';
+import { CharacterCustomizationPanel } from '../components/sheet/CharacterCustomizationPanel';
+import type { RevealData } from '../utils/rollReveal';
 
 const p = getEffectPreset('ingrandire-persona')!;
 const char = {
@@ -218,5 +222,62 @@ describe('spell consumables render', () => {
     expect(out).toContain('Livello incantatore');
     expect(out).toContain('Cariche');
     expect(out).not.toContain('Slot');
+  });
+});
+
+describe('roll reveal renders', () => {
+  const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
+  const data = (over: Partial<RevealData> = {}): RevealData => ({
+    id: 'r', label: 'Tempra', dice: [14], dieType: 20, modifier: 5, total: 19,
+    parts: [{ label: 'Base', value: 4 }, { label: 'Mantello della Resistenza +1', value: 1 }], ...over,
+  });
+
+  it('starts spinning, with a d20 shape and no total yet', () => {
+    const out = html(<RollReveal data={data()} onClose={() => {}} reducedMotion={false} />);
+    expect(out).toContain('is-spinning');
+    expect(out).toContain('50,4 92,27 92,73 50,96 8,73 8,27');
+    expect(out).not.toContain('roll-reveal-total is-shown');
+    expect(out).not.toContain('class="reveal-bonus');
+  });
+
+  it('with reduced motion it shows the final state at once', () => {
+    const out = html(<RollReveal data={data()} onClose={() => {}} reducedMotion />);
+    expect(out).toContain('roll-reveal-total is-shown');
+    expect(out).toContain('+4');
+    expect(out).toContain('Mantello della Resistenza +1');
+    expect(out).toContain('Tempra: 19');
+    expect(out).not.toContain('is-spinning');
+  });
+
+  it('shows critical, threat and fumble', () => {
+    expect(html(<RollReveal data={data({ dice: [20], total: 25 })} onClose={() => {}} reducedMotion />)).toContain('CRITICO!');
+    expect(html(<RollReveal data={data({ dice: [19], total: 24, critRange: 19 })} onClose={() => {}} reducedMotion />)).toContain('Minaccia');
+    expect(html(<RollReveal data={data({ dice: [1], total: 6 })} onClose={() => {}} reducedMotion />)).toContain('FUMBLE!');
+    expect(html(<RollReveal data={data({ dice: [19], total: 24 })} onClose={() => {}} reducedMotion />)).not.toContain('Minaccia');
+  });
+
+  it('draws no dice above five, only the values', () => {
+    const out = html(<RollReveal data={data({ dice: [1, 2, 3, 4, 5, 6, 3, 2, 1, 6], dieType: 6, parts: undefined, modifier: 0, total: 33 })} onClose={() => {}} reducedMotion={false} />);
+    expect(out).not.toContain('<svg');
+    expect(out).toContain('dice-value-chip');
+  });
+
+  it('inconsistent parts show a single unnamed modifier', () => {
+    const out = html(<RollReveal data={data({ parts: [{ label: 'Base', value: 1 }] })} onClose={() => {}} reducedMotion />);
+    expect(out).toContain('+5');
+    expect(out).not.toContain('Base');
+  });
+
+  it('the dice panel shows no overlay before a roll', () => {
+    expect(html(<DiceRoller open onClose={() => {}} onPendingHandled={() => {}} />)).not.toContain('roll-reveal');
+  });
+});
+
+describe('dice animations setting', () => {
+  const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
+  const props = { onChangeColor: () => {}, onChangeIcon: () => {}, onChangeDiceAnimations: () => {}, onDelete: () => {}, onClose: () => {} };
+  it('is checked by default and unchecked when disabled', () => {
+    expect(html(<CharacterCustomizationPanel {...props} />)).toMatch(/<input type="checkbox" checked=""[^>]*\/>\s*Animazioni dei dadi/);
+    expect(html(<CharacterCustomizationPanel {...props} diceAnimations={false} />)).not.toMatch(/checked=""[^>]*\/>\s*Animazioni dei dadi/);
   });
 });

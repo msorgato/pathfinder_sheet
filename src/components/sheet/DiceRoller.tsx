@@ -1,11 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { RollResultData } from '../../types';
+import type { RevealData } from '../../utils/rollReveal';
+import { RollReveal } from './RollReveal';
+
+/** A named piece of a roll's modifier (e.g. "Forza", "Benedizione"). */
+export interface RollPart {
+  label: string;
+  value: number;
+}
 
 export interface RollRequest {
   label: string;
   numDice: number;
   dieType: number;
   modifier: number;
+  /** Breakdown of `modifier`; the reveal falls back to a single unnamed entry if it does not add up. */
+  parts?: RollPart[];
+  /** Lowest natural roll that threatens a critical (attack rolls). */
+  critRange?: number;
 }
 
 interface RollResult {
@@ -24,6 +36,8 @@ interface Props {
   onPendingHandled: () => void;
   characterName?: string;
   onRollResult?: (result: RollResultData) => void;
+  /** Show the animated reveal of each roll (the character's setting). */
+  animate?: boolean;
 }
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -40,23 +54,26 @@ function isFumble(dice: number[], dieType: number): boolean {
   return dieType === 20 && dice.length === 1 && dice[0] === 1;
 }
 
-export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, characterName = '', onRollResult }: Props) {
+export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, characterName = '', onRollResult, animate = true }: Props) {
   const [numDice, setNumDice] = useState(1);
   const [dieType, setDieType] = useState(20);
   const [modifier, setModifier] = useState(0);
   const [results, setResults] = useState<RollResult[]>([]);
   const [animKey, setAnimKey] = useState(0);
+  const [reveal, setReveal] = useState<RevealData | null>(null);
+  const closeReveal = useCallback(() => setReveal(null), []);
   const onRollResultRef = useRef(onRollResult);
   onRollResultRef.current = onRollResult;
 
   const modStr = (v: number) => v === 0 ? '' : v > 0 ? `+${v}` : `${v}`;
 
-  const performRoll = (label: string, n: number, d: number, mod: number) => {
+  const performRoll = (label: string, n: number, d: number, mod: number, extra: Pick<RollRequest, 'parts' | 'critRange'> = {}) => {
     const dice = Array.from({ length: n }, () => rollDie(d));
     const total = dice.reduce((a, b) => a + b, 0) + mod;
     const id = Date.now().toString();
     setResults(prev => [{ id, label, dice, dieType: d, modifier: mod, total }, ...prev].slice(0, 30));
     setAnimKey(k => k + 1);
+    if (animate) setReveal({ id, label, dice, dieType: d, modifier: mod, total, parts: extra.parts, critRange: extra.critRange });
     onRollResultRef.current?.({
       characterName,
       label,
@@ -71,16 +88,19 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
 
   useEffect(() => {
     if (!pendingRoll) return;
-    const { label, numDice: n, dieType: d, modifier: mod } = pendingRoll;
+    const { label, numDice: n, dieType: d, modifier: mod, parts, critRange } = pendingRoll;
     setNumDice(n);
     setDieType(d);
     setModifier(mod);
-    performRoll(label, n, d, mod);
+    performRoll(label, n, d, mod, { parts, critRange });
     onPendingHandled();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingRoll]);
 
-  if (!open) return null;
+  // Shown even with the panel closed.
+  const revealEl = reveal ? <RollReveal key={reveal.id} data={reveal} onClose={closeReveal} /> : null;
+
+  if (!open) return revealEl;
 
   const latest = results[0];
   const crit = latest && isCrit(latest.dice, latest.dieType);
@@ -88,6 +108,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
 
   return (
     <>
+      {revealEl}
       {/* Panel — pointer-events:none on the outer shell so clicks pass through to elements behind it */}
       <div
         className="fixed bottom-20 right-4 z-50 w-72 rounded-xl flex flex-col shadow-2xl"
@@ -163,8 +184,9 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
             🎲 Lancia!
           </button>
 
-          {/* Latest result */}
-          {latest && (
+          {/* Latest result: hidden while the reveal plays (no spoilers), its space reserved so the roll button stays where it is */}
+          <div style={{ minHeight: 112 }}>
+          {latest && !reveal && (
             <div
               key={animKey}
               className="rounded-lg p-3 text-center dice-result"
@@ -192,31 +214,31 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
               </div>
             </div>
           )}
+          </div>
         </div>
 
-        {/* Roll history */}
-        {results.length > 1 && (
-          <div className="overflow-y-auto border-t" style={{ borderColor: 'var(--theme-ghost-border)', pointerEvents: 'auto' }}>
-            <div className="px-3 py-1.5 text-xs font-bold uppercase" style={{ color: 'var(--theme-text-faint)' }}>Storico</div>
-            {results.slice(1).map(r => {
-              const rc = isCrit(r.dice, r.dieType);
-              const rf = isFumble(r.dice, r.dieType);
-              return (
-                <div
-                  key={r.id}
-                  className="flex items-center justify-between px-3 py-1 text-xs border-b"
-                  style={{ borderColor: 'var(--theme-bg-panel)' }}
-                >
-                  <span style={{ color: 'var(--theme-text-faint)' }}>{r.label}</span>
-                  <span style={{ color: rc ? 'var(--theme-hp-high)' : rf ? 'var(--theme-hp-low)' : 'var(--theme-text-muted)', fontWeight: rc || rf ? 'bold' : 'normal' }}>
-                    {r.total}
-                    {rc ? ' ✦' : rf ? ' ✕' : ''}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* Roll history: fixed height and scrollable, so it never pushes the roll button up */}
+        <div className="overflow-y-auto border-t min-h-0" style={{ borderColor: 'var(--theme-ghost-border)', pointerEvents: 'auto', height: 144 }}>
+          <div className="px-3 py-1.5 text-xs font-bold uppercase sticky top-0" style={{ color: 'var(--theme-text-faint)', background: 'var(--theme-bg-panel-2)' }}>Storico</div>
+          {results.length <= 1 && <div className="px-3 py-1 text-xs" style={{ color: 'var(--theme-text-faint)' }}>Nessun tiro precedente.</div>}
+          {results.slice(1).map(r => {
+            const rc = isCrit(r.dice, r.dieType);
+            const rf = isFumble(r.dice, r.dieType);
+            return (
+              <div
+                key={r.id}
+                className="flex items-center justify-between px-3 py-1 text-xs border-b"
+                style={{ borderColor: 'var(--theme-bg-panel)' }}
+              >
+                <span style={{ color: 'var(--theme-text-faint)' }}>{r.label}</span>
+                <span style={{ color: rc ? 'var(--theme-hp-high)' : rf ? 'var(--theme-hp-low)' : 'var(--theme-text-muted)', fontWeight: rc || rf ? 'bold' : 'normal' }}>
+                  {r.total}
+                  {rc ? ' ✦' : rf ? ' ✕' : ''}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </>
   );
