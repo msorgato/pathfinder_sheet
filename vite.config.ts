@@ -2,13 +2,29 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import type { Plugin } from 'vite'
+
+// One identifier per build, shared by the app (define) and the published version.json,
+// so a running app can tell whether a newer build is online.
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA ?? String(Date.now())
+
+const versionFile = (): Plugin => ({
+  name: 'version-file',
+  apply: 'build',
+  generateBundle() {
+    this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) })
+  },
+})
 
 export default defineConfig({
+  define: { __APP_BUILD__: JSON.stringify(BUILD_ID) },
   plugins: [
     react(),
     tailwindcss(),
+    versionFile(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits until the user accepts it (see lib/pwaUpdate)
+      registerType: 'prompt',
       injectRegister: false,
       devOptions: { enabled: false },
       includeAssets: ['icons/*.png', 'icons/classi/*.svg'],
@@ -34,6 +50,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/__\//],
         cleanupOutdatedCaches: true,
+        // The waiting worker only activates when the user accepts (or the app is closed); it then takes over the open page
+        clientsClaim: true,
         // Firestore, Auth and Cloud Functions are cross-origin and have no runtime rule: always network.
         runtimeCaching: [
           {

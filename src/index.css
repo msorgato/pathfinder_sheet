@@ -1324,3 +1324,19 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .roll-reveal, .roll-reveal *, .roll-reveal *::before { animation: none !important; }
 }
+
+/* ── PWA update notice ───────────────────────────────────────────────────── */
+.update-prompt {
+  position: fixed; z-index: 70; left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  width: min(calc(100vw - 32px), 420px);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border-radius: 14px;
+  background: var(--bg-raised, #161a26); border: 1px solid var(--line-mid);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  animation: reveal-card-in 0.25s ease-out both;
+}
+.update-prompt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--ink); font-size: 14px; }
+.update-prompt-text span { color: var(--ink-mute); font-size: 12px; }
+.update-prompt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .update-prompt { animation: none; } }
