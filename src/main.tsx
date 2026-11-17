@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import App from './App.tsx'
-import { registerSW } from 'virtual:pwa-register'
+import { initPwaUpdates } from './lib/pwaUpdate'
 
-registerSW({ immediate: true })
+initPwaUpdates()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

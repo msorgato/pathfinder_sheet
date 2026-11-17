@@ -14,6 +14,7 @@ import { useCharacterStore } from './store/characterStore';
 import { useDataStore } from './store/dataStore';
 import { useLobbyStore } from './store/lobbyStore';
 import { subscribePublishedClasses } from './lib/firestoreSync';
+import { UpdatePrompt } from './components/ui/UpdatePrompt';
 
 function LoadingScreen() {
   return (
@@ -79,10 +80,12 @@ function App() {
   }, [user?.uid, authLoading]);
 
   if (authLoading || dataLoading || !builtinLoaded) {
-    return <LoadingScreen />;
+    return <><LoadingScreen /><UpdatePrompt /></>;
   }
 
   return (
+    <>
+    <UpdatePrompt />
     <BrowserRouter>
       <Routes>
         <Route path="/login"          element={user ? <Navigate to="/" replace />      : <LoginPage />} />
@@ -95,6 +98,7 @@ function App() {
         <Route path="/settings/account" element={user ? <AccountSettings />    : <Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 

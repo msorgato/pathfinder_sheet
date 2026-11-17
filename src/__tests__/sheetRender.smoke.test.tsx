@@ -27,6 +27,7 @@ import { SpellsPanel } from '../components/sheet/SpellsPanel';
 import { Step6_Spells } from '../components/wizard/Step6_Spells';
 import { useDataStore } from '../store/dataStore';
 import { CustomClassEditor } from '../components/admin/CustomClassEditor';
+import { UpdateNotice, UpdatePrompt } from '../components/ui/UpdatePrompt';
 import { RollReveal } from '../components/sheet/RollReveal';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import { CharacterCustomizationPanel } from '../components/sheet/CharacterCustomizationPanel';
@@ -382,5 +383,22 @@ describe('custom spellcasting classes render like built-in ones', () => {
       expect(out).toMatch(/<input type="radio"[^>]*disabled=""[^>]*\/>Spontanei/);
       expect(out).not.toMatch(/<input type="radio"[^>]*disabled=""[^>]*\/>Preparati/);
     } finally { reset(); }
+  });
+});
+
+describe('PWA update notice', () => {
+  const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
+  it('offers Aggiorna and Dopo for a ready update', () => {
+    const out = html(<UpdateNotice kind="update" onApply={() => {}} onDismiss={() => {}} />);
+    expect(out).toContain('Nuova versione disponibile');
+    expect(out).toContain('>Aggiorna<');
+    expect(out).toContain('>Dopo<');
+    expect(out).not.toContain('non è riuscito');
+  });
+  it('explains the recovery when the app is stuck', () => {
+    expect(html(<UpdateNotice kind="recover" onApply={() => {}} onDismiss={() => {}} />)).toContain('non è riuscito');
+  });
+  it('renders nothing when there is nothing to offer', () => {
+    expect(html(<UpdatePrompt />)).toBe('');
   });
 });
