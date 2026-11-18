@@ -1343,18 +1343,19 @@ body {
 
 /* ── PWA update notice ───────────────────────────────────────────────────── */
 .update-prompt {
-  position: fixed; z-index: 70; left: 50%; transform: translateX(-50%);
+  /* centred with auto margins, not with a transform: the entrance animation sets `transform` and would undo it */
+  position: fixed; z-index: 70; left: 16px; right: 16px; margin-inline: auto;
   top: calc(env(safe-area-inset-top, 0px) + 12px);
-  width: min(calc(100vw - 32px), 420px);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  max-width: 480px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
   padding: 10px 12px; border-radius: 14px;
   background: var(--bg-raised, #161a26); border: 1px solid var(--line-mid);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
   animation: reveal-card-in 0.25s ease-out both;
 }
-.update-prompt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--ink); font-size: 14px; }
+.update-prompt-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 200px; min-width: 0; color: var(--ink); font-size: 15px; }
 .update-prompt-text span { color: var(--ink-mute); font-size: 13px; }
-.update-prompt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.update-prompt-actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: auto; }
 @media (prefers-reduced-motion: reduce) { .update-prompt { animation: none; } }
 
 /* 3D dice canvas of the roll reveal */

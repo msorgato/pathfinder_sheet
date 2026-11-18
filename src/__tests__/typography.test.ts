@@ -55,4 +55,13 @@ describe('typography rules', () => {
     expect(css).toMatch(/--text-xs:\s*0\.8125rem/); // 13px
     expect(css).toMatch(/--text-sm:\s*0\.9375rem/); // 15px
   });
+
+  it('the update notice is not centred with a transform (its entrance animation would undo it)', () => {
+    const css = read(join(root, 'src/index.css'));
+    const rule = /\.update-prompt \{[^}]*\}/.exec(css)?.[0] ?? '';
+    expect(rule).toContain('.update-prompt');
+    expect(rule).not.toMatch(/translateX\(-50%\)/);
+    expect(rule).toMatch(/left:\s*16px/);
+    expect(rule).toMatch(/right:\s*16px/);
+  });
 });
