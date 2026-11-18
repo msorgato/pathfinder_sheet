@@ -107,15 +107,18 @@ export function CharacterCustomizationPanel({ accentColor, onChangeColor, portra
         )}
 
         <div className="label-rune-soft" style={{ marginTop: 20, marginBottom: 10 }}>Tiri di dado</div>
-        <label className="checkbox-inline">
-          <input type="checkbox" checked={diceAnimations !== false} onChange={e => onChangeDiceAnimations(e.target.checked)} />
-          Animazioni dei dadi
-        </label>
-        <label className="checkbox-inline" style={{ marginTop: 8, opacity: diceAnimations === false ? 0.5 : 1 }}>
-          <input type="checkbox" checked={diceSounds !== false} disabled={diceAnimations === false}
-            onChange={e => onChangeDiceSounds(e.target.checked)} />
-          Suoni dei dadi
-        </label>
+        {/* one setting per line: .checkbox-inline is inline-flex, so it needs a column to wrap */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+          <label className="checkbox-inline">
+            <input type="checkbox" checked={diceAnimations !== false} onChange={e => onChangeDiceAnimations(e.target.checked)} />
+            Animazioni dei dadi
+          </label>
+          <label className="checkbox-inline" style={{ opacity: diceAnimations === false ? 0.5 : 1 }}>
+            <input type="checkbox" checked={diceSounds !== false} disabled={diceAnimations === false}
+              onChange={e => onChangeDiceSounds(e.target.checked)} />
+            Suoni dei dadi
+          </label>
+        </div>
 
         <div style={{ marginTop: 20, borderTop: '1px solid var(--line-soft)', paddingTop: 14 }}>
           <div className="label-rune-soft" style={{ marginBottom: 10 }}>Pericolo</div>

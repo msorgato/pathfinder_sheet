@@ -17,6 +17,10 @@ When the reveal shows dice (5 or fewer), it SHALL show them as three-dimensional
 - **WHEN** a d100 roll of 47 is revealed
 - **THEN** two 3D d10 stop showing 40 and 7
 
+#### Scenario: Accent colour in the lobby
+- **WHEN** a player rolls from the lobby sheet panel with a character whose accent colour is blue
+- **THEN** the dice and the total are blue, as on the character sheet
+
 #### Scenario: Critical in 3D
 - **WHEN** a d20 stops on 20
 - **THEN** the die glows gold and the reveal shows "CRITICO!"

@@ -42,7 +42,7 @@
 ## 5. Verifica d'insieme
 
 - [x] 5.1 Eseguire `npx vitest run` da PowerShell, `npx tsc -b`, `npm run lint` (nessun errore nuovo) e `npm run build`. Annotare la dimensione del chunk di `three`.
-- [ ] 5.2 Provare sul dev server, su desktop e su un telefono Android:
+- [x] 5.2 Provare sul dev server, su desktop e su un telefono Android:
   - d4, d6, d8, d10, d12 e d20 si fermano sulla faccia giusta e leggibile;
   - 1d100 (per esempio 47) mostra 40 e 7;
   - 3d6 in fila;
