@@ -56,7 +56,7 @@ export function CharacterCustomizationPanel({ accentColor, onChangeColor, portra
             className={`portrait-icon-option${!chosenIcon ? ' is-active' : ''}`}
             onClick={() => onChangeIcon(undefined)}
           >
-            <span style={{ fontFamily: 'var(--font-rune)', fontSize: 10, letterSpacing: '0.08em' }}>AUTO</span>
+            <span style={{ fontFamily: 'var(--font-rune)', fontSize: 12, letterSpacing: '0.08em' }}>AUTO</span>
           </button>
           {PORTRAIT_ICONS.map(icon => (
             <button
@@ -99,7 +99,7 @@ export function CharacterCustomizationPanel({ accentColor, onChangeColor, portra
         </div>
         {accentColor && (
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--ink-mute)' }}>{current?.name ?? ''}</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-mute)' }}>{current?.name ?? ''}</span>
             <button className="pf-btn pf-btn-ghost" style={{ fontSize: 13, padding: '4px 10px' }} onClick={() => onChangeColor(undefined)}>
               Ripristina oro
             </button>

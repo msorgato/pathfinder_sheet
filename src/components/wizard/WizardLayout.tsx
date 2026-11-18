@@ -19,7 +19,7 @@ export function WizardLayout({
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--theme-bg)' }}>
       {/* Header */}
       <div className="pf-header px-6 py-4">
-        <h1 className="font-bold" style={{ fontSize: 26, color: 'var(--theme-text)', fontFamily: 'Georgia, serif' }}>
+        <h1 className="font-bold" style={{ fontSize: 26, color: 'var(--theme-text)', fontFamily: 'var(--font-rune)' }}>
           ⚔️ Creazione Personaggio
         </h1>
         <p style={{ fontSize: 15, marginTop: 4, color: 'var(--theme-accent)' }}>{title}</p>

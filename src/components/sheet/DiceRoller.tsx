@@ -123,7 +123,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ borderColor: 'var(--theme-ghost-border)', pointerEvents: 'auto' }}>
-          <h2 className="font-bold text-sm" style={{ color: 'var(--theme-accent)', fontFamily: 'Georgia' }}>
+          <h2 className="font-bold text-sm" style={{ color: 'var(--theme-accent)', fontFamily: 'var(--font-rune)' }}>
             🎲 Lancia i Dadi
           </h2>
           <button onClick={onClose} className="text-sm px-1" style={{ color: 'var(--theme-text-faint)' }}>✕</button>
@@ -209,7 +209,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
                 className="text-4xl font-bold"
                 style={{
                   color: crit ? 'var(--theme-hp-high)' : fumble ? 'var(--theme-hp-low)' : 'var(--theme-accent)',
-                  fontFamily: 'Georgia',
+                  fontFamily: 'var(--font-display)',
                 }}
               >
                 {latest.total}

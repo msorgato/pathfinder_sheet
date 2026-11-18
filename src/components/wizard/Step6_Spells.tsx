@@ -7,8 +7,8 @@ import type { AbilityScores, KnownSpell, SpellDefinition } from '../../types';
 import { WizardLayout } from './WizardLayout';
 
 const SCHOOL_COLORS: Record<string, string> = {
-  Evocation: 'var(--theme-hp-low)', Conjuration: '#3b82f6', Abjuration: '#6366f1',
-  Divination: '#a855f7', Enchantment: '#ec4899', Illusion: '#14b8a6',
+  Evocation: 'var(--theme-hp-low)', Conjuration: '#60a5fa', Abjuration: '#818cf8',
+  Divination: '#c084fc', Enchantment: '#ec4899', Illusion: '#14b8a6',
   Necromancy: '#22c55e', Transmutation: '#f59e0b', Universal: 'var(--theme-text-neutral)',
 };
 

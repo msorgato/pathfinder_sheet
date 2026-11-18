@@ -66,7 +66,7 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
         <button
           className="pf-btn"
           style={{
-            fontSize: 12,
+            fontSize: 13,
             padding: '6px 12px',
             background: onlyTrained ? 'var(--gold)' : 'var(--surface-1)',
             color: onlyTrained ? 'var(--bg-deep)' : 'var(--ink-mute)',
@@ -86,8 +86,8 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
             gridTemplateColumns: '1fr 20px 40px 40px 40px 64px',
             color: 'var(--ink-faint)',
             fontFamily: 'var(--font-rune)',
-            fontSize: 11,
-            letterSpacing: '0.2em',
+            fontSize: 12,
+            letterSpacing: '0.03em', // the numeric columns are 40px wide
             textTransform: 'uppercase',
           }}
         >
@@ -128,13 +128,13 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
                   {skill.name}
                 </span>
                 {skill.trainedOnly && (
-                  <span style={{ marginLeft: 4, fontSize: 12, color: 'var(--ink-faint)' }}>*</span>
+                  <span style={{ marginLeft: 4, fontSize: 13, color: 'var(--ink-faint)' }}>*</span>
                 )}
               </div>
-              <div style={{ fontSize: 12, textAlign: 'center', color: 'var(--vital)' }}>
+              <div style={{ fontSize: 13, textAlign: 'center', color: 'var(--vital)' }}>
                 {isClass ? '✓' : ''}
               </div>
-              <div className="label-rune-soft" style={{ textAlign: 'center', fontSize: 11 }}>
+              <div className="label-rune-soft" style={{ textAlign: 'center', fontSize: 12 }}>
                 {AB_LABELS[skill.ability]}
               </div>
               <div className="text-center">

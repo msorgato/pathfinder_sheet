@@ -42,7 +42,7 @@ export function ModifierRows({ value, onChange }: { value: Modifier[]; onChange:
             onClick={() => onChange(value.filter((_, j) => j !== i))}>✕</button>
         </div>
       ))}
-      <button type="button" className="pf-btn pf-btn-outline" style={{ alignSelf: 'flex-start', fontSize: 12 }}
+      <button type="button" className="pf-btn pf-btn-outline" style={{ alignSelf: 'flex-start', fontSize: 13 }}
         onClick={() => onChange([...value, newModifier()])}>
         + Modificatore
       </button>

@@ -213,7 +213,7 @@ export function CharacterSheet() {
               gap: '3px 10px',
               fontFamily: 'var(--font-rune)',
               fontSize: 12,
-              letterSpacing: '0.18em',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--ink-mute)',
               marginBottom: 12,
@@ -269,7 +269,7 @@ export function CharacterSheet() {
             style={{
               fontFamily: 'var(--font-rune)',
               fontSize: 12,
-              letterSpacing: '0.22em',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
               padding: '12px 20px',
               border: 'none',

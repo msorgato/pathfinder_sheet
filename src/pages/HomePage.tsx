@@ -224,7 +224,7 @@ export function HomePage() {
           textAlign: 'center',
           fontFamily: 'var(--font-rune)',
           fontSize: 12,
-          letterSpacing: '0.2em',
+          letterSpacing: '0.14em',
           color: 'var(--ink-faint)',
           textTransform: 'uppercase',
         }}>
@@ -396,7 +396,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
               padding: '5px 4px',
             }}>
               <div className="numeral" style={{ fontSize: 16, color: 'var(--ink)', lineHeight: 1 }}>{value}</div>
-              <div className="label-rune-soft" style={{ fontSize: 11, marginTop: 2 }}>{label}</div>
+              <div className="label-rune-soft" style={{ fontSize: 12, marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -405,14 +405,14 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
         <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ flex: 1, fontSize: 12, padding: '4px 6px' }}
+            style={{ flex: 1, fontSize: 13, padding: '4px 6px' }}
             onClick={e => { e.stopPropagation(); onOpen(); }}
           >
             Apri
           </button>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ fontSize: 12, padding: '4px 8px' }}
+            style={{ fontSize: 13, padding: '4px 8px' }}
             onClick={onExport}
             title="Esporta"
           >
@@ -420,7 +420,7 @@ function CharacterCard({ char, onOpen, onExport, onDelete, delay }: {
           </button>
           <button
             className="pf-btn pf-btn-ghost"
-            style={{ fontSize: 12, padding: '4px 8px' }}
+            style={{ fontSize: 13, padding: '4px 8px' }}
             onClick={onDelete}
             title="Elimina"
           >

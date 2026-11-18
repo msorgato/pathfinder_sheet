@@ -52,6 +52,19 @@ function modelFor(dieType: number): DieModel {
 }
 
 const CELL = 128;
+/** Font of the numbers on the dice (bundled, see main.tsx). */
+const DIE_FONT = '"Literata Variable", Literata, serif';
+const fontSpec = (size: number) => `700 ${size}px ${DIE_FONT}`;
+
+/** Resolves when the dice font is loaded, or after `timeoutMs` (the textures then use the fallback serif). */
+export function ensureDiceFont(timeoutMs = 1500): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts?.load) return Promise.resolve();
+  return Promise.race([
+    document.fonts.load(fontSpec(48)).then(() => undefined, () => undefined),
+    new Promise<void>(resolve => setTimeout(resolve, timeoutMs)),
+  ]);
+}
+const diceFontReady = () => typeof document === 'undefined' || !document.fonts?.check || document.fonts.check(fontSpec(48));
 /** Share of the cell taken by the font, per die: smaller on the triangular faces. */
 const FONT_SHARE: Record<number, number> = { 4: 0.34, 6: 0.48, 8: 0.36, 10: 0.36, 12: 0.42, 20: 0.32 };
 const textures = new Map<string, CanvasTexture>();
@@ -78,7 +91,7 @@ function labelTexture(dieType: number, role: DieSpec['role'], color: Color): Can
       const size = CELL * (FONT_SHARE[dieSides(dieType)] ?? 0.4) * (label.length > 1 ? 0.78 : 1);
       const cx = (i % cols) * CELL + CELL / 2;
       const cy = Math.floor(i / cols) * CELL + CELL / 2;
-      ctx.font = `700 ${size}px Georgia, 'Times New Roman', serif`;
+      ctx.font = fontSpec(size);
       ctx.fillText(label, cx, cy + size * 0.04);
       if (label === '6' || label === '9') { // so that 6 and 9 cannot be confused
         ctx.fillRect(cx - size * 0.24, cy + size * 0.46, size * 0.48, Math.max(2, size * 0.06));
@@ -88,7 +101,8 @@ function labelTexture(dieType: number, role: DieSpec['role'], color: Color): Can
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 4;
-  textures.set(key, texture);
+  // a texture drawn with the fallback font is not kept: the next roll draws it again with the right one
+  if (diceFontReady()) textures.set(key, texture);
   return texture;
 }
 

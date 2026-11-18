@@ -22,8 +22,8 @@ const ABILITY_LABELS: Record<AbilityKey, string> = {
 };
 
 const SCHOOL_COLORS: Record<string, string> = {
-  Evocation: 'var(--theme-hp-low)', Conjuration: '#3b82f6', Abjuration: '#6366f1',
-  Divination: '#a855f7', Enchantment: '#ec4899', Illusion: '#14b8a6',
+  Evocation: 'var(--theme-hp-low)', Conjuration: '#60a5fa', Abjuration: '#818cf8',
+  Divination: '#c084fc', Enchantment: '#ec4899', Illusion: '#14b8a6',
   Necromancy: '#22c55e', Transmutation: '#f59e0b', Universal: 'var(--theme-text-neutral)',
 };
 
@@ -440,9 +440,9 @@ export function LevelUpWizard({ char, onClose }: Props) {
                               {f.name}
                             </div>
                             {f.prerequisites && (
-                              <div style={{ fontSize: 12, color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
+                              <div style={{ fontSize: 13, color: 'var(--theme-border-strong)' }}>Prerequisiti: {f.prerequisites}</div>
                             )}
-                            <div style={{ fontSize: 12, color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
+                            <div style={{ fontSize: 13, color: 'var(--theme-text-muted)' }}>{f.benefit}</div>
                           </button>
                         ));
                         })()}
@@ -505,7 +505,7 @@ export function LevelUpWizard({ char, onClose }: Props) {
                         {f.name}
                       </span>
                       {f.repeatable && (
-                        <span className="px-1 rounded" style={{ fontSize: 11, background: 'var(--theme-bg)', color: 'var(--theme-text-faint)' }}>
+                        <span className="px-1 rounded" style={{ fontSize: 13, background: 'var(--theme-bg)', color: 'var(--theme-text-faint)' }}>
                           ripetibile
                         </span>
                       )}

@@ -26,7 +26,7 @@ export function CharacterSelectBar({ characters, activeCharacterId, onSelect }: 
         <span className="flex-1 text-left truncate">
           {active ? active.name : 'Scegli personaggio…'}
         </span>
-        <span style={{ color: 'var(--theme-text-faint)', fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+        <span style={{ color: 'var(--theme-text-faint)', fontSize: 12 }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
