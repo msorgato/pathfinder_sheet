@@ -13,11 +13,14 @@ interface Props {
   /** Animated reveal of dice rolls; absent means enabled. */
   diceAnimations?: boolean;
   onChangeDiceAnimations: (enabled: boolean) => void;
+  /** Sounds of the dice reveal; absent means enabled. */
+  diceSounds?: boolean;
+  onChangeDiceSounds: (enabled: boolean) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export function CharacterCustomizationPanel({ accentColor, onChangeColor, portraitIcon, autoIcon, onChangeIcon, diceAnimations, onChangeDiceAnimations, onDelete, onClose }: Props) {
+export function CharacterCustomizationPanel({ accentColor, onChangeColor, portraitIcon, autoIcon, onChangeIcon, diceAnimations, onChangeDiceAnimations, diceSounds, onChangeDiceSounds, onDelete, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -107,6 +110,11 @@ export function CharacterCustomizationPanel({ accentColor, onChangeColor, portra
         <label className="checkbox-inline">
           <input type="checkbox" checked={diceAnimations !== false} onChange={e => onChangeDiceAnimations(e.target.checked)} />
           Animazioni dei dadi
+        </label>
+        <label className="checkbox-inline" style={{ marginTop: 8, opacity: diceAnimations === false ? 0.5 : 1 }}>
+          <input type="checkbox" checked={diceSounds !== false} disabled={diceAnimations === false}
+            onChange={e => onChangeDiceSounds(e.target.checked)} />
+          Suoni dei dadi
         </label>
 
         <div style={{ marginTop: 20, borderTop: '1px solid var(--line-soft)', paddingTop: 14 }}>

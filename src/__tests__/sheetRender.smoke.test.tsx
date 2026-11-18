@@ -251,6 +251,23 @@ describe('roll reveal renders', () => {
     expect(out).not.toContain('class="reveal-bonus');
   });
 
+  it('without WebGL (server rendering) the reveal uses the 2D dice with the same values and total', () => {
+    const out = html(<RollReveal data={data({ dice: [3, 5], dieType: 6, parts: undefined, modifier: 0, total: 8 })} onClose={() => {}} reducedMotion={false} />);
+    expect(out).not.toContain('dice-canvas');
+    expect(out).toContain('class="die is-spinning"');
+    expect(out).toContain('>8<');
+  });
+
+  it("the reveal carries the character's accent colour, wherever it is shown", () => {
+    const out = html(<RollReveal data={data()} onClose={() => {}} reducedMotion accent="#3b82f6" />);
+    expect(out).toContain('--char-accent:#3b82f6');
+    expect(html(<RollReveal data={data()} onClose={() => {}} reducedMotion />)).not.toContain('--char-accent');
+  });
+
+  it('with reduced motion no 3D canvas is mounted', () => {
+    expect(html(<RollReveal data={data()} onClose={() => {}} reducedMotion />)).not.toContain('dice-canvas');
+  });
+
   it('with reduced motion it shows the final state at once', () => {
     const out = html(<RollReveal data={data()} onClose={() => {}} reducedMotion />);
     expect(out).toContain('roll-reveal-total is-shown');
@@ -286,10 +303,17 @@ describe('roll reveal renders', () => {
 
 describe('dice animations setting', () => {
   const html = (el: React.ReactElement) => renderToString(el).replace(/<!-- -->/g, '');
-  const props = { onChangeColor: () => {}, onChangeIcon: () => {}, onChangeDiceAnimations: () => {}, onDelete: () => {}, onClose: () => {} };
+  const props = { onChangeColor: () => {}, onChangeIcon: () => {}, onChangeDiceAnimations: () => {}, onChangeDiceSounds: () => {}, onDelete: () => {}, onClose: () => {} };
   it('is checked by default and unchecked when disabled', () => {
     expect(html(<CharacterCustomizationPanel {...props} />)).toMatch(/<input type="checkbox" checked=""[^>]*\/>\s*Animazioni dei dadi/);
     expect(html(<CharacterCustomizationPanel {...props} diceAnimations={false} />)).not.toMatch(/checked=""[^>]*\/>\s*Animazioni dei dadi/);
+  });
+  const sounds = (el: React.ReactElement) => /<input[^>]*type="checkbox"[^>]*\/>\s*Suoni dei dadi/.exec(html(el))?.[0] ?? '';
+  it('the sounds setting is on by default, off when disabled, and unavailable without animations', () => {
+    expect(sounds(<CharacterCustomizationPanel {...props} />)).toContain('checked=""');
+    expect(sounds(<CharacterCustomizationPanel {...props} />)).not.toContain('disabled');
+    expect(sounds(<CharacterCustomizationPanel {...props} diceSounds={false} />)).not.toContain('checked=""');
+    expect(sounds(<CharacterCustomizationPanel {...props} diceAnimations={false} />)).toContain('disabled=""');
   });
 });
 

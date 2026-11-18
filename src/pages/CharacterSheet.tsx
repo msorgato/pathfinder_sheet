@@ -374,6 +374,8 @@ export function CharacterSheet() {
           onChangeIcon={id => updateCharacter(char.id, { portraitIcon: id })}
           diceAnimations={char.diceAnimations}
           onChangeDiceAnimations={enabled => updateCharacter(char.id, { diceAnimations: enabled })}
+          diceSounds={char.diceSounds}
+          onChangeDiceSounds={enabled => updateCharacter(char.id, { diceSounds: enabled })}
           onDelete={() => { setShowCustomize(false); setShowDeleteConfirm(true); }}
           onClose={() => setShowCustomize(false)}
         />
@@ -432,6 +434,8 @@ export function CharacterSheet() {
         pendingRoll={pendingRoll}
         onPendingHandled={() => setPendingRoll(undefined)}
         animate={char.diceAnimations !== false}
+        sound={char.diceSounds !== false}
+        accentColor={char.accentColor}
       />
     </div>
   );

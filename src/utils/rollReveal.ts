@@ -62,17 +62,26 @@ export function bonusEntries(data: Pick<RevealData, 'parts' | 'modifier'>): Roll
   return data.modifier === 0 ? [] : [{ label: '', value: data.modifier }];
 }
 
+/** The 3D dice are used for up to five dice, when motion is allowed and the 3D scene is ready; otherwise the 2D ones. */
+export const shouldUse3D = (reducedMotion: boolean, diceCount: number, ready: boolean) =>
+  !reducedMotion && ready && showDice(diceCount);
+
 export type RevealStep = { kind: 'spin' | 'land' | 'bonus' | 'total'; ms: number };
 
 export const SPIN_MS = 700;
+/** Duration of the 3D throw. */
+export const SPIN_3D_MS = 1300;
 export const LAND_MS = 350;
 export const BONUS_MS = 150;
 export const CLOSE_MS = 1500;
 
 /** Ordered steps of the reveal; with no dice shown the spin is skipped. `ms` is how long a step lasts. */
-export function buildTimeline(data: Pick<RevealData, 'dice' | 'parts' | 'modifier'>): RevealStep[] {
+export function buildTimeline(
+  data: Pick<RevealData, 'dice' | 'parts' | 'modifier'>,
+  options: { spinMs?: number } = {},
+): RevealStep[] {
   const steps: RevealStep[] = [];
-  if (showDice(data.dice.length)) steps.push({ kind: 'spin', ms: SPIN_MS });
+  if (showDice(data.dice.length)) steps.push({ kind: 'spin', ms: options.spinMs ?? SPIN_MS });
   steps.push({ kind: 'land', ms: LAND_MS });
   bonusEntries(data).forEach(() => steps.push({ kind: 'bonus', ms: BONUS_MS }));
   steps.push({ kind: 'total', ms: CLOSE_MS });

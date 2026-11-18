@@ -371,6 +371,8 @@ export interface Character {
   accentColor?: string;
   /** Animated reveal of dice rolls; absent means enabled. */
   diceAnimations?: boolean;
+  /** Sounds of the dice reveal; absent means enabled (when animations are on). */
+  diceSounds?: boolean;
   /** Id of the chosen portrait icon (file name in public/icons/classi without extension). */
   portraitIcon?: string;
   classFeatureChoices?: ClassFeatureChoice[];
