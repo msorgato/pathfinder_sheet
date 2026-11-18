@@ -115,6 +115,8 @@ export function LobbySheetPanel({ character, loading, onRollResult }: Props) {
         characterName={character.name}
         onRollResult={onRollResult}
         animate={character.diceAnimations !== false}
+        sound={character.diceSounds !== false}
+        accentColor={character.accentColor}
       />
     </div>
   );

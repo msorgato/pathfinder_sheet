@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Character } from '../types';
 import { deriveStats } from '../utils/derivedStats';
-import { bonusEntries, buildTimeline, partsMatch, rollOutcome, rollParts, showDice } from '../utils/rollReveal';
+import { SPIN_3D_MS, SPIN_MS, bonusEntries, buildTimeline, shouldUse3D, partsMatch, rollOutcome, rollParts, showDice } from '../utils/rollReveal';
 
 const char = {
   id: 'c', name: 'T', race: 'human', alignment: 'NG',
@@ -49,6 +49,11 @@ describe('showDice', () => {
 });
 
 describe('timeline', () => {
+  it('the spin lasts as long as asked (3D throw), 700 ms by default', () => {
+    const d = { dice: [14], parts: undefined, modifier: 0 };
+    expect(buildTimeline(d).find(x => x.kind === 'spin')?.ms).toBe(SPIN_MS);
+    expect(buildTimeline(d, { spinMs: SPIN_3D_MS }).find(x => x.kind === 'spin')?.ms).toBe(1300);
+  });
   const base = { dice: [14], parts: [{ label: 'Base', value: 5 }, { label: 'Forza', value: 4 }, { label: 'Benedizione', value: 1 }], modifier: 10 };
   it('spin, land, one step per bonus, then the total', () => {
     expect(buildTimeline(base).map(s => s.kind)).toEqual(['spin', 'land', 'bonus', 'bonus', 'bonus', 'total']);
@@ -61,5 +66,15 @@ describe('timeline', () => {
     expect(bonusEntries({ parts: [{ label: 'a', value: 1 }], modifier: 5 })).toEqual([{ label: '', value: 5 }]);
     expect(bonusEntries({ parts: undefined, modifier: 0 })).toEqual([]);
     expect(buildTimeline({ dice: [3], parts: undefined, modifier: 0 }).map(s => s.kind)).toEqual(['spin', 'land', 'total']);
+  });
+});
+
+describe('shouldUse3D', () => {
+  it('3D only for up to five dice, with motion allowed and the scene ready', () => {
+    expect(shouldUse3D(false, 1, true)).toBe(true);
+    expect(shouldUse3D(false, 5, true)).toBe(true);
+    expect(shouldUse3D(false, 6, true)).toBe(false);
+    expect(shouldUse3D(true, 1, true)).toBe(false);
+    expect(shouldUse3D(false, 1, false)).toBe(false);
   });
 });

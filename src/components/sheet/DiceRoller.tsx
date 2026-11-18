@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { RollResultData } from '../../types';
 import type { RevealData } from '../../utils/rollReveal';
 import { RollReveal } from './RollReveal';
+import { preloadDice3D } from '../dice3d/loader';
 
 /** A named piece of a roll's modifier (e.g. "Forza", "Benedizione"). */
 export interface RollPart {
@@ -38,6 +39,10 @@ interface Props {
   onRollResult?: (result: RollResultData) => void;
   /** Show the animated reveal of each roll (the character's setting). */
   animate?: boolean;
+  /** Play the dice sounds (only with animations on). */
+  sound?: boolean;
+  /** Accent colour of the character (colours the dice of the reveal). */
+  accentColor?: string;
 }
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -54,13 +59,15 @@ function isFumble(dice: number[], dieType: number): boolean {
   return dieType === 20 && dice.length === 1 && dice[0] === 1;
 }
 
-export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, characterName = '', onRollResult, animate = true }: Props) {
+export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, characterName = '', onRollResult, animate = true, sound = true, accentColor }: Props) {
   const [numDice, setNumDice] = useState(1);
   const [dieType, setDieType] = useState(20);
   const [modifier, setModifier] = useState(0);
   const [results, setResults] = useState<RollResult[]>([]);
   const [animKey, setAnimKey] = useState(0);
   const [reveal, setReveal] = useState<RevealData | null>(null);
+  // Fetch the 3D scene while the browser is idle, so the first roll can already use it
+  useEffect(() => { if (animate) preloadDice3D(); }, [animate]);
   const closeReveal = useCallback(() => setReveal(null), []);
   const onRollResultRef = useRef(onRollResult);
   onRollResultRef.current = onRollResult;
@@ -98,7 +105,7 @@ export function DiceRoller({ open, onClose, pendingRoll, onPendingHandled, chara
   }, [pendingRoll]);
 
   // Shown even with the panel closed.
-  const revealEl = reveal ? <RollReveal key={reveal.id} data={reveal} onClose={closeReveal} /> : null;
+  const revealEl = reveal ? <RollReveal key={reveal.id} data={reveal} onClose={closeReveal} sound={sound} accent={accentColor} /> : null;
 
   if (!open) return revealEl;
 
