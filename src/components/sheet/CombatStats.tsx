@@ -47,7 +47,7 @@ export function HitPointsPanel({ char }: { char: Character }) {
       </div>
 
       <div className="flex gap-2">
-        <HpButton label="Danno" color="var(--blood)" onSubmit={v => takeDamage(char.id, v)} />
+        <HpButton label="Danno" color="var(--blood-text)" onSubmit={v => takeDamage(char.id, v)} />
         <HpButton label="Cura" color="var(--vital)" onSubmit={v => heal(char.id, v)} />
         <HpButton label="Temp HP" color="var(--amethyst-bright)" onSubmit={v => setTempHp(char.id, v)} />
       </div>
@@ -90,7 +90,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
           value={modStr(bab)}
           onRoll={onQuickRoll ? () => onQuickRoll({ label: 'BAB', numDice: 1, dieType: 20, modifier: bab, parts: bab ? [{ label: 'BAB', value: bab }] : [] }) : undefined}
           extra={bab >= 6 ? (
-            <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: 13, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
               {modStr(bab)}/{modStr(bab - 5)}
               {bab >= 11 ? `/${modStr(bab - 10)}` : ''}
               {bab >= 16 ? `/${modStr(bab - 15)}` : ''}
@@ -123,7 +123,7 @@ export function CombatStats({ char, onQuickRoll }: Props) {
             label={label}
             stat={stat}
             detail={detail}
-            valueColor={stat.total >= 0 ? 'var(--vital)' : 'var(--blood)'}
+            valueColor={stat.total >= 0 ? 'var(--vital)' : 'var(--blood-text)'}
             onRoll={onQuickRoll ? () => onQuickRoll(statRoll(label, stat)) : undefined}
           />
         ))}
@@ -170,7 +170,7 @@ function RollableStat({
       <div className={`numeral ${stat ? statTone(stat) : ''}`} style={{ fontSize: 24, color: valueColor ?? 'var(--gold)', lineHeight: 1 }}>{shown}</div>
       {stat && <StatBreakdown label={label} stat={stat} />}
       {detail && (
-        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-rune)', letterSpacing: '0.1em' }}>
+        <div style={{ fontSize: 13, color: 'var(--ink-faint)', marginTop: 3, fontFamily: 'var(--font-body)' }}>
           {detail}
         </div>
       )}
@@ -195,7 +195,7 @@ function HpButton({ label, color, onSubmit }: { label: string; color: string; on
     return (
       <button
         className="pf-btn flex-1"
-        style={{ background: color + '22', border: `1px solid ${color}55`, color, fontSize: 12, padding: '6px 8px' }}
+        style={{ background: color + '22', border: `1px solid ${color}55`, color, fontSize: 13, padding: '6px 8px' }}
         onClick={() => setOpen(true)}
       >
         {label}

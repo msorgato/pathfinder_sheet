@@ -153,7 +153,7 @@ export function UserPreferencesPanel() {
         ) : (
           <span style={{ fontSize: 16, lineHeight: 1 }}>⚙</span>
         )}
-        <span style={{ fontSize: 10, color: 'var(--theme-text-muted)' }}>▾</span>
+        <span style={{ fontSize: 12, color: 'var(--theme-text-muted)' }}>▾</span>
       </button>
 
       {createPortal(dropdown, document.body)}

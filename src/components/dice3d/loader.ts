@@ -28,7 +28,7 @@ export function preloadDice3D(): void {
   scheduled = true;
   const start = () => {
     import('./scene')
-      .then(m => { loaded = m; })
+      .then(m => { loaded = m; void m.ensureDiceFont(); }) // also fetch the dice font while idle
       .catch(() => { disabled = true; });
   };
   if (typeof requestIdleCallback === 'function') requestIdleCallback(start, { timeout: 3000 });

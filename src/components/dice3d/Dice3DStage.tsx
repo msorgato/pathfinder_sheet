@@ -33,20 +33,27 @@ export function Dice3DStage({ dice, dieType, spinning, outcome, spinMs, onFail }
     const host = hostRef.current;
     const mod = getDiceSceneModule();
     if (!host || !mod) { onFailRef.current(); return; }
-    const canvas = document.createElement('canvas');
-    canvas.className = 'dice-canvas';
-    canvas.setAttribute('aria-hidden', 'true');
-    host.appendChild(canvas);
-    const fail = () => { disableDice3D(); onFailRef.current(); };
-    const scene = mod.createDiceScene(canvas, fail);
-    if (!scene) { canvas.remove(); return; }
-    sceneRef.current = scene;
-    try {
-      scene.play({ dice: meshSpecs(dice, dieType), color: accentColor(canvas), spinMs });
-    } catch {
-      fail();
-    }
-    return () => { scene.dispose(); sceneRef.current = null; canvas.remove(); };
+    let cancelled = false;
+    let cleanup = () => {};
+    // The numbers are drawn with the bundled font: wait for it (it is normally loaded already, so this is immediate).
+    void mod.ensureDiceFont().then(() => {
+      if (cancelled) return;
+      const canvas = document.createElement('canvas');
+      canvas.className = 'dice-canvas';
+      canvas.setAttribute('aria-hidden', 'true');
+      host.appendChild(canvas);
+      const fail = () => { disableDice3D(); onFailRef.current(); };
+      const scene = mod.createDiceScene(canvas, fail);
+      if (!scene) { canvas.remove(); return; }
+      sceneRef.current = scene;
+      try {
+        scene.play({ dice: meshSpecs(dice, dieType), color: accentColor(canvas), spinMs });
+      } catch {
+        fail();
+      }
+      cleanup = () => { scene.dispose(); sceneRef.current = null; canvas.remove(); };
+    });
+    return () => { cancelled = true; cleanup(); };
   // the reveal is remounted for each roll
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

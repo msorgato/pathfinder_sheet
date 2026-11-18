@@ -53,22 +53,8 @@ export default defineConfig({
         // The waiting worker only activates when the user accepts (or the app is closed); it then takes over the open page
         clientsClaim: true,
         // Firestore, Auth and Cloud Functions are cross-origin and have no runtime rule: always network.
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts-stylesheets' },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
+        // Fonts are bundled (fontsource); only the Latin subsets are precached, the other scripts are never needed.
+        globIgnores: ['**/*-cyrillic*.woff2', '**/*-greek*.woff2', '**/*-vietnamese*.woff2', '**/*-latin-ext-*.woff2'],
       },
     }),
   ],

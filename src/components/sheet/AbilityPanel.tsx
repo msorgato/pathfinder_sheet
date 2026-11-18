@@ -57,7 +57,7 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                   padding: '2px 8px',
                   borderRadius: 8,
                   background: mod >= 0 ? 'rgba(212,165,116,0.12)' : 'rgba(220,38,38,0.12)',
-                  color: mod >= 0 ? 'var(--gold)' : 'var(--blood)',
+                  color: mod >= 0 ? 'var(--gold)' : 'var(--blood-text)',
                   border: `1px solid ${mod >= 0 ? 'var(--line-mid)' : 'rgba(220,38,38,0.4)'}`,
                   cursor: onQuickRoll ? 'pointer' : 'default',
                   display: 'inline-block',
@@ -70,14 +70,14 @@ export function AbilityPanel({ char, onQuickRoll }: Props) {
                 {modStr(mod)}
               </button>
               {(damage > 0 || drain > 0) && (
-                <div className="is-debuffed" style={{ fontSize: 12, fontFamily: 'var(--font-mono)', marginBottom: 2 }}>
+                <div className="is-debuffed" style={{ fontSize: 13, fontFamily: 'var(--font-mono)', marginBottom: 2 }}>
                   {damage > 0 && <span title="Danno di caratteristica: −1 al modificatore ogni 2 punti">−{damage} dan.</span>}
                   {damage > 0 && drain > 0 && ' · '}
                   {drain > 0 && <span title="Risucchio di caratteristica: riduce il punteggio">−{drain} ris.</span>}
                 </div>
               )}
 
-              <div style={{ fontSize: 12, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 13, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                 {base}{racial !== 0 ? ` ${racial >= 0 ? '+' : ''}${racial}R` : ''}
                 {increases !== 0 ? ` +${increases}↑` : ''}
               </div>

@@ -48,7 +48,7 @@ export function RollMessage({ msg, isMine }: Props) {
             {roll.formula}
           </span>
           <span className="text-xs" style={{ color: 'var(--theme-text-faint)' }}>=</span>
-          <span className="text-2xl font-bold leading-none" style={{ color: totalColor, fontFamily: 'Georgia' }}>
+          <span className="text-2xl font-bold leading-none" style={{ color: totalColor, fontFamily: 'var(--font-display)' }}>
             {roll.total}
           </span>
         </div>
