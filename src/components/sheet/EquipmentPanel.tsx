@@ -78,7 +78,9 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
   );
 
   return (
-    <div className="pf-panel p-4 space-y-2 equipment-panel">
+    <div className="pf-panel p-4 equipment-panel">
+     <div className="sheet-cols sheet-cols-tight">
+      <div className="sheet-col sheet-col-tight">
       <div className="equip-summary">
         <div className="stat-tile equip-tile">
           <div className="label-rune-soft">Peso</div>
@@ -106,7 +108,9 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
 
       <div className="status-section-title"><span className="label-rune-soft">Equipaggiamento indossato</span></div>
       <EquipmentSlots char={char} readOnly={readOnly} onOpenCatalog={() => setPicker(true)} />
+      </div>
 
+      <div className="sheet-col sheet-col-tight">
       <div className="status-section-title"><span className="label-rune-soft">Trasportati</span></div>
       {carried.length === 0 && <p className="status-empty">Nessun oggetto trasportato.</p>}
       {carried.map(row)}
@@ -128,6 +132,8 @@ export function EquipmentPanel({ char, readOnly = false }: { char: Character; re
       </div>
 
       <ProficienciesSection char={char} readOnly={readOnly} />
+      </div>
+     </div>
 
       {creator && <SpellItemCreator char={char} onClose={() => setCreator(false)} />}
       {picker && <ItemPicker char={char} onClose={() => setPicker(false)} />}
