@@ -10,29 +10,21 @@ import { FrameCorners } from '../components/ui/FrameCorners';
 import { getClass } from '../data/classes';
 import { getRace } from '../data/races';
 import { deriveStats } from '../utils/derivedStats';
-import { AbilityPanel } from '../components/sheet/AbilityPanel';
-import { CombatStats, HitPointsPanel } from '../components/sheet/CombatStats';
-import { SkillsPanel } from '../components/sheet/SkillsPanel';
-import { SpellsPanel } from '../components/sheet/SpellsPanel';
-import { FeaturesPanel } from '../components/sheet/FeaturesPanel';
-import { AttacksPanel } from '../components/sheet/AttacksPanel';
-import { EquipmentPanel } from '../components/sheet/EquipmentPanel';
-import { ConsumablesSection } from '../components/sheet/ConsumablesSection';
+import { SheetBody } from '../components/sheet/SheetBody';
+import type { SheetTab } from '../components/sheet/SheetBody';
+import { useIsDesktop } from '../lib/useIsDesktop';
 import { StatusChips } from '../components/sheet/StatusChips';
-import { StatusPanel } from '../components/sheet/StatusPanel';
 import { LevelUpWizard } from '../components/levelup/LevelUpWizard';
 import { DiceRoller } from '../components/sheet/DiceRoller';
 import type { RollRequest } from '../components/sheet/DiceRoller';
-
-type Tab = 'overview' | 'equipment' | 'skills' | 'spells' | 'features' | 'notes';
 
 export function CharacterSheet() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { characters, deleteCharacter, updateCharacter } = useCharacterStore();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<SheetTab>('overview');
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [editingNotes, setEditingNotes] = useState(false);
+  const isDesktop = useIsDesktop();
   const [diceOpen, setDiceOpen] = useState(false);
   const [pendingRoll, setPendingRoll] = useState<RollRequest | undefined>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -61,15 +53,6 @@ export function CharacterSheet() {
   const maxHp = derived.maxHp.total;
   const hpPct = Math.max(0, Math.min(100, (char.currentHp / maxHp) * 100));
 
-  const TABS: { id: Tab; label: string; short?: string }[] = [
-    { id: 'overview',  label: 'Combattimento' },
-    { id: 'equipment', label: 'Equipaggiamento', short: 'Equip' },
-    { id: 'skills',    label: 'Abilità' },
-    { id: 'spells',    label: 'Incantesimi' },
-    { id: 'features',  label: 'Capacità' },
-    { id: 'notes',     label: 'Note' },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-deep)', '--char-accent': char.accentColor ?? 'var(--gold)' } as React.CSSProperties}>
       {/* Identity header */}
@@ -83,6 +66,7 @@ export function CharacterSheet() {
       >
         <FrameCorners />
 
+        <div className="sheet-header-inner">
         {/* Top action row */}
         <div className="char-header-actions">
           <button
@@ -253,113 +237,16 @@ export function CharacterSheet() {
           </div>
 
         </div>
+        </div>
       </div>
 
-      {/* Tab bar */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--line-soft)',
-        background: 'var(--bg-elev)',
-        overflowX: 'auto',
-      }}>
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              fontFamily: 'var(--font-rune)',
-              fontSize: 12,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              padding: '12px 20px',
-              border: 'none',
-              borderBottom: `2px solid ${tab === t.id ? 'var(--gold)' : 'transparent'}`,
-              background: 'transparent',
-              color: tab === t.id ? 'var(--gold)' : 'var(--ink-mute)',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'color 0.15s, border-color 0.15s',
-            }}
-          >
-            {t.short
-              ? <><span className="tab-label-long">{t.label}</span><span className="tab-label-short">{t.short}</span></>
-              : t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full">
-        {tab === 'overview' && (
-          <div className="space-y-4">
-            <AbilityPanel char={char} onQuickRoll={handleQuickRoll} />
-            <HitPointsPanel char={char} />
-            <StatusPanel char={char} />
-            <CombatStats char={char} onQuickRoll={handleQuickRoll} />
-            <AttacksPanel char={char} onQuickRoll={handleQuickRoll} />
-            <ConsumablesSection char={char} />
-          </div>
-        )}
-        {tab === 'equipment' && <EquipmentPanel char={char} />}
-        {tab === 'skills' && <SkillsPanel char={char} onQuickRoll={handleQuickRoll} />}
-        {tab === 'spells' && <SpellsPanel char={char} />}
-        {tab === 'features' && <FeaturesPanel char={char} />}
-        {tab === 'notes' && (
-          <div className="space-y-4">
-            <div className="pf-panel p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="label-rune">Note</div>
-                <button
-                  className="pf-btn pf-btn-outline text-xs px-3 py-1"
-                  onClick={() => setEditingNotes(e => !e)}
-                >
-                  {editingNotes ? 'Salva' : 'Modifica'}
-                </button>
-              </div>
-              {editingNotes ? (
-                <textarea
-                  className="pf-input resize-none w-full"
-                  rows={8}
-                  value={char.notes}
-                  onChange={e => updateCharacter(char.id, { notes: e.target.value })}
-                />
-              ) : (
-                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--ink-soft)' }}>
-                  {char.notes || 'Nessuna nota.'}
-                </p>
-              )}
-            </div>
-
-            {/* Character details */}
-            <div className="pf-panel p-4 grid grid-cols-2 gap-3 text-sm">
-              {[
-                ['Razza', race?.name ?? char.race],
-                ['Allineamento', char.alignment],
-                ['Divinità', char.deity ?? '—'],
-                ['Giocatore', char.playerName ?? '—'],
-                ['Genere', char.gender ?? '—'],
-                ['Età', char.age ? String(char.age) : '—'],
-                ['Altezza', char.height ?? '—'],
-                ['Peso', char.weight ?? '—'],
-                ['Capelli', char.hair ?? '—'],
-                ['Occhi', char.eyes ?? '—'],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <span className="label-rune-soft" style={{ display: 'inline', marginRight: 6 }}>{label}</span>
-                  <span style={{ color: 'var(--ink-soft)' }}>{value}</span>
-                </div>
-              ))}
-            </div>
-
-            {char.background && (
-              <div className="pf-panel p-4">
-                <div className="label-rune" style={{ marginBottom: 8 }}>Background</div>
-                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--ink-soft)' }}>{char.background}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <SheetBody
+        char={char}
+        tab={tab}
+        onTabChange={setTab}
+        layout={isDesktop ? 'desktop' : 'mobile'}
+        onQuickRoll={handleQuickRoll}
+      />
 
       {showLevelUp && (
         <LevelUpWizard char={char} onClose={() => setShowLevelUp(false)} />
