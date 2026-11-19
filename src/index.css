@@ -1012,10 +1012,24 @@ body {
    SCROLLBAR
    ================================================================ */
 
-::-webkit-scrollbar          { width: 6px; height: 6px; }
-::-webkit-scrollbar-track    { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb    { background: var(--line-mid); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--line-strong); }
+/* Chrome, Edge, Safari: slim, transparent track, rounded thumb with breathing room (transparent border).
+   Do not set scrollbar-width / scrollbar-color on elements here: Chrome would then ignore these rules. */
+::-webkit-scrollbar          { width: 10px; height: 10px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-corner   { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-mid);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active { background: var(--line-strong); background-clip: padding-box; }
+
+/* Firefox and other browsers without the WebKit pseudo-elements: standard properties */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--line-mid) transparent; }
+}
 
 /* ================================================================
    RESPONSIVE — TABLET (≤ 1024px)
