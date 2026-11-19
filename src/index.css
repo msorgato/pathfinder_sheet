@@ -1435,7 +1435,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  scrollbar-width: thin;
   min-width: 0;
 }
 
