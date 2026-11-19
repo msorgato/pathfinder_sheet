@@ -151,7 +151,7 @@ export function SpellsPanel({ char }: Props) {
 
       {/* SLOTS TAB */}
       {tab === 'slots' && (
-        <div className="space-y-3">
+        <div className="sheet-grid-auto">
           {slots.map(s => {
             const isCantrip = s.level === 0;
             const used = isCantrip ? 0 : usedAtLevel(s.level);

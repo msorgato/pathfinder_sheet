@@ -47,41 +47,13 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
 
   const usedPoints = char.skills.reduce((s, sk) => s + sk.ranks, 0);
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="label-rune">Abilità</div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-mute)' }}>
-          Gradi: {usedPoints}/{totalSkillPoints}
-        </span>
-      </div>
+  const splitAt = Math.ceil(filtered.length / 2);
+  const firstHalf = filtered.slice(0, splitAt);
+  const secondHalf = filtered.slice(splitAt);
 
-      <div className="flex gap-2">
-        <input
-          className="pf-input flex-1"
-          placeholder="Cerca abilità..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <button
-          className="pf-btn"
-          style={{
-            fontSize: 13,
-            padding: '6px 12px',
-            background: onlyTrained ? 'var(--gold)' : 'var(--surface-1)',
-            color: onlyTrained ? 'var(--bg-deep)' : 'var(--ink-mute)',
-            border: `1px solid ${onlyTrained ? 'var(--gold)' : 'var(--line-mid)'}`,
-          }}
-          onClick={() => setOnlyTrained(t => !t)}
-        >
-          Solo addestrati
-        </button>
-      </div>
-
-      <div className="space-y-0.5">
-        {/* Header */}
+  const header = (extraClass = '') => (
         <div
-          className="grid px-2 mb-2"
+          className={`grid px-2 mb-2 ${extraClass}`}
           style={{
             gridTemplateColumns: '1fr 20px 40px 40px 40px 64px',
             color: 'var(--ink-faint)',
@@ -98,8 +70,9 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
           <span className="text-center">Misc</span>
           <span className="text-center" title={onQuickRoll ? 'Clicca per tirare' : undefined}>Tot</span>
         </div>
+  );
 
-        {filtered.map(skill => {
+  const renderRow = (skill: (typeof SKILLS)[number]) => {
           const skillData = char.skills.find(s => s.skillId === skill.id);
           const ranks = skillData?.ranks ?? 0;
           const misc = skillData?.misc ?? 0;
@@ -189,7 +162,48 @@ export function SkillsPanel({ char, onQuickRoll }: Props) {
               </div>
             </div>
           );
-        })}
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="label-rune">Abilità</div>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-mute)' }}>
+          Gradi: {usedPoints}/{totalSkillPoints}
+        </span>
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          className="pf-input flex-1"
+          placeholder="Cerca abilità..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <button
+          className="pf-btn"
+          style={{
+            fontSize: 13,
+            padding: '6px 12px',
+            background: onlyTrained ? 'var(--gold)' : 'var(--surface-1)',
+            color: onlyTrained ? 'var(--bg-deep)' : 'var(--ink-mute)',
+            border: `1px solid ${onlyTrained ? 'var(--gold)' : 'var(--line-mid)'}`,
+          }}
+          onClick={() => setOnlyTrained(t => !t)}
+        >
+          Solo addestrati
+        </button>
+      </div>
+
+      <div className="sheet-skill-cols">
+        <div className="space-y-0.5">
+          {header()}
+          {firstHalf.map(renderRow)}
+        </div>
+        <div className="space-y-0.5">
+          {header('sheet-second-header')}
+          {secondHalf.map(renderRow)}
+        </div>
       </div>
     </div>
   );
