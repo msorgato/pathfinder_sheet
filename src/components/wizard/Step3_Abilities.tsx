@@ -24,6 +24,8 @@ const STANDARD_ARRAYS = {
   low: [13, 12, 11, 10, 9, 8],
 };
 
+const DEFAULT_SCORE = 10;
+
 interface Props {
   scores: AbilityScores;
   onChange: (scores: AbilityScores) => void;
@@ -42,6 +44,12 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
 
   const setScore = (key: AbilityKey, val: number) => {
     onChange({ ...scores, [key]: Math.max(7, Math.min(18, val)) });
+  };
+
+  const resetScores = () => {
+    const keys: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    const reset = Object.fromEntries(keys.map(k => [k, DEFAULT_SCORE])) as AbilityScores;
+    onChange(reset);
   };
 
   const applyArray = (arr: number[]) => {
@@ -176,6 +184,21 @@ export function Step3_Abilities({ scores, onChange, onNext, onBack }: Props) {
             </div>
           );
         })}
+      </div>
+
+      <div className="flex justify-start mt-3">
+        <button
+          onClick={resetScores}
+          className="pf-btn text-sm"
+          style={{
+            background: 'var(--theme-bg-panel)',
+            color: 'var(--theme-text)',
+            border: '1px solid var(--theme-border)',
+          }}
+          disabled={Object.values(scores).every(v => v === DEFAULT_SCORE)}
+        >
+          ↺ Reset punteggi
+        </button>
       </div>
 
       <div className="mt-4 pf-panel p-3 text-center text-sm" style={{ color: 'var(--theme-text-faint)' }}>
